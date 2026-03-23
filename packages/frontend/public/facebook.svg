@@ -1,0 +1,11 @@
+<svg width="50" height="50" viewBox="0 0 24 24"
+     xmlns="http://www.w3.org/2000/svg" fill="none">
+  <!-- 파란 원 배경 -->
+  <circle cx="12" cy="12" r="11" fill="#1877F2"/>
+  <!-- 하얀색 f (25% 확대) -->
+  <path 
+    transform="scale(1.25) translate(0, -0.5)"
+    d="M13.54 7.2H15V4.5h-1.46c-2.77 0-4.54 1.7-4.54 4.46v1.59H7v2.7h2v4.25h2.79v-4.25h2.17l.4-2.7h-2.57V8.86c0-1.02.48-1.66 1.75-1.66Z" 
+    fill="#FFFFFF"
+  />
+</svg>
