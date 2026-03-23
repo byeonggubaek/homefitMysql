@@ -90,14 +90,19 @@ app.post('/api/recommend-exercise', async (req, res) => {
     const user = await getMember(userProfile.mem_join_id);
     const workouts = await getWorkouts();
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-3-flash-preview",
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
       generationConfig: {
-        temperature: 0.7,   // 0.0(정확) → 1.0(창의적, 다양)
-        topP: 0.9,
-        maxOutputTokens: 512,
+        temperature: 0,           // 이미 OK
+        maxOutputTokens: 8192,    // 8192 → 1024 (3배↑)
+        topK: 1,                  // 32 → 1 (2배↑)
+        topP: 0.1,                // 추가!
+        candidateCount: 1         // 명시적 1
       },
+      // 시스템 지시어로 즉답 유도
+      systemInstruction: "간결하고 빠르게 답변해."
     });
+
     const userText = `성별: ${user.mem_sex}, 나이: ${user.mem_age}, 강도: ${userProfile.intensity}`; 
     const workoutsText = workouts
       .map((w: WorkoutDetail) => {
@@ -123,7 +128,7 @@ app.post('/api/recommend-exercise', async (req, res) => {
       - 각 운동에 대해:
         - 권장 시간/횟수 wod_target_reps
         - 권장 세트 wod_target_sets
-      - woo_id, woo_name, woo_img, woo_guide는 반드시 입력으로 주어진 문자열을 그대로 사용하고 변경하지 마세요
+      - woo_id, woo_name, woo_img  반드시 입력으로 주어진 문자열을 그대로 사용하고 변경하지 마세요
       - 응답은 아래 JSON 배열 코드만 출력해주세요.
       - JSON 외에 설명, 마크다운, \`json 텍스트, 주석, Thought: 등은 절대 포함하지 마세요.
       [반환 형식(JSON 배열)]
@@ -150,6 +155,7 @@ app.post('/api/recommend-exercise', async (req, res) => {
     try {
       // JSON 문자열이 ```json ... ``` 으로 둘러싸여 있을 수 있으니 깔끔히 정리
       const cleanText = rawText.replace(/```json|```/g, "").trim();
+      console.log("AI 원본 응답:", cleanText);      
       recommendedExercises = JSON.parse(cleanText);
       console.log("AI 원본 응답:", rawText);
     } catch (parseError) {
