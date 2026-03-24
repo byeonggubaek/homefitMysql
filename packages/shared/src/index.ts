@@ -2,119 +2,119 @@
   메뉴
 =======================================================================================================*/
 export interface NavSubItem {
-  nas_id: string,
-  nas_name: string;
-  nas_href: string,  
-  nas_desc: string;
+  NAS_ID: string,
+  NAS_NAME: string;
+  NAS_HREF: string,  
+  NAS_DESC: string;
 }
 export interface NavItem {
-  nav_id: string,
-  nav_name: string;
-  nav_img: string;
-  nav_desc: string;
-  sub_menus: NavSubItem[];
+  NAV_ID: string,
+  NAV_NAME: string;
+  NAV_IMG: string;
+  NAV_DESC: string;
+  NAV_SUB_MENUS: NavSubItem[];
 }
 export interface MenuPos {
-  nav_id: string,
-  nav_name: string,
-  nas_id: string;
-  nas_name: string;
-  siblings: NavSubItem[];
+  NAV_ID: string,
+  NAS_ID: string;
+  NAV_NAME: string,
+  NAS_NAME: string;
+  NAS_SIBLINGS: NavSubItem[];
 }
 /*=======================================================================================================
   테이블 관련 
 =======================================================================================================*/
 export interface ColDesc {
-  col_id: string;
-  col_name: string;
-  col_type: string;
-  col_width?: number;
-  col_sum?: string;
-  col_agg?: number;
+  COL_ID: string;
+  COL_NAME: string;
+  COL_TYPE: string;
+  COL_WIDTH?: number;
+  COL_SUM?: string;
+  COL_AGG?: number;
 }
 /*=======================================================================================================
   회원정보
 =======================================================================================================*/
 export interface Member {
-    mem_id: string;
-    mem_name: string;
-    mem_nickname: string;
-    mem_img: string;
-    mem_sex: string;
-    mem_age: number;
-    mem_point: number;
-    mem_exp_point: number;   //
-    mem_lvl: number;         //
-    mes_id : string;
-    mes_name: string;
+    MEM_ID: string;
+    MEM_NAME: string;
+    MEM_NICKNAME: string;
+    MEM_IMG: string;
+    MEM_SEX: string;
+    MEM_AGE: number;
+    MEM_POINT: number;
+    MEM_EXP_POINT: number;   //
+    MEM_LVL: number;         //
+    MES_ID : string;
+    MES_NAME: string;
 }
 export interface MemberExists {
-    status: string;
-    error: string;
+    STATUS: string;
+    ERROR: string;
 }
 /*=======================================================================================================
   홈 트레이닝 관련
 =======================================================================================================*/
 export interface WorkoutRecord {
-  wor_id: string;
-  wor_dt: Date;
-  woo_id: string;
-  woo_name: string;
-  woo_name_color: string;
-  wor_target_reps: number;
-  wor_target_sets: number;
-  wor_count_p: number;
-  wor_count: number;
-  wor_count_s: number;
-  wor_point: number;
-  wor_desc?: string;
+  WOR_ID: string;
+  WOR_DT: Date;
+  WOO_ID: string;
+  WOO_NAME: string;
+  WOO_NAME_COLOR: string;
+  WOD_TARGET_REPS: number;
+  WOD_TARGET_SETS: number;
+  WOD_COUNT_P: number;
+  WOD_COUNT: number;
+  WOD_COUNT_S: number;
+  WOD_POINT: number;
+  WOR_DESC?: string;
 }
 export interface WorkoutHistory {
-  wo_dt: string;
-  status: string;
+  WOR_DT: string;
+  STATUS: string;
 }
 export interface WorkoutDetail {
-  woo_id: string;
-  woo_name: string;
-  woo_guide: string;
-  woo_img: string;
-  wod_target_reps: number;
-  wod_target_sets: number;
+  WOO_ID: string;
+  WOO_NAME: string;
+  WOO_GUIDE: string;
+  WOO_IMG: string;
+  WOD_TARGET_REPS: number;
+  WOD_TARGET_SETS: number;
 }
 /*=======================================================================================================
   메뉴 관련
 =======================================================================================================*/
 
 export interface ChartData {
-  columns: Record<string, any>;
-  data: Record<string, any>;
+  COLUMNS: Record<string, any>;
+  DATA: Record<string, any>;
 }
 /*=======================================================================================================
   우편번호 
 =======================================================================================================*/
 export interface Postcode {
-  postcode: string;
-  address: string;
-  roadAddress: string;
+  POSTCODE: string;
+  ADDRESS: string;
+  ROAD_ADDRESS: string;
 }
 /*=======================================================================================================
   카카오지도  
 =======================================================================================================*/
 export interface MapPosition {
-  lat: number;
-  lng: number;
+  LAT: number;
+  LNG: number;
 }
 export interface BusinessTypeResult {
-  name: string;
-  fullCategory: string;        // 전체: "음식점 > 한식 > 김밥"
-  leafCategory: string;        // 최종 말단: "김밥"
-  mainCategory: string;        // 메인: "음식점"
-  subCategory: string;         // 중분류: "한식"
+  NAME: string;
+  FULL_CATEGORY: string;        // 전체: "음식점 > 한식 > 김밥"
+  LEAF_CATEGORY: string;        // 최종 말단: "김밥"
+  MAIN_CATEGORY: string;        // 메인: "음식점"
+  SUB_CATEGORY: string;         // 중분류: "한식"
 }
 export interface ShopLocation {
-  name: string;
-  fullAddress: string;
-  coords: { lat: number; lng: number };
-  category: string;
-  matchScore: number; // 일치도 점수 (0-100)
+  NAME: string;
+  FULL_ADDRESS: string;
+  COORDS: { LAT: number; LNG: number };
+  CATEGORY: string;
+  MATCH_SCORE: number; // 일치도 점수 (0-100)
 }
