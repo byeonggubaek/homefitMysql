@@ -203,50 +203,41 @@ export const getMenus = async (): Promise<NavItem[]> => {
 }
 async function _getMember(P_MEM_ID: string): Promise<any> {
   return select(`
-SELECT	A.MEM_ID_ACT,
-        A.MEM_NAME,
-        A.MEM_NICKNAME,
-        A.MEM_IMG,
-        C.MIN_NAME MEM_SEX,
-        A.MEM_AGE,
-        A.MEM_POINT,
-        A.MEM_EXP_POINT,
-        A.MEM_LVL,
-        A.MES_ID,
-        B.MES_NAME 
-FROM	T_MEMBER A
-JOIN	T_MEMBERSHIP B ON B.MES_ID = A.MES_ID 
-JOIN 	T_MINOR_DESC C ON C.COD_ID = 'COD00003' AND C.MIN_ID = A.MEM_SEX
+SELECT A.MEM_ID_ACT,
+       A.MEM_NAME,
+       A.MEM_NICKNAME,
+       A.MEM_IMG,
+       C.MIN_NAME AS MEM_SEX,
+       A.MEM_AGE,
+       A.MEM_POINT,
+       A.MEM_EXP_POINT,
+       A.MEM_LVL,
+       A.MES_ID,
+       B.MES_NAME
+FROM T_MEMBER A
+JOIN T_MEMBERSHIP B 
+    ON B.MES_ID = A.MES_ID
+JOIN T_MINOR_DESC C 
+    ON C.COD_ID = 'COD00003' 
+    AND C.MIN_ID = A.MEM_SEX
 WHERE A.MEM_ID = ?
 `, [P_MEM_ID]);
 }
 export const getMember = async (P_MEM_ID: string): Promise<Member> => {
-  const record = await _getMember(P_MEM_ID);
-  return record.length > 0 ? {
-    MEM_ID_ACT: record[0].MEM_ID_ACT,
-    MEM_NAME: record[0].MEM_NAME,
-    MEM_NICKNAME: record[0].MEM_NICKNAME,
-    MEM_IMG: record[0].MEM_IMG,
-    MEM_SEX: record[0].MEM_SEX,
-    MEM_AGE: record[0].MEM_AGE,
-    MEM_POINT: record[0].MEM_POINT,
-    MEM_EXP_POINT: record[0].MEM_EXP_POINT,
-    MEM_LVL: record[0].MEM_LVL,
-    MES_ID: record[0].MES_ID,
-    MES_NAME: record[0].MES_NAME
-  } : {
-    MEM_ID_ACT: '',
-    MEM_NAME: '',
-    MEM_NICKNAME: '',
-    MEM_IMG: '',
-    MEM_SEX: '',
-    MEM_AGE: 0,
-    MEM_POINT: 0,
-    MEM_EXP_POINT: 0,
-    MEM_LVL: 0,
-    MES_ID: '',
-    MES_NAME: ''    
-  };
+  const records = await _getMember(P_MEM_ID);
+  return records.map((record: any) => ({      
+    MEM_ID_ACT: record.MEM_ID_ACT,
+    MEM_NAME: record.MEM_NAME,
+    MEM_NICKNAME: record.MEM_NICKNAME,
+    MEM_IMG: record.MEM_IMG,
+    MEM_SEX: record.MEM_SEX,
+    MEM_AGE: record.MEM_AGE,
+    MEM_POINT: record.MEM_POINT,
+    MEM_EXP_POINT: record.MEM_EXP_POINT,
+    MEM_LVL: record.MEM_LVL,
+    MES_ID: record.MES_ID,
+    MES_NAME: record.MES_NAME
+  }));
 }
 async function _getWorkoutDetails(P_WOR_ID: string = ''): Promise<any[]> {
   return select(`
@@ -310,22 +301,22 @@ export const getMenuPos = async (P_NAS_PAGE: string = ''): Promise<any> => {
 async function _getWorkoutHistory(P_MEM_ID: string = ''): Promise<any> {
   return select(`
 WITH RECURSIVE DATE_RANGE AS (
-	SELECT CURDATE() - INTERVAL 7 DAY AS DATE_VAL
-	UNION ALL
-	SELECT DATE_VAL + INTERVAL 1 DAY
-	FROM   DATE_RANGE
-	WHERE  DATE_VAL + INTERVAL 1 DAY <= CURDATE()
+    SELECT CURDATE() - INTERVAL 7 DAY AS DATE_VAL
+    UNION ALL
+    SELECT DATE_VAL + INTERVAL 1 DAY
+    FROM DATE_RANGE
+    WHERE DATE_VAL + INTERVAL 1 DAY <= CURDATE()
 )
-SELECT	JSON_ARRAYAGG(
+SELECT JSON_ARRAYAGG(
             JSON_OBJECT(
                 'WO_DT', A.DATE_VAL,
                 'STATUS', CASE WHEN B.WOR_DT IS NOT NULL THEN 'G' ELSE 'B' END
-            )  
-        ) AS RESULT   
-FROM	DATE_RANGE A
+            )
+        ) AS RESULT
+FROM DATE_RANGE A
 LEFT JOIN T_WORKOUT_RECORD B
-ON   B.WOR_DT = A.DATE_VAL
-AND  B.MEM_ID = ?
+ON B.WOR_DT = A.DATE_VAL
+AND B.MEM_ID = ?
 `, [P_MEM_ID]);
 }
 export const getWorkoutHistory = async (P_MEM_ID: string = ''): Promise<any> => {
@@ -357,6 +348,7 @@ export const getWorkouts = async (): Promise<Workout[]> => {
   }));
 }
 
+// 신규 
 
 
 
