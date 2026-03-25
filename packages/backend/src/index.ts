@@ -4,14 +4,17 @@ import {
   closePool, 
   getMenus, searchSubMenus, 
   getColDescs, 
-  getWorkoutDetails, getWorkoutPivot, getWorkoutPivotWithPlan, getCurMenuPos, getWorkoutHistory, getWorkouts,
+  getWorkoutPivot, getWorkoutPivotWithPlan, getCurMenuPos, getWorkoutHistory, 
   getMember, 
   getWorkoutDetail,
-  checkMember} from './db_ora11c.js';
+  checkMember,
+  getWorkoutDetails,
+  getMenuPos,
+  getWorkouts} from './db.js';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Member, WorkoutDetail } from 'shared';
+import { Member, Workout, WorkoutDetail } from 'shared';
 
 //=================================================================================================
 // 환경 변수 로드 & 서버 초기화
@@ -84,10 +87,11 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 // ==========================================
 // 🚀 AI 운동 추천 API (Gemini 3 Flash Preview)
 // ==========================================
-app.post('/api/recommend-exercise', async (req, res) => {
+app.post('/api/recExercise', async (req, res) => {
   try {
     const { userProfile } = req.body;
-    const user = await getMember(userProfile.mem_join_id);
+    console.log("AI 추천 요청 - 사용자 프로필:", userProfile); // 💡 사용자 프로필 로그
+    const user = await getMember(userProfile.P_MEM_ID);
     const workouts = await getWorkouts();
 
     const model = genAI.getGenerativeModel({ 
@@ -103,10 +107,10 @@ app.post('/api/recommend-exercise', async (req, res) => {
       systemInstruction: "간결하고 빠르게 답변해."
     });
 
-    const userText = `성별: ${user.mem_sex}, 나이: ${user.mem_age}, 강도: ${userProfile.intensity}`; 
+    const userText = `성별: ${user.MEM_SEX}, 나이: ${user.MEM_AGE}, 강도: ${userProfile.P_INTENSITY}`; 
     const workoutsText = workouts
-      .map((w: WorkoutDetail) => {
-        return `- woo_id: ${w.woo_id}, woo_name: ${w.woo_name}, woo_img: ${w.woo_img}, wod_target_sets: ${w.wod_target_sets}, wod_target_reps: ${w.wod_target_reps}`;
+      .map((w: Workout) => {
+        return `- WOO_ID: ${w.WOO_ID}, WOO_NAME: ${w.WOO_NAME}, WOO_IMG: ${w.WOO_IMG}, WOO_GUIDE: ${w.WOO_GUIDE}, WOD_TARGET_SETS: ${w.WOO_TARGET_SETS}, WOD_TARGET_REPS: ${w.WOO_TARGET_REPS}`;
       })
       .join("\n");
 
@@ -126,44 +130,40 @@ app.post('/api/recommend-exercise', async (req, res) => {
       [지시]
       - 보유운동 중 가장 적합한 3가지만 골라서 추천하세요.
       - 각 운동에 대해:
-        - 권장 시간/횟수 wod_target_reps
-        - 권장 세트 wod_target_sets
-      - woo_id, woo_name, woo_img  반드시 입력으로 주어진 문자열을 그대로 사용하고 변경하지 마세요
+        - 권장 시간/횟수 WOD_TARGET_REPS
+        - 권장 세트 WOD_TARGET_SETS
+      - WOO_ID, WOO_NAME, WOO_IMG 반드시 입력으로 주어진 문자열을 그대로 사용하고 변경하지 마세요
       - 응답은 아래 JSON 배열 코드만 출력해주세요.
       - JSON 외에 설명, 마크다운, \`json 텍스트, 주석, Thought: 등은 절대 포함하지 마세요.
       [반환 형식(JSON 배열)]
       [
         {
-          "woo_id": "...",
-          "woo_name": "...",
-          "woo_img": "...",
-          "woo_guide": "...",
-          "wod_target_reps": 0,
-          "wod_target_sets": 0
+          "WOO_ID": "...",
+          "WOO_NAME": "...",
+          "WOO_IMG": "...",
+          "WOO_GUIDE": "...",
+          "WOD_TARGET_REPS": 0,
+          "WOD_TARGET_SETS": 0
         }
       ]
     `;
-
-    console.log("AI 프롬프트:", prompt);
-
+    console.log("AI 추천 요청 - 프롬프트:", prompt); // 💡 프롬프트 로그
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const rawText = response.text();
-    console.log("AI 원본 응답:", rawText);
     
     let recommendedExercises: any[] = [];
     try {
       // JSON 문자열이 ```json ... ``` 으로 둘러싸여 있을 수 있으니 깔끔히 정리
       const cleanText = rawText.replace(/```json|```/g, "").trim();
-      console.log("AI 원본 응답:", cleanText);      
       recommendedExercises = JSON.parse(cleanText);
-      console.log("AI 원본 응답:", rawText);
+      console.warn("결과", recommendedExercises);      
     } catch (parseError) {
       console.warn("AI 응답 파싱 실패, fallback 사용");
       recommendedExercises = [
-          { woo_name: "플랭크", woo_guide: "30초 동안 자세 유지하기.", woo_img: "plank.png", wod_target_reps: 0, wod_target_sets: 1 },
-          { woo_name: "스쿼트", woo_guide: "다리를 어깨 너비로 벌리고 앉았다 일어나기.", woo_img: "squat.png", wod_target_reps: 0, wod_target_sets: 1 },
-          { woo_name: "런지", woo_guide: "손은 어깨너비보다 약간 넓게, 손가락은 앞쪽으로 향하게 위치.", woo_img: "lunge.png", wod_target_reps: 0, wod_target_sets: 1 }
+          { WOO_NAME: "플랭크", WOO_GUIDE: "30초 동안 자세 유지하기.", WOO_IMG: "plank.png", WOD_TARGET_REPS: 0, WOD_TARGET_SETS: 1 },
+          { WOO_NAME: "스쿼트", WOO_GUIDE: "다리를 어깨 너비로 벌리고 앉았다 일어나기", WOO_IMG: "squat.png", WOD_TARGET_REPS: 0, WOD_TARGET_SETS: 1 },
+          { WOO_NAME: "런지", WOO_GUIDE: "좌우 각 권장 횟수만큼 반복하기", WOO_IMG: "lunge.png", WOD_TARGET_REPS: 0, WOD_TARGET_SETS: 1 }
       ];
     }
 
@@ -198,23 +198,18 @@ app.post('/api/recommend-exercise', async (req, res) => {
   }
 });
 
-
 //================================================================================================
-// 메뉴  
+//   
 //================================================================================================
-// API: 메뉴 전체 조회
-// GET /api/get_menus
-// PARAMETER : 없음
-app.get('/api/get_menus', async (req, res) => {
+app.get('/api/getMenus', async (req, res) => {
   let apiLogEntry = null;
   try {
-    apiLogEntry = await Logger.logApiStart('GET /api/get_menus', []);
-    const menus = await getMenus();
-    let menu =  
+    apiLogEntry = await Logger.logApiStart('GET /api/getMenus', []);
+    const data = await getMenus();
     res.json({
       success: true,
-      data: menus,
-      count: menus.length,
+      data: data,
+      count: data.length,
       timestamp: new Date().toISOString()
     });
     await Logger.logApiSuccess(apiLogEntry);
@@ -226,18 +221,68 @@ app.get('/api/get_menus', async (req, res) => {
     });
   }
 });
-// API: 메뉴 위치조회 
-// GET /api/get_menu_pos?page=메뉴페이지명
-// PARAMETER : page (선택) - 조회할 메뉴 페이지명 
-app.get('/api/get_menu_pos', async (req, res) => {
+app.get('/api/getMember', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    const { P_MEM_ID } = req.query as { P_MEM_ID: string };
+    if (!P_MEM_ID) {
+      return res.status(400).json({
+        success: false,
+        error: '회원 ID가 필요합니다.'
+      });
+    }
+    apiLogEntry = await Logger.logApiStart('GET /api/getMember', [P_MEM_ID]);
+    const data = await getMember(P_MEM_ID);
+    res.json({
+      success: true,
+      data: data,
+      timestamp: new Date().toISOString()
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+app.get('/api/getWorkoutDetails', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    const { P_WOR_ID } = req.query as { P_WOR_ID: string };
+    if (!P_WOR_ID) {
+      return res.status(400).json({
+        success: false,
+        error: '운동기록 ID가 필요합니다.'
+      });
+    }
+    apiLogEntry = await Logger.logApiStart('GET /api/getWorkoutDetails', [P_WOR_ID]);
+    const data = await getWorkoutDetails(P_WOR_ID);
+    res.json({
+      success: true,
+      data: data,
+      count: data.length,
+      timestamp: new Date().toISOString()
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+app.get('/api/getMenuPos', async (req, res) => {
   let apiLogEntry = null;  
   try {
     const { page } = req.query as { page?: string };  
-    apiLogEntry = await Logger.logApiStart('GET /api/get_menu_pos', [page]);
-    const menuPos = await getCurMenuPos(page);
+    apiLogEntry = await Logger.logApiStart('GET /api/getMenuPos', [page]);
+    const data = await getMenuPos(page);
     res.json({
       success: true,
-      data: menuPos,
+      data: data,
       timestamp: new Date().toISOString()
     });
     await Logger.logApiSuccess(apiLogEntry);
@@ -249,6 +294,27 @@ app.get('/api/get_menu_pos', async (req, res) => {
     });
   }
 });
+app.get('/api/getWorkoutHistory', async (req, res) => {
+  let apiLogEntry = null;  
+  try {
+    const { P_MEM_ID } = req.query as { P_MEM_ID?: string };  
+    apiLogEntry = await Logger.logApiStart('GET /api/getWorkoutHistory', [P_MEM_ID]);
+    const workoutHistory = await getWorkoutHistory(P_MEM_ID);
+    res.json({
+      success: true,
+      data: workoutHistory,
+      timestamp: new Date().toISOString()
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+
 // API: 메뉴 검색
 // GET /api/search_menus?key=검색어
 // PARAMETER : key (필수) - 검색할 메뉴 제목 또는 설명
@@ -263,11 +329,11 @@ app.get('/api/search_menus', async (req, res) => {
       });
     }
     apiLogEntry = await Logger.logApiStart('GET /api/search_menus', [key]);
-    const menus = await searchSubMenus(key);
+    const data = await searchSubMenus(key);
     res.json({
       success: true,
-      data: menus,
-      count: menus.length,
+      data: data,
+      count: data.length,
       timestamp: new Date().toISOString()
     });
     await Logger.logApiSuccess(apiLogEntry);
@@ -319,53 +385,13 @@ app.get('/api/get_col_descs', async (req, res) => {
 //================================================================================================
 // 운동
 //================================================================================================
-app.get('/api/get_workout_details', async (req, res) => {
-  let apiLogEntry = null;
-  try {
-    const { memberId } = req.query as { memberId: string };
-    const { from } = req.query as { from: string };
-    const { to } = req.query as { to: string };
-    if (!memberId) {
-      return res.status(400).json({
-        success: false,
-        error: '회원 ID가 필요합니다.'
-      });
-    }
-    if (!from) {
-      return res.status(400).json({
-        success: false,
-        error: '시작일이 필요합니다.'
-      });
-    }
-    if (!to) {
-      return res.status(400).json({
-        success: false,
-        error: '종료일이 필요합니다.'
-      });
-    }     
-    apiLogEntry = await Logger.logApiStart('GET /api/get_workout_details', [memberId, from, to]);
-    const records = await getWorkoutDetails(memberId, from, to);
-    res.json({
-      success: true,
-      data: records,
-      count: records.length,
-      timestamp: new Date().toISOString()
-    });
-    await Logger.logApiSuccess(apiLogEntry);
-  } catch (error) {
-    await Logger.logApiError(apiLogEntry, error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message
-    });
-  }
-});
+
 // API: 전체 운동내역 일별 집계 조회
-// GET /api/get_workout_pivot?memberId=회원ID&from=시작일&to=종료일
+// GET /api/getWorkoutPivot?memberId=회원ID&from=시작일&to=종료일
 // PARAMETER : memberId (필수) - 조회할 회원 ID
 //             from (필수) - 조회 시작일 (YYYY-MM-DD)
 //             to (필수) - 조회 종료일 (YYYY-MM-DD)
-app.get('/api/get_workout_pivot', async (req, res) => {
+app.get('/api/getWorkoutPivot', async (req, res) => {
   let apiLogEntry = null;
   try {
     const { memberId } = req.query as { memberId: string };
@@ -455,86 +481,13 @@ app.get('/api/get_workout_pivot_with_plan', async (req, res) => {
 // API: 메뉴 위치조회 
 // GET /api/get_menu_pos?page=메뉴페이지명
 // PARAMETER : page (선택) - 조회할 메뉴 페이지명 
-app.get('/api/get_workout_history', async (req, res) => {
-  let apiLogEntry = null;  
-  try {
-    const { mem_join_id } = req.query as { mem_join_id?: string };  
-    apiLogEntry = await Logger.logApiStart('GET /api/get_workout_history', [mem_join_id]);
-    const workoutHistory = await getWorkoutHistory(mem_join_id);
-    res.json({
-      success: true,
-      data: workoutHistory,
-      timestamp: new Date().toISOString()
-    });
-    await Logger.logApiSuccess(apiLogEntry);
-  } catch (error) {
-    await Logger.logApiError(apiLogEntry, error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message
-    });
-  }
-});
-app.get('/api/get_workout_detail', async (req, res) => {
-  let apiLogEntry = null;
-  try {
-    const { wor_id } = req.query as { wor_id: string };
-    if (!wor_id) {
-      return res.status(400).json({
-        success: false,
-        error: '운동 기록 ID가 필요합니다.'
-      });
-    }
-    apiLogEntry = await Logger.logApiStart('GET /api/get_workout_detail', [wor_id]);
-    const records = await getWorkoutDetail(wor_id);
-    res.json({
-      success: true,
-      data: records,
-      count: records.length,
-      timestamp: new Date().toISOString()
-    });
-    await Logger.logApiSuccess(apiLogEntry);
-  } catch (error) {
-    await Logger.logApiError(apiLogEntry, error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message
-    });
-  }
-});
+
 //================================================================================================
 // 회원정보
 //================================================================================================
 // API: 회원 정보 조회
 // GET /api/get_member?memberId=회원ID
 // PARAMETER : memberId (필수) - 조회할 회원 ID
-app.get('/api/get_member', async (req, res) => {
-  let apiLogEntry = null;
-  try {
-    const { mem_join_id } = req.query as { mem_join_id: string };
-    if (!mem_join_id) {
-      return res.status(400).json({
-        success: false,
-        error: '회원 ID가 필요합니다.'
-      });
-    }
-
-    apiLogEntry = await Logger.logApiStart('GET /api/get_member', [mem_join_id]);
-    const member = await getMember(mem_join_id);
-    res.json({
-      success: true,
-      data: member,
-      timestamp: new Date().toISOString()
-    });
-    await Logger.logApiSuccess(apiLogEntry);
-  } catch (error) {
-    await Logger.logApiError(apiLogEntry, error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message
-    });
-  }
-});
 // API: 회원 정보 조회
 // POST /api/check_member
 // PARAMETER : memberId (필수) - 조회할 회원 ID

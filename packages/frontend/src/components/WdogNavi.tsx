@@ -20,13 +20,13 @@ export default function WdogNavi({ navItems }: WdogNaviProps) {
       <NavigationMenu>
         <NavigationMenuList>
           {navItems.map(nav => (
-            <NavigationMenuItem key={nav.nav_id}>
+            <NavigationMenuItem key={nav.NAV_ID}>
               <NavigationMenuTrigger className={`
                 text-xl 
                 transition-colors
                 ${navigationMenuTriggerStyle()}
               `}>
-                {nav.nav_name}
+                {nav.NAV_NAME}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-100 gap-3 p-1 md:w-125 md:grid-cols-2 lg:w-150 list-none">
@@ -37,16 +37,16 @@ export default function WdogNavi({ navItems }: WdogNaviProps) {
                         href="#"
                         onClick={e => e.preventDefault()}
                       >
-                        <img src={nav.nav_img} alt={nav.nav_name} width={300} height={400}  />
+                        <img src={nav.NAV_IMG} alt={nav.NAV_NAME} width={300} height={400}  />
                         <p className="text-primary text-sm leading-tight">
-                          {nav.nav_desc}
+                          {nav.NAV_DESC}
                         </p>
                       </a>
                     </NavigationMenuLink>
                   </li>
-                  {nav.sub_menus.map(sub => (
-                    <ListItem href={sub.nas_href} key={sub.nas_id} title={sub.nas_name}>
-                      {sub.nas_desc}
+                  {nav.NAV_SUB_MENUS.map(sub => (
+                    <ListItem href={sub.NAS_HREF} key={sub.NAS_ID} title={sub.NAS_NAME}>
+                      {sub.NAS_DESC}
                     </ListItem>
                   ))}
                 </ul>

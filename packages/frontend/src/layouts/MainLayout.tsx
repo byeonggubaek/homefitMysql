@@ -11,7 +11,7 @@ export default function MainLayout() {
   const isDarkMode = useDarkMode(); // 훅 호출
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   useEffect(() => {
-    fetch('http://localhost:3001/api/get_menus')
+    fetch('http://localhost:3001/api/getMenus')
       .then(res => res.json())
       .then(data => {
         setNavItems(data.data);  // 👈 바로 사용!

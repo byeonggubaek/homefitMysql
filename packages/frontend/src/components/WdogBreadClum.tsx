@@ -29,7 +29,7 @@ const WgodBreadcrumb = (
 {
   const [menuPos, setMenuPos] = useState<MenuPos>();
   useEffect(() => {
-    fetch(`http://localhost:3001/api/get_menu_pos?page=${page}`)
+    fetch(`http://localhost:3001/api/getMenuPos?page=${page}`)
       .then(res => res.json())
       .then(data => {
         setMenuPos(data.data);
@@ -45,22 +45,22 @@ const WgodBreadcrumb = (
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage >{menuPos?.nas_name}</BreadcrumbPage>
+            <BreadcrumbPage >{menuPos?.NAS_NAME}</BreadcrumbPage>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1 text-focus">
-                  {menuPos?.nas_name}
+                  {menuPos?.NAS_NAME}
                   <ChevronDownIcon className="size-3.5" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuGroup>
-                  {menuPos?.siblings.map((sib) => (
-                    <DropdownMenuItem key={sib.nas_id}>
-                      {sib.nas_id === menuPos.nas_id ? <span className="text-focus">{sib.nas_name}</span> : <Link to={sib.nas_href}>{sib.nas_name}</Link>}
+                  {menuPos?.NAS_SIBLINGS.map((sib) => (
+                    <DropdownMenuItem key={sib.NAS_ID}>
+                      {sib.NAS_ID === menuPos.NAS_ID ? <span className="text-focus">{sib.NAS_NAME}</span> : <Link to={sib.NAS_HREF}>{sib.NAS_NAME}</Link>}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuGroup>

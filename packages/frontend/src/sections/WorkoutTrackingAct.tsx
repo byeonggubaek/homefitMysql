@@ -9,61 +9,58 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Play } from "lucide-react"
+import { Hourglass, Play } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { WorkoutDetail } from "shared"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const WorkoutTrackingAct = () => {
-   const [workouts, setWorkout] = useState<WorkoutDetail[] | null>(null);
-   const [isLoading, setIsLoading] = useState(false);
-   const [intensity, setIntensity] = useState<"low" | "medium" | "high" | undefined>("medium");   
-   const workoutRecordId = 'WOR00001'; // 예시 운동 기록 ID
-   useEffect(() => {
-     // 운동정보 조회 
-     fetch(`http://localhost:3001/api/get_workout_detail?wor_id=${workoutRecordId}`)
-       .then(res => res.json())
-       .then(data => {
-         setWorkout(data.data); 
-         console.log("초기 운동 정보:", data.data); // 💡 초기 운동 정보 로그
-     });    
-   }, []);   
+  const [workouts, setWorkout] = useState<WorkoutDetail[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [intensity, setIntensity] = useState<"low" | "medium" | "high" | undefined>("medium");   
+  const P_WOR_ID = 'WOR00001'; // 예시 운동 기록 ID
+  useEffect(() => {
+    // 운동정보 조회 
+    fetch(`http://localhost:3001/api/getWorkoutDetails?P_WOR_ID=${P_WOR_ID}`)
+      .then(res => res.json())
+      .then(data => {
+        setWorkout(data.data); 
+    });    
+  }, []);   
   const handleAIRecommend = async () => {
     if (isLoading) return;
+    
+    setIsLoading(true);  // 로딩 시작!
     try {
-      setIsLoading(true);
-      console.log("AI 추천 요청 - 선택된 강도:", intensity); // 💡 AI 추천 요청 로그
-      fetch('http://localhost:3001/api/recommend-exercise', {
+      const response = await fetch('http://localhost:3001/api/recExercise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userProfile: { 
-            mem_join_id: 1, 
-            intensity: intensity
+            P_MEM_ID: 1, 
+            P_INTENSITY: intensity
           }
         })
-      })
-      .then(res => res.json())
-      .then(data => {
-          const formatted: WorkoutDetail[] = data.data.map((item: any) => ({
-            woo_id: item.woo_id,
-            woo_name: item.woo_name,
-            woo_guide: item.woo_guide || "AI가 추천한 운동입니다.",
-            wod_target_sets: item.wod_target_sets,
-            wod_target_reps: item.wod_target_reps,
-            woo_img: item.woo_img 
-          }));         
-          setWorkout(formatted); 
-          console.log("AI 추천 운동 정보:", formatted); // 💡 AI 추천 운동 정보 로그
-        });    
-
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      const formatted: WorkoutDetail[] = data.data.map((item: any) => ({
+        WOO_ID: item.WOO_ID,
+        WOO_NAME: item.WOO_NAME,
+        WOO_GUIDE: item.WOO_GUIDE || "AI가 추천한 운동입니다.",
+        WOO_IMG: item.WOO_IMG,
+        WOD_TARGET_SETS: item.WOD_TARGET_SETS,
+        WOD_TARGET_REPS: item.WOD_TARGET_REPS
+      })); 
+      setWorkout(formatted);
     } catch (error) {
-      console.error("추천 실패:", error);
+      console.error("❌ AI 추천 실패:", error);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false);  // 성공/실패 상관없이 로딩 종료
     }
   };
-
   return (
     <Card className="w-full">
       <CardHeader>
@@ -72,7 +69,10 @@ const WorkoutTrackingAct = () => {
           AI가 실시간으로 자세를 분석하고 피드백을 제공합니다
         </CardDescription>
         <CardAction>
-          <Button className="text-lg border-2 shadow-lg" onClick={handleAIRecommend}>{isLoading ? "추천 중..." : "AI추천"}</Button>          
+          <div className="flex items-center gap-4">
+            <Button className="text-lg border-2 shadow-lg" onClick={handleAIRecommend} disabled={isLoading}>AI추천</Button>    
+            {isLoading && <Hourglass className="size-6 animate-spin" />}  
+          </div> 
           <Select onValueChange={(value) => setIntensity(value as "low" | "medium" | "high")}>
                 <SelectTrigger className="w-full max-w-48">
                   <SelectValue placeholder="운동 강도 선택" />
@@ -95,7 +95,7 @@ const WorkoutTrackingAct = () => {
           </div>
           {workouts?.map((workout, index) => {
             return (
-              <Workout key={workout.woo_id ?? `workout-${index}`} workout={workout} index={index} />
+              <Workout key={workout.WOO_ID ?? `workout-${index}`} workout={workout} index={index} />
             )})}
         </div>
       </CardContent>
@@ -118,22 +118,22 @@ const Workout = ({ workout, index } : { workout: WorkoutDetail, index: number })
         </Badge>
         <div> 
             <div className="text-xl font-bold">
-              {workout.woo_name}
+              {workout.WOO_NAME}
             </div>
             <div className="text-primary"> 
-              {workout.woo_guide}
+              {workout.WOO_GUIDE}
             </div>
         </div>
         <div>
           <img 
-            src={workout.woo_img}  // 새 투명 PNG 사용
-            alt={workout.woo_name} 
+            src={workout.WOO_IMG}  // 새 투명 PNG 사용
+            alt={workout.WOO_NAME} 
             className="w-20 h-20 object-contain hover:animate-heartbeat hover:scale-140 hover:ring-4 hover:ring-emerald-400/50 transition-all duration-700 bg-linear-to-br rounded-xl" 
           />                  
         </div>  
       </div>
       <div className="text-2xl"> 
-        {workout.wod_target_reps}회&nbsp;{workout.wod_target_sets}세트  
+        {workout.WOD_TARGET_REPS}회&nbsp;{workout.WOD_TARGET_SETS}세트  
       </div>
     </div>
   );

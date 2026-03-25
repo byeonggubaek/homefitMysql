@@ -15,10 +15,10 @@ import type { WorkoutHistory } from "shared";
 
 const WorkoutTrackingHis = () => {
    const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistory[]>([]);
-   const mem_join_id = 1; // 예시 회원 ID
+   const P_MEM_ID = 1; // 예시 회원 ID
    useEffect(() => {
      // 그리드 데이터 
-     fetch(`http://localhost:3001/api/get_workout_history?mem_join_id=${mem_join_id}`)
+     fetch(`http://localhost:3001/api/getWorkoutHistory?P_MEM_ID=${P_MEM_ID}`)
        .then(res => res.json())
        .then(data => {
          setWorkoutHistory(data.data);  
@@ -42,8 +42,8 @@ const WorkoutTrackingHis = () => {
           {workoutHistory.map((workout, index) => (
             <StampItem
               key={index}
-              status={workout.status === 'G' ? 'good' : 'bad'}
-              date={workout.wo_dt}
+              status={workout.STATUS === 'G' ? 'good' : 'bad'}
+              date={workout.WO_DT}
             />
           ))}
         </div>  
