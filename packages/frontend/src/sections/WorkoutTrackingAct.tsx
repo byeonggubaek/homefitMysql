@@ -18,10 +18,10 @@ const WorkoutTrackingAct = () => {
   const [workouts, setWorkout] = useState<WorkoutDetail[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [intensity, setIntensity] = useState<"low" | "medium" | "high" | undefined>("medium");   
-  const P_WOR_ID = 'WOR00001'; // 예시 운동 기록 ID
+  const wor_id = 'WOR00001'; // 예시 운동 기록 ID
   useEffect(() => {
     // 운동정보 조회 
-    fetch(`http://localhost:3001/api/getWorkoutDetails?P_WOR_ID=${P_WOR_ID}`)
+    fetch(`http://localhost:3001/api/getWorkoutDetails?wor_id=${wor_id}`)
       .then(res => res.json())
       .then(data => {
         setWorkout(data.data); 
@@ -32,13 +32,13 @@ const WorkoutTrackingAct = () => {
     
     setIsLoading(true);  // 로딩 시작!
     try {
-      const response = await fetch('http://localhost:3001/api/recExercise', {
+      const response = await fetch('http://localhost:3001/api/ai/recExercise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userProfile: { 
-            P_MEM_ID: 1, 
-            P_INTENSITY: intensity
+            mem_id: 1, 
+            intensity: intensity
           }
         })
       });
@@ -51,8 +51,6 @@ const WorkoutTrackingAct = () => {
         WOO_NAME: item.WOO_NAME,
         WOO_GUIDE: item.WOO_GUIDE || "AI가 추천한 운동입니다.",
         WOO_IMG: item.WOO_IMG,
-        WOD_TARGET_SETS: item.WOD_TARGET_SETS,
-        WOD_TARGET_REPS: item.WOD_TARGET_REPS
       })); 
       setWorkout(formatted);
     } catch (error) {
@@ -69,23 +67,25 @@ const WorkoutTrackingAct = () => {
           AI가 실시간으로 자세를 분석하고 피드백을 제공합니다
         </CardDescription>
         <CardAction>
-          <div className="flex items-center gap-4">
-            <Button className="text-lg border-2 shadow-lg" onClick={handleAIRecommend} disabled={isLoading}>AI추천</Button>    
-            {isLoading && <Hourglass className="size-6 animate-spin" />}  
-          </div> 
-          <Select onValueChange={(value) => setIntensity(value as "low" | "medium" | "high")}>
-                <SelectTrigger className="w-full max-w-48">
-                  <SelectValue placeholder="운동 강도 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>운동 강도</SelectLabel>
-                    <SelectItem value="low">가볍게</SelectItem>
-                    <SelectItem value="medium">보통</SelectItem>
-                    <SelectItem value="high">강하게</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>          
+          <div className="flex items-end gap-4">
+            <div className="flex items-end gap-4">
+              {isLoading && <Hourglass className="size-6 animate-spin" />}              
+              <Button className="text-lg border-2 shadow-lg" onClick={handleAIRecommend} disabled={isLoading}>AI추천</Button>    
+            </div> 
+            <Select onValueChange={(value) => setIntensity(value as "low" | "medium" | "high")}>
+              <SelectTrigger className="w-full max-w-48">
+                <SelectValue placeholder="운동 강도 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>운동 강도</SelectLabel>
+                  <SelectItem value="low">가볍게</SelectItem>
+                  <SelectItem value="medium">보통</SelectItem>
+                  <SelectItem value="high">강하게</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>    
+          </div>      
         </CardAction>
       </CardHeader>
       <CardContent>

@@ -4,11 +4,14 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import 'passive-events-support';
 import './index.css'
+import { UserProvider } from '@/hooks/UserContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <UserProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </UserProvider>
   </React.StrictMode>,
 )

@@ -1,4 +1,4 @@
-import mysql, { Pool, PoolConnection, RowDataPacket } from 'mysql2/promise';
+import mysql, { PoolConnection, RowDataPacket } from 'mysql2/promise';
 import { NavItem, NavSubItem, ColDesc, WorkoutRecord, ChartData, MenuPos, WorkoutHistory, Member, WorkoutDetail, MemberExists, Workout } from 'shared';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
@@ -22,6 +22,7 @@ export async function initPool(): Promise<void> {
           database: process.env.MYSQL_DATABASE!,
           port: Number(process.env.MYSQL_PORT!) || 3306,
           waitForConnections: true,
+          multipleStatements: true,
           connectionLimit: 10,
           queueLimit: 0,
         });
@@ -60,7 +61,7 @@ export async function select<T extends RowDataPacket = RowDataPacket>(
   try {
     await initPool();
     logEntry = await Logger.logQueryStart(sql, binds);
-    const [rows] = await pool!.execute<T[]>(sql, binds);
+    const [rows] = await pool!.query<T[]>(sql, binds);
     await Logger.logQuerySuccess(logEntry, rows.length || 0);    
     return rows as T[];
   } catch (error: any) {
@@ -97,38 +98,6 @@ export async function withTransaction<T>(
     }
   }
 }
-
-/**
- * 쿼리 실행 (SELECT) - 수정됨!
- */
-// async function select(sql: string, binds: any[] = []): Promise<any[]> {
-//   let logEntry = null;
-//   try {
-//     // 1. 쿼리 시작 로그
-//     initPool();
-//     if (!pool) 
-//       throw new Error('DB 풀이 초기화되지 않았습니다.');
-//     logEntry = await Logger.logQueryStart(sql, binds);
-//     console.log('쿼리 실행:', sql, binds);    
-//     const [rows] = await pool.query(sql, binds);
-//     console.log('쿼리 결과:', rows);
-//     // 2. 성공 로그
-//     const rowCount = Array.isArray(rows) ? rows.length : 0;
-//     await Logger.logQuerySuccess(logEntry, rowCount)    
-//     return rows as any[];
-//   } catch (error) {
-//     console.log('쿼리 결과:', error); 
-//     // 3. 에러 로그
-//     await Logger.logQueryError(logEntry, error)
-//     throw error
-//   } 
-// }
-/**
- * 쿼리 실행 (PL/SQL) - 수정됨!
- */
-async function execPlsql(sql: string, binds: Record<string, any>, options: any = {}): Promise<any> {
-}
-
 /**
  * INSERT/UPDATE/DELETE (DML)
  */
@@ -220,33 +189,21 @@ JOIN 	T_MINOR_DESC C ON C.COD_ID = 'COD00003' AND C.MIN_ID = A.MEM_SEX
 WHERE A.MEM_ID = ?
 `, [P_MEM_ID]);
 }
-export const getMember = async (P_MEM_ID: string): Promise<Member> => {
-  const record = await _getMember(P_MEM_ID);
-  return record.length > 0 ? {
-    MEM_ID_ACT: record[0].MEM_ID_ACT,
-    MEM_NAME: record[0].MEM_NAME,
-    MEM_NICKNAME: record[0].MEM_NICKNAME,
-    MEM_IMG: record[0].MEM_IMG,
-    MEM_SEX: record[0].MEM_SEX,
-    MEM_AGE: record[0].MEM_AGE,
-    MEM_POINT: record[0].MEM_POINT,
-    MEM_EXP_POINT: record[0].MEM_EXP_POINT,
-    MEM_LVL: record[0].MEM_LVL,
-    MES_ID: record[0].MES_ID,
-    MES_NAME: record[0].MES_NAME
-  } : {
-    MEM_ID_ACT: '',
-    MEM_NAME: '',
-    MEM_NICKNAME: '',
-    MEM_IMG: '',
-    MEM_SEX: '',
-    MEM_AGE: 0,
-    MEM_POINT: 0,
-    MEM_EXP_POINT: 0,
-    MEM_LVL: 0,
-    MES_ID: '',
-    MES_NAME: ''    
-  };
+export const getMember = async (P_MEM_ID: string): Promise<Member[]> => {
+  const records = await _getMember(P_MEM_ID);
+  return records.length === 0 ? [] : [{
+    MEM_ID_ACT: records[0].MEM_ID_ACT,
+    MEM_NAME: records[0].MEM_NAME,
+    MEM_NICKNAME: records[0].MEM_NICKNAME,
+    MEM_IMG: records[0].MEM_IMG,
+    MEM_SEX: records[0].MEM_SEX,
+    MEM_AGE: records[0].MEM_AGE,
+    MEM_POINT: records[0].MEM_POINT,    
+    MEM_EXP_POINT: records[0].MEM_EXP_POINT,
+    MEM_LVL: records[0].MEM_LVL,
+    MES_ID: records[0].MES_ID,
+    MES_NAME: records[0].MES_NAME
+  }];
 }
 async function _getWorkoutDetails(P_WOR_ID: string = ''): Promise<any[]> {
   return select(`
@@ -264,14 +221,14 @@ async function _getWorkoutDetails(P_WOR_ID: string = ''): Promise<any[]> {
 }
 export const getWorkoutDetails = async (P_WOR_ID: string = ''): Promise<WorkoutDetail[]> => {
   const records = await _getWorkoutDetails(P_WOR_ID);
-  return records.map((rec: any) => ({
-    WOO_ID : rec.WOO_ID,
-    WOO_NAME : rec.WOO_NAME,
-    WOO_GUIDE : rec.WOO_GUIDE,
-    WOO_IMG : rec.WOO_IMG,
-    WOO_TARGET_UNIT : rec.WOO_TARGET_UNIT,
-    WOD_TARGET_REPS : rec.WOD_TARGET_REPS,
-    WOD_TARGET_SETS : rec.WOD_TARGET_SETS
+  return records.map((record: any) => ({
+    WOO_ID : record.WOO_ID,
+    WOO_NAME : record.WOO_NAME,
+    WOO_GUIDE : record.WOO_GUIDE,
+    WOO_IMG : record.WOO_IMG,
+    WOO_TARGET_UNIT : record.WOO_TARGET_UNIT,
+    WOD_TARGET_REPS : record.WOD_TARGET_REPS,
+    WOD_TARGET_SETS : record.WOD_TARGET_SETS
   }));
 }
 async function _getMenuPos(P_NAS_PAGE: string = ''): Promise<any[]> {
@@ -346,29 +303,17 @@ FROM	  T_WORKOUT
 }
 export const getWorkouts = async (): Promise<Workout[]> => {
   const records = await _getWorkouts();
-  return records.map((rec: any) => ({
-    WOO_ID : rec.WOO_ID,
-    WOO_NAME : rec.WOO_NAME,
-    WOO_GUIDE : rec.WOO_GUIDE,
-    WOO_IMG : rec.WOO_IMG,
-    WOO_TARGET_UNIT : rec.WOO_TARGET_UNIT,
-    WOO_TARGET_REPS : rec.WOO_TARGET_REPS,
-    WOO_TARGET_SETS : rec.WOO_TARGET_SETS
+  return records.map((record: any) => ({
+    WOO_ID : record.WOO_ID,
+    WOO_NAME : record.WOO_NAME,
+    WOO_GUIDE : record.WOO_GUIDE,
+    WOO_IMG : record.WOO_IMG,
+    WOO_TARGET_UNIT : record.WOO_TARGET_UNIT,
+    WOO_TARGET_REPS : record.WOO_TARGET_REPS,
+    WOO_TARGET_SETS : record.WOO_TARGET_SETS
   }));
 }
-
-
-
-
-
-
-
-
-
-
-
-
-async function _searchRawSubMenus(key: string = ''): Promise<any[]> {
+async function _searchMenus(key: string = ''): Promise<any[]> {
   if (!key?.trim() || key.trim().length < 2) {
     return [];  
   }
@@ -384,18 +329,70 @@ SELECT NAV_ID,
     OR NAS_DESC LIKE CONCAT('%', UPPER(?), '%')
  ORDER BY 
        NAV_ID,
-       NAS_ID;
+       NAS_ID
 `, [cleanKey, cleanKey]);
 }
-export const searchSubMenus = async (key: string = ''): Promise<NavSubItem[]> => {
-  const subMenus = await _searchRawSubMenus(key);
-  return subMenus.map((sub: any) => ({
-    NAS_ID: sub.NAS_ID,
-    NAS_NAME: sub.NAS_NAME,
-    NAS_HREF: sub.NAS_HREF,
-    NAS_DESC: sub.NAS_DESC
+export const searchMenus = async (key: string = ''): Promise<NavSubItem[]> => {
+  const records = await _searchMenus(key);
+  return records.map((record: any) => ({
+    NAS_ID: record.NAS_ID,
+    NAS_NAME: record.NAS_NAME,
+    NAS_HREF: record.NAS_HREF,
+    NAS_DESC: record.NAS_DESC
   }));
 }
+async function _isMember(P_MEM_ID_ACT: string): Promise<boolean> {
+  const result = await select(`
+SELECT  MEM_ID_ACT
+FROM    T_MEMBER A
+WHERE   MEM_ID_ACT = ?
+`, [P_MEM_ID_ACT]);
+  return result.length > 0;
+}
+async function _checkMember(P_MEM_ID_ACT: string, P_MEM_PASSWORD: string): Promise<Member[]> {
+  const records = await select(`
+  CALL member_login(?, ?)
+`, [P_MEM_ID_ACT, P_MEM_PASSWORD]);
+  return records[0].length === 0 ? [] : 
+    records[0].map((record: any) => ({
+      MEM_ID_ACT: record.MEM_ID_ACT,
+      MEM_NAME: record.MEM_NAME,
+      MEM_NICKNAME: record.MEM_NICKNAME,
+      MEM_IMG: record.MEM_IMG,
+      MEM_SEX: record.MEM_SEX,
+      MEM_AGE: record.MEM_AGE,
+      MEM_POINT: record.MEM_POINT,    
+      MEM_EXP_POINT: record.MEM_EXP_POINT,
+      MEM_LVL: record.MEM_LVL,
+      MES_ID: record.MES_ID,
+      MES_NAME: record.MES_NAME
+    }));
+}
+export const login = async (P_MEM_ID_ACT: string, P_MEM_PASSWORD: string): Promise<MemberExists> => {
+  const bool = await _isMember(P_MEM_ID_ACT);
+  if(!bool) {
+    return {
+      STATUS: "FAIL",  
+      ERROR: '회원정보가 존재하지 않습니다.'
+    };
+  }
+  const records = await _checkMember(P_MEM_ID_ACT, P_MEM_PASSWORD);
+  if(!records || records.length === 0) {
+    return {
+      STATUS: "FAIL",  
+      ERROR: '비밀번호가 올바르지 않습니다.',
+    };  
+  }
+  else {
+    return {
+      STATUS: "SUCCESS",
+      ERROR: '',
+      USER: records[0]
+    };
+  }
+} 
+
+
 // 2. 칼럼정의 조회 - 테이블명으로 칼럼정의 조회 (칼럼명은 소문자로 반환)
 async function _getColDescs(tableName: string): Promise<any[]> {
   return select(`
@@ -476,31 +473,7 @@ END;
 
 // 4. 회원 정보 조회 (예시)
 
-async function _isMember(memberId: string): Promise<boolean> {
-  const result = await select(`
-SELECT A.id
-FROM member A
-WHERE A.id = :1
-`, [memberId]);
-  return result.length > 0;
-}
-async function _checkMember(memberId: string, password: string): Promise<string> {
-  console.log('_checkMember:', memberId, password);
-  const binds = {
-    id: memberId,
-    password: password,
-    json: { dir: oracledb.BIND_OUT, type: oracledb.CLOB }
-  };
-  return execPlsql(`
-BEGIN
-  member_login(
-    :id,
-    :password,
-    :json
-  );
-END;
-`, binds);
-}
+
 
 // =================================================================================================================
 // DB에서 읽어들인 데이터를 객체 데이터로 변환하여 반환하는 함수들
@@ -566,25 +539,3 @@ export const getWorkoutPivotWithPlan = async (memberId: string, from: string, to
 // 10. 회원정보 조회
 
 // 12. 회원정보 검증
-export const checkMember = async (memberId: string, password: string): Promise<MemberExists> => {
-  console.log('_isMember:', memberId, password);
-  const bool = await _isMember(memberId);
-  if(!bool) {
-    return {
-      status: "FAIL",  
-      error: '회원정보가 존재하지 않습니다.'
-    };
-  }
-  console.log('_checkMember:', memberId);  
-  const status = await _checkMember(memberId, password);
-  if(status == "FAIL") {
-    return {
-      status: status,  
-      error: '비밀번호가 올바르지 않습니다.'
-    };
-  }
-  return {
-    status: status,
-    error: ''
-  };
-} 

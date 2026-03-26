@@ -2,45 +2,45 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field,  FieldGroup, FieldLabel, FieldLegend, FieldSeparator, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useUser } from '@/hooks/UserContext';
 import axios from 'axios';
 
 export default function MemberLoginMain() {
-  const [id, setId] = useState('');  // 👈 ID 상태 추가
-  const [password, setPassword] = useState('');
+  const { refetch } = useUser();  // ✅ 컴포넌트 최상단에서 호출  
+  const [mem_id_act, setMemIdAct] = useState('');  // 👈 ID 상태 추가
+  const [mem_password, setMemPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();  // 👈 폼 기본 제출 방지
     
-    if (!id || !password) {
+    if (!mem_id_act || !mem_password) {
       alert('아이디와 비밀번호를 모두 입력해주세요.');
       return;
     }
-
     setLoading(true);
-    try {
-      // 👇 Axios POST 호출
-      const response = await axios.post('http://localhost:3001/api/check_member', {
-        id,          
-        password
-      });
-      
+    await axios.post('http://localhost:3001/api/member/login', {
+      mem_id_act,          
+      mem_password
+    })
+    .then(async (response) => {
       if (response.data.success) {
         // 로그인 성공 처리 (리다이렉트, 토큰 저장 등)
+        await refetch();  // 헤더 즉시 업데이트
         window.location.href = '/';
-        localStorage.setItem("memberID", id);
       } else {
         localStorage.setItem("memberID", "");        
       }
-    } catch (error: any) {
+    })
+    .catch((error) => {
       console.error('로그인 오류:', error);
-    } finally {
+    })
+    .finally(() => {
       setLoading(false);
-    }
+    });
   };
-
   return (
     <div className="w-full relative z-10 flex items-start  justify-start">
       {/* 로고 */}
@@ -67,8 +67,9 @@ export default function MemberLoginMain() {
                     className=' bg-white'
                     id="checkout-id"
                     placeholder="예) homefit123@naver.com"
-                    value={id}
-                    onChange={(e) => setId(e.target.value)}
+                    autoComplete="new-password"
+                    value={mem_id_act}
+                    onChange={(e) => setMemIdAct(e.target.value)}
                     required
                   />
                 </Field>
@@ -79,9 +80,9 @@ export default function MemberLoginMain() {
                   id="checkout-password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="비밀번호 입력"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="on"
+                  value={mem_password}
+                  onChange={(e) => setMemPassword(e.target.value)}
                   required
                 />
                 {/* z-10으로 Input 위로 */}

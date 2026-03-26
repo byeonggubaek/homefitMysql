@@ -1,3 +1,5 @@
+import 'react';
+
 /*=======================================================================================================
   메뉴
 =======================================================================================================*/
@@ -51,6 +53,7 @@ export interface Member {
 export interface MemberExists {
     STATUS: string;
     ERROR: string;
+    USER?: Member;
 }
 /*=======================================================================================================
   홈 트레이닝 관련
@@ -88,8 +91,8 @@ export interface Workout {
   WOO_GUIDE: string;
   WOO_IMG: string;
   WOO_TARGET_UNIT: string;
-  WOD_TARGET_REPS: number;
-  WOD_TARGET_SETS: number;
+  WOO_TARGET_REPS: number;
+  WOO_TARGET_SETS: number;
 }
 /*=======================================================================================================
   메뉴 관련
@@ -128,3 +131,11 @@ export interface ShopLocation {
   CATEGORY: string;
   MATCH_SCORE: number; // 일치도 점수 (0-100)
 }
+
+declare module 'express-session' {
+  interface SessionData {
+    user: Member | null;
+    isLogined: boolean;
+  }
+}
+
