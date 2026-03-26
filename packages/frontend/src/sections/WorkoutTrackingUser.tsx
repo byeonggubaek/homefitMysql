@@ -14,10 +14,10 @@ import type { Member } from "shared";
 
 const WorkoutTrackingUser = () => {
    const [member, setMember] = useState<Member | null>(null);
-   const P_MEM_ID = 1; // 예시 회원 ID
+   const mem_id = 1; // 예시 회원 ID
    useEffect(() => {
      // 회원 정보 조회
-     fetch(`http://localhost:3001/api/getMember?P_MEM_ID=${P_MEM_ID}`)
+     fetch(`http://localhost:3001/api/getMember?mem_id=${mem_id}`)
        .then(res => res.json())
        .then(data => {
          setMember(data.data); 

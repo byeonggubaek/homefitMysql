@@ -4,7 +4,7 @@ import { Link, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import WdogNavi from '@/components/WdogNavi'
-import WdogMenuSearch from '@/components/WdogMenuSearch'
+import WdogAutoInput from '@/components/WdogAutoInput'
 import WdogAvatar from '@/components/WdogAvatar';
 
 export default function MainLayout() {
@@ -47,7 +47,7 @@ export default function MainLayout() {
             <WdogNavi navItems={navItems} /> 
           </div>
           <div className="w-1/6">
-            <WdogMenuSearch />
+            <WdogAutoInput />
           </div>
           <div className="w-5">
             <WdogAvatar memberID={memberID} />

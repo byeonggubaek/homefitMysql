@@ -8,10 +8,10 @@ BEGIN
     DECLARE l_stored_hash VARCHAR(256);
 
     -- 저장된 해시 조회
-    SELECT PASSWORD
+    SELECT MEM_PASSWORD
       INTO l_stored_hash
-      FROM MEMBER
-     WHERE mem_id_act = p_mem_id_act;
+      FROM T_MEMBER
+     WHERE MEM_ID_ACT = p_mem_id_act;
 
     -- 입력값 해싱 후 비교 (member_hash_password는 이미 MySQL에 만들어져 있다고 가정)
     IF l_stored_hash = member_hash_password(p_mem_id_act, p_mem_password) THEN

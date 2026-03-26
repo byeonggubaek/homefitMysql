@@ -1,13 +1,24 @@
-CREATE PROCEDURE `member_login`(
+CREATE DEFINER=`sc_25K_HI2_p2_2`@`%` PROCEDURE `member_login`(
     IN  p_mem_id_act    VARCHAR(50),
-    IN  p_mem_password 	VARCHAR(256),
-    OUT p_result   VARCHAR(20)
+    IN  p_mem_password 	VARCHAR(256)
 )
 BEGIN
-    -- member_verify_password()가 TINYINT(1) (0/1) 을 리턴한다고 가정
     IF member_verify_password(p_mem_id_act, p_mem_password) = 1 THEN
-        SET p_result := 'SUCCESS';
-    ELSE
-        SET p_result := 'FAIL';
+		  SELECT  A.MEM_ID,
+				  A.MEM_ID_ACT,
+				  A.MEM_NAME,
+				  A.MEM_NICKNAME,
+				  A.MEM_IMG,
+				  C.MIN_NAME MEM_SEX,
+				  A.MEM_AGE,
+				  A.MEM_POINT,
+				  A.MEM_EXP_POINT,
+				  A.MEM_LVL,
+				  A.MES_ID,
+				  B.MES_NAME 
+		  FROM	T_MEMBER A
+		  JOIN	T_MEMBERSHIP B ON B.MES_ID = A.MES_ID 
+		  JOIN 	T_MINOR_DESC C ON C.COD_ID = 'COD00003' AND C.MIN_ID = A.MEM_SEX
+		  WHERE A.MEM_ID_ACT = p_mem_id_act;
     END IF;
 END

@@ -31,7 +31,7 @@ export default function WdogAutoInput({
 
     setLoading(true)
     try {
-      fetch('http://localhost:3001/api/search_menus?key=' + encodeURIComponent(key))
+      fetch('http://localhost:3001/api/searchMenus?key=' + encodeURIComponent(key))
         .then(res => res.json())
         .then(data => {
           if(open === false) {
@@ -53,9 +53,9 @@ export default function WdogAutoInput({
 
   const navigate = useNavigate()  
   const handleSelect = useCallback((item: NavSubItem) => {
-    onValueChange?.(item.title, item)
+    onValueChange?.(item.NAS_NAME, item)
     setOpen(false)
-    navigate(item.href)
+    navigate(item.NAS_HREF)
   }, [navigate, onValueChange]) 
     
   const clearInput = () => {
@@ -120,7 +120,7 @@ export default function WdogAutoInput({
             <CommandGroup>
               {navItems.map((item) => (
                 <CommandItem
-                  key={item.id}
+                  key={item.NAS_ID}
                   onSelect={() => handleSelect(item)}
                   className="cursor-pointer px-4 py-2"
                 >
@@ -129,10 +129,10 @@ export default function WdogAutoInput({
                       <MoveRight className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0 w-56">
-                      <p className="font-medium truncate">{item.title}</p>
-                      {item.description && (
+                      <p className="font-medium truncate">{item.NAS_NAME}</p>
+                      {item.NAS_DESC && (
                         <p className="text-xs text-muted-foreground truncate">
-                          {item.description}
+                          {item.NAS_DESC}
                         </p>
                       )}
                     </div>
