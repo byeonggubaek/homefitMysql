@@ -10,6 +10,7 @@ import HistoryContent from "./pages/HistoryContent";
 import HistoryState from "./pages/HistoryState";
 import WorkoutTracking from "./pages/WorkoutTracking";
 import MemberLogin from "./pages/MemberLogin.tsx";
+import MemberLogout from "./pages/MemberLogout.tsx";
 
 function App() {
   return (
@@ -52,6 +53,10 @@ function App() {
       </Route>    
       <Route path="/member/login" element={<MainLayout />}>
         <Route index element={<MemberLogin />} />           {/* / */}
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Route>           
+      <Route path="/member/logout" element={<MainLayout />}>
+        <Route index element={<MemberLogout />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>           
     </Routes>

@@ -17,24 +17,6 @@ export default function MainLayout() {
         setNavItems(data.data);  // 👈 바로 사용!
       });
   }, []);
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      console.log('Storage 변경 감지:', e.key, e.newValue);
-      if (e.key === 'memberID') {
-        console.log('memberID 변경 감지:', e.newValue);
-        const newID = e.newValue;
-        if (newID) setMemberID(newID);
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-  const [memberID, setMemberID] = useState("");
-  // 1. 초기 로드
-  useEffect(() => {
-    console.log('초기 한번만 실행되야 되는데');
-    localStorage.setItem("memberID", ""); // 초기화
-  }, []);
   return (
     <div className="flex flex-col w-screen min-h-screen ">  
       {/* Header */}
@@ -50,7 +32,7 @@ export default function MainLayout() {
             <WdogAutoInput />
           </div>
           <div className="w-5">
-            <WdogAvatar memberID={memberID} />
+            <WdogAvatar/>
           </div>
         </nav>
       </header>

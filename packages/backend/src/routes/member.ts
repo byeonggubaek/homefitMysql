@@ -1,6 +1,8 @@
 import express from 'express';
 import Logger from '../logger.js'
-import { login } from '../db.js';
+import { getMember, login } from '../db.js';
+import jwt from 'jsonwebtoken';
+import { Member } from 'shared';
 
 const memberRouter = express.Router();
 memberRouter.post("/login", async (req, res) => {
@@ -8,18 +10,18 @@ memberRouter.post("/login", async (req, res) => {
   try {
     const { mem_id_act, mem_password } = req.body;  // 👈 자동 파싱    
     if (!mem_id_act) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         error: '회원 ID가 필요합니다.'
       });
     }
     if (!mem_password) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         error: '회원 비밀번호가 필요합니다.'
       });
     }
-    apiLogEntry = await Logger.logApiStart('POST /api/login', [mem_id_act]);
+    apiLogEntry = await Logger.logApiStart('POST /api/member/login', [mem_id_act]);
     const result = await login(mem_id_act, mem_password);
     if(result.STATUS === "FAIL") {
       await Logger.logApiError(apiLogEntry, result.ERROR);
@@ -29,13 +31,31 @@ memberRouter.post("/login", async (req, res) => {
       });
     }
     else {
+      req.session.user = result.USER;
+      req.session.isLogined = true;
+      const member : Member = result.USER as Member;
+      const token = jwt.sign(
+        {
+          mem_id: member.MEM_ID,
+          mem_id_act: member.MEM_ID_ACT,
+          mem_name: member.MEM_NAME,
+          mem_nickname: member.MEM_NICKNAME,
+          mem_img: member.MEM_IMG,
+          mem_sex: member.MEM_SEX,
+          mem_age: member.MEM_AGE,
+          mem_point: member.MEM_POINT,
+          mem_exp_point: member.MEM_EXP_POINT,
+          mem_lvl: member.MEM_LVL
+        },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '7d' } // 7일 유효
+      );
+      res.cookie('sessionID', token, { httpOnly: true });      
       res.json({
         success: true,
         data: result,
         timestamp: new Date().toISOString()
-      });
-      req.session.user = result.USER;
-      req.session.isLogined = true;
+      });      
       await Logger.logApiSuccess(apiLogEntry);
     }
   } catch (error) {
@@ -47,20 +67,82 @@ memberRouter.post("/login", async (req, res) => {
     });
   }
 });
-
-memberRouter.get('/me', (req, res) => {
+memberRouter.post("/logout", async (req, res) => {
+  let apiLogEntry = null;
   try {
-    console.log('세션 정보:', req.session.user);
+    apiLogEntry = await Logger.logApiStart('POST /api/member/logout', []);
+    // 1) 세션 제거 (express-session 기준)
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('세션 제거 오류:', err);
+        }
+      });
+    }
+    // 2) JWT 담긴 httpOnly 쿠키 삭제
+    res.clearCookie('sessionID', {
+      httpOnly: true,
+      secure: false,      // 운영환경: true + HTTPS
+      sameSite: 'lax',
+      path: '/',          // 생성할 때와 동일해야 함
+    });
+    // 3) 응답
+    return res.json({
+      success: true,
+      message: '로그아웃 완료',
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    console.error('로그아웃 처리 중 오류:', error);
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+
+memberRouter.get('/me', async (req, res) => {
+  let apiLogEntry = null;  
+  try {
+    apiLogEntry = await Logger.logApiStart('GET /api/member/me', []);
     if (req.session.user) {
       res.json(req.session.user);
-      console.log('세션 사용자 정보 반환:', req.session.user);
+      await Logger.logApiSuccess(apiLogEntry);
     } else {
+      await Logger.logApiError(apiLogEntry, "로그인 필요");
       res.status(401).json({ message: '로그인 필요' });
     }
   } catch (error) {
-    console.error('세션 조회 중 오류:', error);
+    await Logger.logApiError(apiLogEntry, error);
     res.status(500).json({ message: '서버 오류' });
   };
+});
+memberRouter.get('/getMember', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    const { mem_id } = req.query as { mem_id: string };
+    if (!mem_id) {
+      return res.status(400).json({
+        success: false,
+        error: '회원 ID가 필요합니다.'
+      });
+    }
+    apiLogEntry = await Logger.logApiStart('GET /api/member/getMember', [mem_id]);
+    const data = await getMember(mem_id);
+    res.json({
+      success: true,
+      data: data,
+      timestamp: new Date().toISOString()
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
 });
 
 export default memberRouter;

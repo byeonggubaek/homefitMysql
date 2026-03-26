@@ -9,6 +9,9 @@ dotenv.config();
 let pool: mysql.Pool | null = null;
 let poolPromise: Promise<mysql.Pool> | null = null;
 
+// =================================================================================================================
+// DB 커넥션 풀 관리 및 원시 쿼리 실행 함수들
+// =================================================================================================================
 // 1. 커넥션 풀 생성
 export async function initPool(): Promise<void> {
   if (pool) return;
@@ -38,7 +41,7 @@ export async function initPool(): Promise<void> {
   }
   pool = await poolPromise;
 }
-
+// 2. 커넥션 풀 종료
 export async function closePool(): Promise<void> {
   if (!pool) return;
   try {
@@ -51,7 +54,7 @@ export async function closePool(): Promise<void> {
     throw error;
   }
 }
-
+// 3. 원시 쿼리 실행 - SELECT (결과 반환)
 export async function select<T extends RowDataPacket = RowDataPacket>(
   sql: string, 
   binds: any[] = []
@@ -70,7 +73,7 @@ export async function select<T extends RowDataPacket = RowDataPacket>(
   }
 }
 
-// 2. 트랜잭션 래퍼 유틸
+// 4. 원시 쿼리 실행 - DML (INSERT/UPDATE/DELETE)
 export async function withTransaction<T>(
   handler: (conn: PoolConnection) => Promise<T>,
 ): Promise<T> {
@@ -98,27 +101,8 @@ export async function withTransaction<T>(
     }
   }
 }
-/**
- * INSERT/UPDATE/DELETE (DML)
- */
-async function execute(conn: PoolConnection | null = null, sql: string, bind: any[] = []): Promise<any> {
-  // 1. 쿼리 시작 로그
-  try {  
-    if (!pool) 
-      throw new Error('DB 풀이 초기화되지 않았습니다.');
-    const logEntry = await Logger.logQueryStart(sql, bind);
-    await (conn ? conn.query(sql, bind) : pool.query(sql, bind));
-    await Logger.logQuerySuccess(logEntry, 0);    
-  }
-  catch (error) {
-    // 2. 에러 로그
-    await Logger.logQueryError(null, error)
-    throw error
-  }
-}
-
 // =================================================================================================================
-// DB에서 데이터를 조회하여 반환하는 함수들 (원시 데이터 조회)
+// DB에서 읽어들인 데이터를 객체 데이터로 변환하여 반환하는 함수들
 // =================================================================================================================
 // 1. 메뉴 조회 - 메뉴와 서브메뉴를 각각 조회한 후, 자바스크립트에서 조합하여 반환
 async function _getSubMenus(P_NAV_ID: string = ''): Promise<any[]> {
@@ -170,70 +154,6 @@ export const getMenus = async (): Promise<NavItem[]> => {
   );
   return menus;
 }
-async function _getMember(P_MEM_ID: string): Promise<any> {
-  return select(`
-SELECT A.MEM_ID_ACT,
-       A.MEM_NAME,
-       A.MEM_NICKNAME,
-       A.MEM_IMG,
-       C.MIN_NAME AS MEM_SEX,
-       A.MEM_AGE,
-       A.MEM_POINT,
-       A.MEM_EXP_POINT,
-       A.MEM_LVL,
-       A.MES_ID,
-       B.MES_NAME
-FROM T_MEMBER A
-JOIN T_MEMBERSHIP B 
-    ON B.MES_ID = A.MES_ID
-JOIN T_MINOR_DESC C 
-    ON C.COD_ID = 'COD00003' 
-    AND C.MIN_ID = A.MEM_SEX
-WHERE A.MEM_ID = ?
-`, [P_MEM_ID]);
-}
-export const getMember = async (P_MEM_ID: string): Promise<Member[]> => {
-  const records = await _getMember(P_MEM_ID);
-  return records.length === 0 ? [] : [{
-    MEM_ID_ACT: records[0].MEM_ID_ACT,
-    MEM_NAME: records[0].MEM_NAME,
-    MEM_NICKNAME: records[0].MEM_NICKNAME,
-    MEM_IMG: records[0].MEM_IMG,
-    MEM_SEX: records[0].MEM_SEX,
-    MEM_AGE: records[0].MEM_AGE,
-    MEM_POINT: records[0].MEM_POINT,    
-    MEM_EXP_POINT: records[0].MEM_EXP_POINT,
-    MEM_LVL: records[0].MEM_LVL,
-    MES_ID: records[0].MES_ID,
-    MES_NAME: records[0].MES_NAME
-  }];
-}
-async function _getWorkoutDetails(P_WOR_ID: string = ''): Promise<any[]> {
-  return select(`
-    SELECT  B.WOO_ID, 
-            B.WOO_NAME, 
-            B.WOO_GUIDE, 
-            B.WOO_IMG, 
-            B.WOO_TARGET_UNIT,
-            A.WOD_TARGET_REPS,
-            A.WOD_TARGET_SETS
-    FROM    T_WORKOUT_DETAIL A
-    JOIN    T_WORKOUT B ON B.WOO_ID = A.WOO_ID
-    WHERE   A.WOR_ID = ?
-    `, [P_WOR_ID]);
-}
-export const getWorkoutDetails = async (P_WOR_ID: string = ''): Promise<WorkoutDetail[]> => {
-  const records = await _getWorkoutDetails(P_WOR_ID);
-  return records.map((record: any) => ({
-    WOO_ID : record.WOO_ID,
-    WOO_NAME : record.WOO_NAME,
-    WOO_GUIDE : record.WOO_GUIDE,
-    WOO_IMG : record.WOO_IMG,
-    WOO_TARGET_UNIT : record.WOO_TARGET_UNIT,
-    WOD_TARGET_REPS : record.WOD_TARGET_REPS,
-    WOD_TARGET_SETS : record.WOD_TARGET_SETS
-  }));
-}
 async function _getMenuPos(P_NAS_PAGE: string = ''): Promise<any[]> {
   return select(`
 SELECT JSON_OBJECT(
@@ -267,68 +187,7 @@ export const getMenuPos = async (P_NAS_PAGE: string = ''): Promise<any> => {
   const result = await _getMenuPos(P_NAS_PAGE);
   return result.length > 0 ? result[0].RESULT : null;
 }
-async function _getWorkoutHistory(P_MEM_ID: string = ''): Promise<any> {
-  return select(`
-WITH RECURSIVE DATE_RANGE AS (
-    SELECT CURDATE() - INTERVAL 7 DAY AS DATE_VAL
-    UNION ALL
-    SELECT DATE_VAL + INTERVAL 1 DAY
-    FROM DATE_RANGE
-    WHERE DATE_VAL + INTERVAL 1 DAY <= CURDATE()
-)
-SELECT JSON_ARRAYAGG(
-            JSON_OBJECT(
-                'WO_DT', A.DATE_VAL,
-                'STATUS', CASE WHEN B.WOR_DT IS NOT NULL THEN 'G' ELSE 'B' END
-            )
-        ) AS RESULT
-FROM DATE_RANGE A
-LEFT JOIN T_WORKOUT_RECORD B
-ON B.WOR_DT = A.DATE_VAL
-AND B.MEM_ID = ?
-`, [P_MEM_ID]);
-}
-export const getWorkoutHistory = async (P_MEM_ID: string = ''): Promise<any> => {
-  const result = await _getWorkoutHistory(P_MEM_ID);
-  return result.length > 0 ? result[0].RESULT : null;
-}
-async function _getWorkouts(): Promise<any> {
-  return select(`
-SELECT	WOO_ID, 
-		    WOO_NAME, 
-        WOO_IMG,
-        WOO_GUIDE,
-        WOO_TARGET_UNIT,
-        WOO_TARGET_REPS,
-        WOO_TARGET_SETS
-FROM	  T_WORKOUT
-`, []);
-}
-export const getWorkouts = async (): Promise<Workout[]> => {
-  const records = await _getWorkouts();
-  return records.map((record: any) => ({
-    WOO_ID : record.WOO_ID,
-    WOO_NAME : record.WOO_NAME,
-    WOO_GUIDE : record.WOO_GUIDE,
-    WOO_IMG : record.WOO_IMG,
-    WOO_TARGET_UNIT : record.WOO_TARGET_UNIT,
-    WOO_TARGET_REPS : record.WOO_TARGET_REPS,
-    WOO_TARGET_SETS : record.WOO_TARGET_SETS
-  }));
-}
-
-
-
-
-
-
-
-
-
-
-
-
-async function _searchRawSubMenus(key: string = ''): Promise<any[]> {
+async function _searchMenus(key: string = ''): Promise<any[]> {
   if (!key?.trim() || key.trim().length < 2) {
     return [];  
   }
@@ -356,6 +215,123 @@ export const searchMenus = async (key: string = ''): Promise<NavSubItem[]> => {
     NAS_DESC: record.NAS_DESC
   }));
 }
+
+async function _getMember(P_MEM_ID: string): Promise<any> {
+  return select(`
+SELECT A.MEM_ID,
+       A.MEM_ID_ACT,
+       A.MEM_NAME,
+       A.MEM_NICKNAME,
+       A.MEM_IMG,
+       C.MIN_NAME AS MEM_SEX,
+       A.MEM_AGE,
+       A.MEM_POINT,
+       A.MEM_EXP_POINT,
+       A.MEM_LVL,
+       A.MES_ID,
+       B.MES_NAME
+FROM T_MEMBER A
+JOIN T_MEMBERSHIP B 
+    ON B.MES_ID = A.MES_ID
+JOIN T_MINOR_DESC C 
+    ON C.COD_ID = 'COD00003' 
+    AND C.MIN_ID = A.MEM_SEX
+WHERE A.MEM_ID = ?
+`, [P_MEM_ID]);
+}
+export const getMember = async (P_MEM_ID: string): Promise<Member[]> => {
+  const records = await _getMember(P_MEM_ID);
+  return records.length === 0 ? [] : [{
+    MEM_ID: records[0].MEM_ID,
+    MEM_ID_ACT: records[0].MEM_ID_ACT,
+    MEM_NAME: records[0].MEM_NAME,
+    MEM_NICKNAME: records[0].MEM_NICKNAME,
+    MEM_IMG: records[0].MEM_IMG,
+    MEM_SEX: records[0].MEM_SEX,
+    MEM_AGE: records[0].MEM_AGE,
+    MEM_POINT: records[0].MEM_POINT,    
+    MEM_EXP_POINT: records[0].MEM_EXP_POINT,
+    MEM_LVL: records[0].MEM_LVL,
+    MES_ID: records[0].MES_ID,
+    MES_NAME: records[0].MES_NAME
+  }];
+}
+async function _getWorkoutHistory(P_MEM_ID: string = ''): Promise<any> {
+  return select(`
+WITH RECURSIVE DATE_RANGE AS (
+    SELECT CURDATE() - INTERVAL 7 DAY AS DATE_VAL
+    UNION ALL
+    SELECT DATE_VAL + INTERVAL 1 DAY
+    FROM DATE_RANGE
+    WHERE DATE_VAL + INTERVAL 1 DAY <= CURDATE()
+)
+SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'WO_DT', A.DATE_VAL,
+                'STATUS', CASE WHEN B.WOR_DT IS NOT NULL THEN 'G' ELSE 'B' END
+            )
+        ) AS RESULT
+FROM DATE_RANGE A
+LEFT JOIN T_WORKOUT_RECORD B
+ON B.WOR_DT = A.DATE_VAL
+AND B.MEM_ID = ?
+`, [P_MEM_ID]);
+}
+export const getWorkoutHistory = async (P_MEM_ID: string = ''): Promise<any> => {
+  const result = await _getWorkoutHistory(P_MEM_ID);
+  return result.length > 0 ? result[0].RESULT : null;
+}
+async function _getWorkoutDetails(P_WOR_ID: string = ''): Promise<any[]> {
+  return select(`
+    SELECT  B.WOO_ID, 
+            B.WOO_NAME, 
+            B.WOO_IMG, 
+            B.WOO_UNIT,
+            COALESCE(NULLIF(A.WOD_GUIDE, ''), B.WOO_GUIDE) AS WOD_GUIDE,
+            A.WOD_TARGET_REPS,
+            A.WOD_TARGET_SETS
+    FROM    T_WORKOUT_DETAIL A
+    JOIN    T_WORKOUT B ON B.WOO_ID = A.WOO_ID
+    WHERE   A.WOR_ID = ?
+    `, [P_WOR_ID]);
+}
+export const getWorkoutDetails = async (P_WOR_ID: string = ''): Promise<WorkoutDetail[]> => {
+  const records = await _getWorkoutDetails(P_WOR_ID);
+  return records.map((record: any) => ({
+    WOO_ID : record.WOO_ID,
+    WOO_NAME : record.WOO_NAME,
+    WOO_IMG : record.WOO_IMG,
+    WOO_UNIT : record.WOO_UNIT,
+    WOD_GUIDE : record.WOD_GUIDE,
+    WOD_TARGET_REPS : record.WOD_TARGET_REPS,
+    WOD_TARGET_SETS : record.WOD_TARGET_SETS
+  }));
+}
+async function _getWorkouts(): Promise<any> {
+  return select(`
+SELECT	WOO_ID, 
+		    WOO_NAME, 
+        WOO_IMG,
+        WOO_GUIDE,
+        WOO_UNIT,
+        WOO_TARGET_REPS,
+        WOO_TARGET_SETS
+FROM	  T_WORKOUT
+`, []);
+}
+export const getWorkouts = async (): Promise<Workout[]> => {
+  const records = await _getWorkouts();
+  return records.map((record: any) => ({
+    WOO_ID : record.WOO_ID,
+    WOO_NAME : record.WOO_NAME,
+    WOO_GUIDE : record.WOO_GUIDE,
+    WOO_IMG : record.WOO_IMG,
+    WOO_UNIT : record.WOO_UNIT,
+    WOO_TARGET_REPS : record.WOO_TARGET_REPS,
+    WOO_TARGET_SETS : record.WOO_TARGET_SETS
+  }));
+}
+
 async function _isMember(P_MEM_ID_ACT: string): Promise<boolean> {
   const result = await select(`
 SELECT  MEM_ID_ACT
@@ -406,6 +382,12 @@ export const login = async (P_MEM_ID_ACT: string, P_MEM_PASSWORD: string): Promi
     };
   }
 } 
+
+
+// =================================================================================================================
+// 오라클 버전 
+// =================================================================================================================
+
 
 
 // 2. 칼럼정의 조회 - 테이블명으로 칼럼정의 조회 (칼럼명은 소문자로 반환)

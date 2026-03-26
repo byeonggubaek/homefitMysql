@@ -7,9 +7,11 @@ const WdogAvatar = () => {
   const { member, loading } = useUser();  // Context에서 공유
 
   const handleAvatarClick = () => {
-    console.log("로그인상태", member, loading);
     if (!loading && !member) {
       navigate('/member/login');
+    }
+    else {
+      navigate('/member/logout');
     }
   };
   // 로그인 상태: 세션 member로 Avatar 표시
@@ -21,7 +23,7 @@ const WdogAvatar = () => {
       <AvatarImage
         src={member?.MEM_IMG}
         alt={member?.MEM_NAME}
-        className={member?.MES_ID === "MES00001" ? "grayscale" : ""}
+        className={member?.MEM_ID === "MES00001" ? "grayscale" : ""}
       />
       <AvatarFallback>{member?.MEM_NAME?.slice(0, 2) || 'U'}</AvatarFallback>
     </Avatar>

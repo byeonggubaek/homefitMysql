@@ -18,7 +18,7 @@ const WorkoutTrackingHis = () => {
    const P_MEM_ID = 1; // 예시 회원 ID
    useEffect(() => {
      // 그리드 데이터 
-     fetch(`http://localhost:3001/api/getWorkoutHistory?P_MEM_ID=${P_MEM_ID}`)
+     fetch(`http://localhost:3001/api/workout/getWorkoutHistory?P_MEM_ID=${P_MEM_ID}`)
        .then(res => res.json())
        .then(data => {
          setWorkoutHistory(data.data);  

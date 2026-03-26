@@ -8,9 +8,10 @@ export const useUserSession = () => {
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/user/me', { credentials: 'include' });
+      const res = await fetch('http://localhost:3001/api/member/me', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
+        console.log('현재 로그인된 사용자 정보:', data);
         setMember(data);
       } else {
         setMember(null);

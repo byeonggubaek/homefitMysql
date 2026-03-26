@@ -4,10 +4,12 @@ import { Field,  FieldGroup, FieldLabel, FieldLegend, FieldSeparator, FieldSet }
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { useUser } from '@/hooks/UserContext';
+import { useNavigate } from 'react-router-dom'; // 1. import 추가
 import axios from 'axios';
 
 export default function MemberLoginMain() {
-  const { refetch } = useUser();  // ✅ 컴포넌트 최상단에서 호출  
+  const { refetch } = useUser();  // 
+  const navigate = useNavigate();  // 👈 navigate 함수 생성
   const [mem_id_act, setMemIdAct] = useState('');  // 👈 ID 상태 추가
   const [mem_password, setMemPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,15 +23,19 @@ export default function MemberLoginMain() {
       return;
     }
     setLoading(true);
-    await axios.post('http://localhost:3001/api/member/login', {
-      mem_id_act,          
-      mem_password
-    })
+    await axios.post('http://localhost:3001/api/member/login',
+      {
+        mem_id_act,          
+        mem_password
+      }, 
+      { 
+        withCredentials: true // 👈 세션 쿠키를 브라우저에 저장하기 위해 반드시 필요!
+      }
+    )
     .then(async (response) => {
       if (response.data.success) {
-        // 로그인 성공 처리 (리다이렉트, 토큰 저장 등)
         await refetch();  // 헤더 즉시 업데이트
-        window.location.href = '/';
+        navigate('/workout/tracking');
       } else {
         localStorage.setItem("memberID", "");        
       }

@@ -8,28 +8,18 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator";
 import { UserRoundPlus  } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import type { Member } from "shared";
+import { useUser } from '@/hooks/UserContext';
 
 const WorkoutTrackingUser = () => {
-   const [member, setMember] = useState<Member | null>(null);
-   const mem_id = 1; // 예시 회원 ID
-   useEffect(() => {
-     // 회원 정보 조회
-     fetch(`http://localhost:3001/api/getMember?mem_id=${mem_id}`)
-       .then(res => res.json())
-       .then(data => {
-         setMember(data.data); 
-     });    
-   }, []);    
+  const { member } = useUser();  // Context에서 공유
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-3xl text-primary">회원정보 : {member?.MEM_NAME} <span className="text-primary">Lvl</span> </CardTitle>
+        <CardTitle className="text-2xl text-primary">회원정보 : {member?.MEM_NAME} <span className="text-primary">Lvl</span> </CardTitle>
         <CardAction className="flex items-center gap-2">
-          {member?.MES_ID === 'MES00001' && <><UserRoundPlus /><Link className="text-md text-focus" to="/member/register">회원가입</Link> </>}
+          {member?.MES_ID !== 'MES00001' && <><UserRoundPlus /><Link className="text-md text-focus" to="/member/register">회원가입</Link></>}
         </CardAction>      
       </CardHeader>
       <CardContent>

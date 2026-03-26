@@ -41,9 +41,6 @@ export async function closePool() {
         throw error;
     }
 }
-/**
- * 쿼리 실행 (SELECT) - 수정됨!
- */
 async function select(sql, binds = []) {
     let logEntry = null;
     let connection = null;
@@ -69,9 +66,6 @@ async function select(sql, binds = []) {
             await connection.close();
     }
 }
-/**
- * INSERT/UPDATE/DELETE (DML)
- */
 async function execute(sql, binds = []) {
     let logEntry = null;
     let connection = null;

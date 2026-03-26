@@ -118,9 +118,9 @@ export default function WdogAutoInput({
             </CommandEmpty>
             
             <CommandGroup>
-              {navItems.map((item) => (
+              {navItems.map((item, index) => (
                 <CommandItem
-                  key={item.NAS_ID}
+                  key={item.NAS_ID + '-' + index}
                   onSelect={() => handleSelect(item)}
                   className="cursor-pointer px-4 py-2"
                 >

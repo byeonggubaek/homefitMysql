@@ -38,6 +38,7 @@ export interface ColDesc {
   회원정보
 =======================================================================================================*/
 export interface Member {
+    MEM_ID: string;
     MEM_ID_ACT: string;
     MEM_NAME: string;
     MEM_NICKNAME: string;
@@ -79,18 +80,18 @@ export interface WorkoutHistory {
 export interface WorkoutDetail {
   WOO_ID: string;
   WOO_NAME: string;
-  WOO_GUIDE: string;
   WOO_IMG: string;
-  WOO_TARGET_UNIT: string;
+  WOO_UNIT: string;
+  WOD_GUIDE: string;
   WOD_TARGET_REPS: number;
   WOD_TARGET_SETS: number;
 }
 export interface Workout {
   WOO_ID: string;
   WOO_NAME: string;
-  WOO_GUIDE: string;
   WOO_IMG: string;
-  WOO_TARGET_UNIT: string;
+  WOO_UNIT: string;
+  WOO_GUIDE: string;
   WOO_TARGET_REPS: number;
   WOO_TARGET_SETS: number;
 }

@@ -69,6 +69,8 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0003', '운동목표','/menu/plan.jpg', '운동 목표를 설정하고 관리합니다.', 'MemberPlan', '/member/plan');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0004', '로그인','/menu/login.png', '로그인합니다..', 'MemberLogin', '/member/login');
+INSERT INTO T_NAV_SUB_ITEM VALUES
+('NAV00004', 'S0005', '로그아웃','/menu/logout.png', '로그아웃합니다..', 'MemberLogout', '/member/logout');
 
 SELECT * FROM T_NAV_SUB_ITEM;
 --------------------------------------------------------------------------------------------------------------------------------
@@ -168,6 +170,7 @@ DROP TABLE IF EXISTS T_REWARD;
 DROP TABLE IF EXISTS T_MEMBERSHIP_BENIFIT;
 DROP TABLE IF EXISTS T_MEMBERSHIP;
 DROP TABLE IF EXISTS T_BENIFIT;
+DROP TABLE IF EXISTS T_GOODS;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 혜택
 --------------------------------------------------------------------------------------------------------------------------------
@@ -280,7 +283,7 @@ CREATE TABLE T_MEMBER
 INSERT INTO T_MEMBER 
 (MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
 VALUES
-('oranjes@naver.com', '백병구', '쥐', member_hash_password('oranjes@naver.com', '1234'), '/member/U000001.jpg','M', 52, 0, 0, 1, 'MES00001');
+('oranjes@naver.com', '백병구', '쥐', member_hash_password('oranjes@naver.com', '1234'), '/member/U000001.jpg','M', 52, 0, 0, 1, 'MES00002');
 INSERT INTO T_MEMBER 
 (MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
 VALUES
@@ -304,7 +307,7 @@ CREATE TABLE T_WORKOUT
     WOO_IMG     	VARCHAR(256)  	NULL COMMENT '운동 이미지 경로',
     WOO_DESC		VARCHAR(512)  	NULL COMMENT '운동 설명',
     WOO_GUIDE   	VARCHAR(512)	NULL COMMENT '운동 가이드',
-    WOO_TARGET_UNIT	VARCHAR(10)     NOT NULL COMMENT '권장 단위',
+    WOO_UNIT		VARCHAR(10)     NOT NULL COMMENT '권장 단위',
     WOO_TARGET_REPS	INT        		NOT NULL DEFAULT 0 COMMENT '권장 수 기본값',
     WOO_TARGET_SETS	INT        		NOT NULL DEFAULT 0 COMMENT '권장 세트수 기본값',    
     CONSTRAINT T_WORKOUT_PK PRIMARY KEY (WOO_ID)
@@ -313,7 +316,7 @@ CREATE TABLE T_WORKOUT
 INSERT INTO T_WORKOUT VALUES
 ('WOO00001', '프랭크', '/workout/plank.png',
  '코어 근육(복근, 허리, 등)을 강화하는 운동으로, 몸을 널빤지처럼 일직선으로 유지하는 동작입니다.',
- '30초 동안 자세 유지하기', '초', 5, 2);
+ '30초 동안 자세 유지하기', '초', 30, 2);
 INSERT INTO T_WORKOUT VALUES
 ('WOO00002', '스쿼트', '/workout/squat.png',
  '하체 근육(허벅지, 엉덩이)을 강화하는 운동으로, 무릎과 엉덩이를 굽히고 펴는 동작입니다.',
@@ -356,33 +359,34 @@ SELECT * FROM T_WORKOUT_RECORD;
 --------------------------------------------------------------------------------------------------------------------------------
 CREATE TABLE T_WORKOUT_DETAIL 
 (
-    WOR_ID 				VARCHAR(8)	NOT NULL COMMENT '운동기록 ID',
-    WOO_ID 				VARCHAR(8)	NOT NULL COMMENT '운동 ID',
-    WOD_TARGET_REPS     INT        	NOT NULL DEFAULT 0 COMMENT '권장 횟수',
-    WOD_TARGET_SETS     INT        	NOT NULL DEFAULT 0 COMMENT '권장 세트수',
-    WOD_COUNT           INT        	NOT NULL DEFAULT 0 COMMENT '실제 실행 횟수',
-    WOD_POINT           INT        	NOT NULL DEFAULT 0 COMMENT '획득 포인트',
-	WOD_ACCURACY    	INT      	NOT NULL DEFAULT 0 COMMENT '운동 정확도',
-    WOD_TIME			INT 		NOT NULL DEFAULT 0 COMMENT '운동시간(분)',
+    WOR_ID 				VARCHAR(8)		NOT NULL COMMENT '운동기록 ID',
+    WOO_ID 				VARCHAR(8)		NOT NULL COMMENT '운동 ID',
+    WOD_GUIDE   		VARCHAR(512)	NULL COMMENT '운동 가이드',
+    WOD_TARGET_REPS     INT        		NOT NULL DEFAULT 0 COMMENT '권장 횟수',
+    WOD_TARGET_SETS     INT        		NOT NULL DEFAULT 0 COMMENT '권장 세트수',
+    WOD_COUNT           INT        		NOT NULL DEFAULT 0 COMMENT '실제 실행 횟수',
+    WOD_POINT           INT        		NOT NULL DEFAULT 0 COMMENT '획득 포인트',
+	WOD_ACCURACY    	INT      		NOT NULL DEFAULT 0 COMMENT '운동 정확도',
+    WOD_TIME			INT 			NOT NULL DEFAULT 0 COMMENT '운동시간(분)',
     CONSTRAINT T_WORKOUT_DETAIL_PK PRIMARY KEY (WOR_ID, WOO_ID), 
     CONSTRAINT T_WORKOUT_DETAIL_WOR_ID_FK FOREIGN KEY (WOR_ID) REFERENCES T_WORKOUT_RECORD(WOR_ID),
     CONSTRAINT T_WORKOUT_DETAIL_WOO_ID_FK FOREIGN KEY (WOO_ID) REFERENCES T_WORKOUT(WOO_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO T_WORKOUT_DETAIL VALUES
-('WOR00001', 'WOO00001', 15, 3, 45, 450, 95, 20);
+('WOR00001', 'WOO00001', '', 30, 3, 45, 450, 95, 20);
 INSERT INTO T_WORKOUT_DETAIL VALUES
-('WOR00001', 'WOO00002', 30, 2, 60, 600, 92, 20);
+('WOR00001', 'WOO00002', '', 30, 2, 60, 600, 92, 20);
 INSERT INTO T_WORKOUT_DETAIL VALUES
-('WOR00001', 'WOO00003', 20, 3, 55, 0, 0, 0);
+('WOR00001', 'WOO00003', '', 20, 3, 55, 0, 0, 0);
 INSERT INTO T_WORKOUT_DETAIL VALUES
-('WOR00002', 'WOO00001', 15, 3, 30, 300, 88, 10);
+('WOR00002', 'WOO00001', '', 15, 3, 30, 300, 88, 10);
 INSERT INTO T_WORKOUT_DETAIL VALUES
-('WOR00003', 'WOO00001', 15, 3, 45, 0, 0, 0);
+('WOR00003', 'WOO00001', '', 15, 3, 45, 0, 0, 0);
 INSERT INTO T_WORKOUT_DETAIL VALUES
-('WOR00003', 'WOO00002', 30, 2, 60, 0, 0, 0);
+('WOR00003', 'WOO00002', '', 30, 2, 60, 0, 0, 0);
 INSERT INTO T_WORKOUT_DETAIL VALUES
-('WOR00004', 'WOO00001', 15, 3, 45, 450, 95, 10);
+('WOR00004', 'WOO00001', '', 15, 3, 45, 450, 95, 10);
 
 SELECT * FROM T_WORKOUT_DETAIL;
 --------------------------------------------------------------------------------------------------------------------------------
@@ -455,4 +459,28 @@ INSERT INTO T_INVOICE VALUES
 
 SELECT  *
 FROM    T_INVOICE;
+--------------------------------------------------------------------------------------------------------------------------------
+-- 상품 
+--------------------------------------------------------------------------------------------------------------------------------
+CREATE TABLE T_GOODS
+(
+    GOD_ID 		VARCHAR(8)	NOT NULL COMMENT '상품 ID',
+    GOD_NAME	VARCHAR(50)   NOT NULL COMMENT '상품 명',
+    GOD_IMG     VARCHAR(256)  NULL COMMENT '상품 이미지 경로',
+    GOD_DESC	VARCHAR(512)  NULL COMMENT '상품 설명',
+    GOD_PRICE	INT 		NOT NULL DEFAULT 0 COMMENT '상품 가격',
+    GOD_DCRATE  INT 		NOT NULL DEFAULT 0 COMMENT '상품 할인율',
+    CONSTRAINT T_GOODS_PK PRIMARY KEY (GOD_ID)
+);
+
+INSERT INTO T_GOODS VALUES
+('GOD00001', '운동 매트', '/goods/custom_program.jpg','AI가 나만의 운동 프로그램을 생성해줍니다', 10000, 10);
+INSERT INTO T_GOODS VALUES
+('GOD00002', '덤벨 세트', '/goods/home_training_discount.jpg','홈트레이닝 용품을 할인된 가격에 구매하세요', 50000, 20);
+INSERT INTO T_GOODS VALUES
+('GOD00003', '저항 밴드', '/goods/nutrition_guide.jpg','영양 가이드북을 제공합니다', 20000, 15);
+
+SELECT  *
+FROM    T_GOODS;
+
 COMMIT;
