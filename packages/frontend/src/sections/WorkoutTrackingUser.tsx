@@ -13,7 +13,6 @@ import { useUser } from '@/hooks/UserContext';
 
 const WorkoutTrackingUser = () => {
   const { member } = useUser();  // Context에서 공유
-
   return (
     <Card className="w-full">
       <CardHeader>
@@ -27,7 +26,7 @@ const WorkoutTrackingUser = () => {
           <div>
             <Avatar className="h-32 w-32">
               <AvatarImage
-                src={member?.MEM_IMG}
+                src={member?.MEM_IMG || "/member/member.png"}
                 alt={member?.MEM_NAME}
                 className={member?.MES_ID === 'MES00001' ? "grayscale" : ""}            
               />
@@ -36,7 +35,7 @@ const WorkoutTrackingUser = () => {
             </Avatar>
           </div>
           <div>
-              <div> ID : <span className="text-primary">{member?.MEM_ID_ACT}</span></div>
+              <div> 별명 : <span className="text-primary">{member?.MEM_NICKNAME}</span></div>
               <div> 이름 : <span className="text-primary">{member?.MEM_NAME}</span></div>
               <div> 나이 : <span className="text-primary">{member?.MEM_AGE}세</span></div>
               <div> 성별 : <span className="text-primary">{member?.MEM_SEX}</span></div>
