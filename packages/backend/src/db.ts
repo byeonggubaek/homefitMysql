@@ -36,7 +36,7 @@ export async function initPool(): Promise<void> {
         console.error('DB 풀 생성 실패:', error);
         await Logger.logError('DB 풀 생성 실패', error);
         throw error;
-      }
+      } 
     })();
   }
   pool = await poolPromise;
