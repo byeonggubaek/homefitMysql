@@ -188,53 +188,86 @@ const WorkoutStartMain: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full flex items-start gap-6 p-6 bg-slate-50 min-h-screen"> 
-      <div className="w-3/5">
+    <div className="w-full flex items-start gap-6 bg-slate-50 min-h-screen"> 
+      {/* 1. 왼쪽 영역 너비를 조절하여 전체적으로 작게 구성 */}
+      <div className="w-1/2 max-w-2xl"> 
         <Card className="overflow-hidden border-none shadow-xl">
           <CardHeader className="bg-white pb-4">
             <div className="flex justify-between items-end">
               <div>
-                <CardTitle className="text-3xl font-black text-slate-800 tracking-tight">
-                  {isDetecting ? currentExercise : "운동을 시작하세요"}
+                <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">
+                  {isDetecting ? currentExercise : "운동 시작"}
                 </CardTitle>
-                <CardDescription className="text-base">AI가 실시간으로 자세를 교정해드립니다.</CardDescription>
+                <CardDescription className="text-sm">실시간 자세 분석 중</CardDescription>
               </div>
-              <div className="flex gap-6">
+              <div className="flex gap-4">
                 <div className="text-center">
-                  <p className="text-xs font-bold text-slate-400 uppercase">Count</p>
-                  <p className="text-5xl font-black text-blue-600">{count}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Count</p>
+                  <p className="text-3xl font-black text-blue-600">{count}</p>
                 </div>
-                <div className="text-center border-l pl-6">
-                  <p className="text-xs font-bold text-slate-400 uppercase">Plank</p>
-                  <p className="text-5xl font-black text-orange-500">{plankTime}<span className="text-xl">s</span></p>
+                <div className="text-center border-l pl-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Plank</p>
+                  <p className="text-3xl font-black text-orange-500">{plankTime}s</p>
                 </div>
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
-              <Button size="lg" className="flex-1 text-lg font-bold" onClick={startDetection} disabled={isDetecting}>운동 시작</Button>
-              <Button size="lg" variant="destructive" className="flex-1 text-lg font-bold" onClick={stopDetection} disabled={!isDetecting}>중지</Button>
+            <div className="flex gap-2 w-full justify-end mt-4">
+              <Button 
+                size="sm" 
+                className="w-20 h-8 text-xs font-bold" // 너비 80px, 높이 32px로 고정
+                onClick={startDetection} 
+                disabled={isDetecting}
+              >
+                시작
+              </Button>
+              <Button 
+                size="sm" 
+                variant="destructive" 
+                className="w-20 h-8 text-xs font-bold" 
+                onClick={stopDetection} 
+                disabled={!isDetecting}
+              >
+                중지
+              </Button>
             </div>
           </CardHeader>
-
-          <CardContent className="p-0 relative bg-black aspect-video">
-            <Webcam ref={webcamRef} audio={false} mirrored className="absolute inset-0 w-full h-full object-cover" />
-            <canvas ref={canvasRef} width={640} height={480} className="absolute inset-0 w-full h-full z-10" style={{ transform: 'scaleX(-1)' }} />
+          {/* 2. 4:3 비율(aspect-[4/3]) 적용 및 캔버스 사이즈 설정 */}
+          <CardContent className="p-0 relative bg-black aspect-4/3 overflow-hidden">
+            <Webcam 
+              ref={webcamRef} 
+              audio={false} 
+              mirrored 
+              className="absolute inset-0 w-full h-full object-cover" 
+              videoConstraints={{
+                width: 640,
+                height: 480,
+                facingMode: "user",
+              }}
+            />
+            <canvas 
+              ref={canvasRef} 
+              width={640} // 내부 해상도는 640*480 유지
+              height={480} 
+              className="absolute inset-0 w-full h-full z-10" 
+              style={{ transform: 'scaleX(-1)' }} 
+            />
             
-            {/* 상태 오버레이 */}
+            {/* 상태 오버레이 (크기에 맞춰 텍스트 사이즈 소폭 축소) */}
             {isDetecting && (
-              <div className={`absolute bottom-6 left-6 z-20 px-6 py-3 rounded-2xl font-bold text-xl shadow-2xl ${status === 'down' ? 'bg-green-500 text-white' : 'bg-white/90 text-slate-800'}`}>
-                {status === 'down' ? "▼ GO DOWN" : "▲ UP"}
+              <div className={`absolute bottom-4 left-4 z-20 px-4 py-2 rounded-lg font-bold text-base shadow-2xl ${status === 'down' ? 'bg-green-500 text-white' : 'bg-white/90 text-slate-800'}`}>
+                {status === 'down' ? "▼ DOWN" : "▲ UP"}
               </div>
             )}
-            {isPlankActive && <div className="absolute inset-0 border-[12px] border-orange-500/50 animate-pulse z-0" />}
+            {isPlankActive && <div className="absolute inset-0 border-8 border-orange-500/50 animate-pulse z-0" />}
           </CardContent>
         </Card>
       </div>
 
-      <div className="w-2/5 flex flex-col gap-6">
-        <Card className="h-full border-none shadow-lg">
-          <CardHeader className="border-b">
-            <CardTitle>오늘의 운동 목표</CardTitle>
+      {/* 오른쪽 목표 리스트 영역 */}
+      <div className="w-1/2">
+        <Card className="border-none shadow-lg">
+          <CardHeader className="border-b py-3">
+            <CardTitle className="text-lg">오늘의 목표</CardTitle>
           </CardHeader>
           <CardContent className="p-4 flex flex-col gap-3">
             {workouts?.map((workout, index) => (
