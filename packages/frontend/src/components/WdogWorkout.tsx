@@ -16,7 +16,6 @@ export default function WdogWorkout({
   actualReps = 0,
   actualSets = 0
 }: WdogWorkoutProps) {
-  console.log("💡 WdogWorkout props:", { workout, index, type, actualReps, actualSets }); // 💡 디버깅 로그
   return (
     <div className="flex gap-3 items-start justify-between bg-gray-100 p-4 h-25"> 
       <div className="flex gap-3">

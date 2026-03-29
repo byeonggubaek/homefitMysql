@@ -188,7 +188,7 @@ const WorkoutStartMain: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full flex items-start gap-6 bg-slate-50 min-h-screen"> 
+    <div className="w-full flex items-start gap-6 bg-slate-50"> 
       {/* 1. 왼쪽 영역 너비를 조절하여 전체적으로 작게 구성 */}
       <div className="w-1/2 max-w-2xl"> 
         <Card className="overflow-hidden border-none shadow-xl">
