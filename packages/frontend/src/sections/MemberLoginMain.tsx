@@ -35,7 +35,7 @@ export default function MemberLoginMain() {
     .then(async (response) => {
       if (response.data.success) {
         await refetch();  // 헤더 즉시 업데이트
-        navigate('/workout/tracking');
+        navigate('/workout/dashboard');
       } else {
         localStorage.setItem("memberID", "");        
       }
