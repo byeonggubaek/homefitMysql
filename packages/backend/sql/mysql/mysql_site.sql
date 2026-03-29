@@ -50,7 +50,7 @@ CREATE TABLE T_NAV_SUB_ITEM
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO T_NAV_SUB_ITEM VALUES
-('NAV00001', 'S0001', '운동하기','/menu/dashboard.jpg', '프로그램에 따라 운동을 수행합니다.', 'WorkoutDashboard', '/workout/dashboard');
+('NAV00001', 'S0001', '오늘의운동','/menu/dashboard.jpg', '프로그램에 따라 운동을 수행합니다.', 'WorkoutDashboard', '/workout/dashboard');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00002', 'S0001', '운동내역','/menu/state.jpg', '운동 내역을 확인합니다.', 'HistoryState', '/history/state');
 INSERT INTO T_NAV_SUB_ITEM VALUES
