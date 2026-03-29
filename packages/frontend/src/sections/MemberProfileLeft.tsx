@@ -3,9 +3,30 @@ import { useUser } from "@/hooks/UserContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, 
          AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Trash2Icon, CircleDollarSign, SettingsIcon, UserIcon, User } from "lucide-react"
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const MemberProfileLeft = ({ onChildData }: { onChildData: (data: string) => void }) => {
     const { member } = useUser();
+    const { refetch } = useUser();  //     
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+        await axios.post(
+            'http://localhost:3001/api/member/logout',
+            {},
+            { withCredentials: true }
+        );
+        console.log('로그아웃 성공');
+        await refetch();  // 헤더 즉시 업데이트      
+        navigate('/'); // 로그아웃 후 홈 페이지로
+        } catch (e: any) {
+        } finally {
+        }
+    };
+
+    
     return (
         <div className="flex flex-col gap-10 p-6 h-full border-x rounded-lg">
             <div id='footheader' className="flex flex-col justify-center items-center py-8 gap-3">
@@ -80,7 +101,7 @@ const MemberProfileLeft = ({ onChildData }: { onChildData: (data: string) => voi
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>취소</AlertDialogCancel>
-                            <AlertDialogAction>로그아웃</AlertDialogAction>
+                            <AlertDialogAction onClick={handleLogout}>로그아웃</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>

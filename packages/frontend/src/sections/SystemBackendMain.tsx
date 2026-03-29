@@ -223,6 +223,7 @@ const SystemBackendMain = () => {
                 id="form-rhf-demo-description"
                 value={generatedPrompt} // ★ 백엔드에서 받은 결과 출력                
                 className="min-h-120 resize-none"
+                readOnly
               />
               <InputGroupAddon align="block-end">
                 <InputGroupText className="tabular-nums">

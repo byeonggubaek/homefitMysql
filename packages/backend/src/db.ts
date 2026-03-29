@@ -1,5 +1,5 @@
 import mysql, { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import { NavItem, NavSubItem, ColDesc, WorkoutRecord, ChartData, MenuPos, WorkoutHistory, Member, WorkoutDetail, MemberExists, Workout } from 'shared';
+import { NavItem, NavSubItem, ColDesc, WorkoutRecord, ChartData, MenuPos, WorkoutHistory, Member, WorkoutDetail, MemberExists, Workout, BeneFun, Membership, Benefit } from 'shared';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
 
@@ -223,13 +223,16 @@ SELECT A.MEM_ID,
        A.MEM_NAME,
        A.MEM_NICKNAME,
        A.MEM_IMG,
+       A.MEM_PNUMBER,
+       A.MEM_EMAIL,
        C.MIN_NAME AS MEM_SEX,
        A.MEM_AGE,
        A.MEM_POINT,
        A.MEM_EXP_POINT,
        A.MEM_LVL,
        A.MES_ID,
-       B.MES_NAME
+       B.MES_NAME,
+       B.MES_FEE
 FROM T_MEMBER A
 JOIN T_MEMBERSHIP B 
     ON B.MES_ID = A.MES_ID
@@ -247,13 +250,16 @@ export const getMember = async (P_MEM_ID: string): Promise<Member[]> => {
     MEM_NAME: records[0].MEM_NAME,
     MEM_NICKNAME: records[0].MEM_NICKNAME,
     MEM_IMG: records[0].MEM_IMG,
+    MEM_PNUMBER: records[0].MEM_PNUMBER,
+    MEM_EMAIL: records[0].MEM_EMAIL,
     MEM_SEX: records[0].MEM_SEX,
     MEM_AGE: records[0].MEM_AGE,
-    MEM_POINT: records[0].MEM_POINT,    
+    MEM_POINT: records[0].MEM_POINT,
     MEM_EXP_POINT: records[0].MEM_EXP_POINT,
     MEM_LVL: records[0].MEM_LVL,
     MES_ID: records[0].MES_ID,
-    MES_NAME: records[0].MES_NAME
+    MES_NAME: records[0].MES_NAME,
+    MES_FEE: records[0].MES_FEE
   }];
 }
 async function _getWorkoutHistory(P_MEM_ID: string = ''): Promise<any> {
@@ -346,17 +352,21 @@ async function _checkMember(P_MEM_ID_ACT: string, P_MEM_PASSWORD: string): Promi
 `, [P_MEM_ID_ACT, P_MEM_PASSWORD]);
   return records[0].length === 0 ? [] : 
     records[0].map((record: any) => ({
+      MEM_ID: record.MEM_ID,
       MEM_ID_ACT: record.MEM_ID_ACT,
       MEM_NAME: record.MEM_NAME,
       MEM_NICKNAME: record.MEM_NICKNAME,
       MEM_IMG: record.MEM_IMG,
+      MEM_PNUMBER: record.MEM_PNUMBER,
+      MEM_EMAIL: record.MEM_EMAIL,
       MEM_SEX: record.MEM_SEX,
       MEM_AGE: record.MEM_AGE,
-      MEM_POINT: record.MEM_POINT,    
+      MEM_POINT: record.MEM_POINT,
       MEM_EXP_POINT: record.MEM_EXP_POINT,
       MEM_LVL: record.MEM_LVL,
       MES_ID: record.MES_ID,
-      MES_NAME: record.MES_NAME
+      MES_NAME: record.MES_NAME,
+      MES_FEE: record.MES_FEE
     }));
 }
 export const login = async (P_MEM_ID_ACT: string, P_MEM_PASSWORD: string): Promise<MemberExists> => {
@@ -382,8 +392,79 @@ export const login = async (P_MEM_ID_ACT: string, P_MEM_PASSWORD: string): Promi
     };
   }
 } 
+async function _getBenefits(P_MES_ID: string = ''): Promise<any[]> {
+  return select(`
+ SELECT B.BEN_ID, 
+        B.BEN_NAME
+  FROM  T_MEMBERSHIP_BENEFIT A
+  JOIN  T_BENEFIT B
+    ON  B.BEN_ID = A.BEN_ID
+ WHERE  A.MES_ID = ?
+`, [P_MES_ID]);
+}
+export const getBenefits = async (P_MES_ID: string = ''): Promise<Benefit[]> => {
+  const records = await _getBenefits(P_MES_ID);
+  // 1단계: 메뉴 객체 생성
+  return records.map((record: any) => ({
+    BEN_ID: record.BEN_ID,
+    BEN_NAME: record.BEN_NAME || ''
+  }));
+}
+async function _getMemberships(): Promise<any[]> {
+  return select(`
+  SELECT  MES_ID,
+          MES_NAME,
+          MES_FEE
+  FROM    T_MEMBERSHIP
+  WHERE   MES_ID <> 'MES00001'
+`);
+}
+export const getMemberships = async (): Promise<Membership[]> => {
+  const records = await _getMemberships();
+  let memberships: Membership[] = records.map((record: any) => ({
+    MES_ID: record.MES_ID,
+    MES_NAME: record.MES_NAME || '',
+    MES_FEE: record.MES_FEE || 0,
+    MES_BENEFITS: []
+  }));
+  // 2단계: 병렬로 모든 서브메뉴 로드
+  await Promise.all(
+    memberships.map(async (membership) => {
+      membership.MES_BENEFITS = await getBenefits(membership.MES_ID);
+    })
+  );
+  return memberships;
+}
 
+async function _getScript(tableName: string): Promise<any> {
+  try {
+    // 테이블이 없으면 여기서 에러가 발생하므로 try-catch로 감쌉니다.
+    return await select(`SHOW CREATE TABLE ${tableName}`);
+  } catch (error) {
+    // 테이블이 없는 경우 콘솔에 로그만 남기고 null을 반환하여 스킵 준비를 합니다.
+    console.warn(`Table not found: ${tableName}`);
+    return null;
+  }
+}
 
+export const getScripts = async (tableNames: string[]): Promise<string> => {
+  // 1. DB 조회를 병렬로 실행합니다.
+  const rawResults = await Promise.all(tableNames.map(name => _getScript(name)));
+
+  // 2. 결과 가공 및 유효성 검사
+  const scriptStrings = rawResults.map((result) => {
+    // result가 null이 아니고, 배열이며, 첫 번째 요소에 'Create Table'이 있는지 확인
+    if (result && Array.isArray(result) && result.length > 0) {
+      return result[0]['Create Table'] || "";
+    }
+    return ""; // 위 조건에 맞지 않으면(없는 테이블 등) 빈 문자열 반환
+  });
+
+  // 3. 빈 문자열을 필터링하고 하나로 합쳐서 반환합니다.
+  return scriptStrings
+    .filter(s => s.trim() !== "") // 실제 내용이 있는 스크립트만 남김
+    .join('\n\n');
+};
 // =================================================================================================================
 // 오라클 버전 
 // =================================================================================================================

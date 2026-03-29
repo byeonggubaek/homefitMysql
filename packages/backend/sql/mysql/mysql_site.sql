@@ -28,6 +28,8 @@ INSERT INTO T_NAV_ITEM VALUES
 ('NAV00003', '보상', '/menu/reward.jpg','포인트, 업적, 순위를 확인하며 쇼핑몰에서 운동용품을 구입할 수 있습니다.');
 INSERT INTO T_NAV_ITEM VALUES
 ('NAV00004', '내정보', '/menu/member.jpg','개인 정보를 관리합니다.');
+INSERT INTO T_NAV_ITEM VALUES
+('NAV00005', '관리자', '/menu/system.png','사이트를 관리합니다.');
 
 SELECT * FROM T_NAV_ITEM;
 --------------------------------------------------------------------------------------------------------------------------------
@@ -48,7 +50,7 @@ CREATE TABLE T_NAV_SUB_ITEM
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO T_NAV_SUB_ITEM VALUES
-('NAV00001', 'S0001', '운동하기','/menu/tracking.jpg', '프로그램에 따라 운동을 수행합니다.', 'WorkoutTracking', '/workout/tracking');
+('NAV00001', 'S0001', '운동하기','/menu/dashboard.jpg', '프로그램에 따라 운동을 수행합니다.', 'WorkoutDashboard', '/workout/dashboard');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00002', 'S0001', '운동내역','/menu/state.jpg', '운동 내역을 확인합니다.', 'HistoryState', '/history/state');
 INSERT INTO T_NAV_SUB_ITEM VALUES
@@ -62,15 +64,13 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00003', 'S0004', '쇼핑몰','/menu/mall.jpg', '굿즈 또는 운동용품을 구매합니다.', 'RewardMall', '/reward/mall');
 INSERT INTO T_NAV_SUB_ITEM VALUES
-('NAV00004', 'S0001', '프로필','/menu/profile.jpg', '개인 정보를 관리합니다.', 'MemberProfile', '/member/profile');
+('NAV00004', 'S0001', '프로필','/menu/profile.jpg', '개인 정보를 관리합니다.', 'MemberProfile', '/member/profile/profile');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0002', '회원등록','/menu/register.png', '개인 정보를 등록합니다.', 'MemberRegister', '/member/register');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0003', '운동목표','/menu/plan.jpg', '운동 목표를 설정하고 관리합니다.', 'MemberPlan', '/member/plan');
 INSERT INTO T_NAV_SUB_ITEM VALUES
-('NAV00004', 'S0004', '로그인','/menu/login.png', '로그인합니다..', 'MemberLogin', '/member/login');
-INSERT INTO T_NAV_SUB_ITEM VALUES
-('NAV00004', 'S0005', '로그아웃','/menu/logout.png', '로그아웃합니다..', 'MemberLogout', '/member/logout');
+('NAV00005', 'S0001', 'Backend','/menu/backend.jpg', 'Backend service를 자동생성합니다.', 'SystemBackend', '/system/backend');
 
 SELECT * FROM T_NAV_SUB_ITEM;
 --------------------------------------------------------------------------------------------------------------------------------
@@ -167,97 +167,98 @@ DROP TABLE IF EXISTS T_MEMBER;
 DROP TABLE IF EXISTS T_WORKOUT;
 DROP TABLE IF EXISTS T_ACHIEVEMENT;
 DROP TABLE IF EXISTS T_REWARD;
-DROP TABLE IF EXISTS T_MEMBERSHIP_BENIFIT;
+DROP TABLE IF EXISTS T_MEMBERSHIP_BENEFIT;
 DROP TABLE IF EXISTS T_MEMBERSHIP;
-DROP TABLE IF EXISTS T_BENIFIT;
+DROP TABLE IF EXISTS T_BENEFIT;
 DROP TABLE IF EXISTS T_GOODS;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 혜택
 --------------------------------------------------------------------------------------------------------------------------------
-CREATE TABLE T_BENIFIT
+CREATE TABLE T_BENEFIT
 (
     BEN_ID 			VARCHAR(8)		NOT NULL COMMENT '혜택 코드',
     BEN_NAME       	VARCHAR(50)		NOT NULL COMMENT '혜택 명칭',
-    CONSTRAINT T_BENIFIT_PK PRIMARY KEY (BEN_ID)
+    CONSTRAINT T_BENEFIT_PK PRIMARY KEY (BEN_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO T_BENIFIT 
+INSERT INTO T_BENEFIT 
 VALUES('BEN00001', '기본 운동 기록');
-INSERT INTO T_BENIFIT 
+INSERT INTO T_BENEFIT 
 VALUES('BEN00002', '통계 데이터 생성');
-INSERT INTO T_BENIFIT 
+INSERT INTO T_BENEFIT 
 VALUES('BEN00003', '포인트 2배 적립');
-INSERT INTO T_BENIFIT 
+INSERT INTO T_BENEFIT 
 VALUES('BEN00004', '월간 랭킹 계산');
-INSERT INTO T_BENIFIT 
+INSERT INTO T_BENEFIT 
 VALUES('BEN00005', '맞춤 운동 추천');
-INSERT INTO T_BENIFIT 
+INSERT INTO T_BENEFIT 
 VALUES('BEN00006', 'VIP + 프리미엄 전용 콘텐츠');
-INSERT INTO T_BENIFIT 
+INSERT INTO T_BENEFIT 
 VALUES('BEN00007', '광고 완전 제거');
 
 SELECT	*
-FROM	T_BENIFIT;
+FROM	T_BENEFIT;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 회원등급
 --------------------------------------------------------------------------------------------------------------------------------
 CREATE TABLE T_MEMBERSHIP
 (
-    MES_ID      VARCHAR(8)		NOT NULL COMMENT '회원등급 코드',
-    MES_NAME    VARCHAR(50)		NOT NULL COMMENT '회원등급 명칭',
+    MES_ID      VARCHAR(8)		NOT NULL COMMENT '맴버쉽 프랜 코드',
+    MES_NAME    VARCHAR(50)		NOT NULL COMMENT '맴버쉽 프랜 명칭',
+    MES_FEE		INT 			NOT NULL DEFAULT 0 COMMENT '맴버쉽 프랜 가격',
     CONSTRAINT T_MEMBERSHIP_PK PRIMARY KEY (MES_ID)
 );
 INSERT INTO T_MEMBERSHIP 
-VALUES('MES00001', 'FREE');
+VALUES('MES00001', 'FREE', 0);
 INSERT INTO T_MEMBERSHIP 
-VALUES('MES00002', 'PREMINIUM');
+VALUES('MES00002', 'PREMINIUM', 9900);
 INSERT INTO T_MEMBERSHIP 
-VALUES('MES00003', 'VIP');
+VALUES('MES00003', 'VIP', 20000);
 
 SELECT	*
 FROM	T_MEMBERSHIP;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 회원등급별 혜택 
 --------------------------------------------------------------------------------------------------------------------------------
-CREATE TABLE T_MEMBERSHIP_BENIFIT
+CREATE TABLE T_MEMBERSHIP_BENEFIT
 (
     MES_ID      VARCHAR(8)		NOT NULL	COMMENT '회원등급 코드',
     BEN_ID      VARCHAR(8)     	NOT NULL	COMMENT '혜택 코드',
-    CONSTRAINT T_MEMBERSHIP_BENIFIT_PK PRIMARY KEY (MES_ID, BEN_ID),
+    CONSTRAINT T_MEMBERSHIP_BENEFIT_PK PRIMARY KEY (MES_ID, BEN_ID),
     CONSTRAINT T_MEMBERSHIP_MSP_ID_FK FOREIGN KEY (MES_ID) REFERENCES T_MEMBERSHIP(MES_ID),
-    CONSTRAINT T_MEMBERSHIP_BEN_ID_FK FOREIGN KEY (BEN_ID) REFERENCES T_BENIFIT(BEN_ID)    
+    CONSTRAINT T_MEMBERSHIP_BEN_ID_FK FOREIGN KEY (BEN_ID) REFERENCES T_BENEFIT(BEN_ID)    
 );
 
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00001', 'BEN00001');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00001', 'BEN00002');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00002', 'BEN00001');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00002', 'BEN00002');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00002', 'BEN00003');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00002', 'BEN00004');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00002', 'BEN00005');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00003', 'BEN00001');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00003', 'BEN00002');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00003', 'BEN00003');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00003', 'BEN00004');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00003', 'BEN00005');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00003', 'BEN00006');
-INSERT INTO T_MEMBERSHIP_BENIFIT 
+INSERT INTO T_MEMBERSHIP_BENEFIT 
 VALUES('MES00003', 'BEN00007');
 SELECT	*
-FROM	T_MEMBERSHIP_BENIFIT;
+FROM	T_MEMBERSHIP_BENEFIT;
 -------------------------------------------------------------------------------------------------------------------------------
 -- 회원 
 --------------------------------------------------------------------------------------------------------------------------------
@@ -269,6 +270,8 @@ CREATE TABLE T_MEMBER
     MEM_NICKNAME	VARCHAR(50)   NULL COMMENT '닉네임',
     MEM_PASSWORD   	VARCHAR(256)  NOT NULL COMMENT '패스워드 해시값',
     MEM_IMG        	VARCHAR(256)  NULL COMMENT '회원 이미지 경로',
+    MEM_PNUMBER		VARCHAR(64)   NULL COMMENT '전화번호',
+    MEM_EMAIL		VARCHAR(512)  NULL COMMENT '이메일',
     MEM_SEX        	VARCHAR(5)    NULL COMMENT '성별 코드 (T_MINOR_DESC : CD00003 참조)',
     MEM_AGE        	INT           NOT NULL DEFAULT 0 COMMENT '나이',
     MEM_POINT      	INT           NOT NULL DEFAULT 0 COMMENT '현재 포인트',
@@ -281,21 +284,21 @@ CREATE TABLE T_MEMBER
 
 -- member_hash_password는 MySQL에 따로 함수 구현 필요
 INSERT INTO T_MEMBER 
-(MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
+(MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
 VALUES
-('oranjes@naver.com', '백병구', '쥐', member_hash_password('oranjes@naver.com', '1234'), '/member/U000001.jpg','M', 52, 0, 0, 1, 'MES00002');
+('oranjes@naver.com', '백병구', '쥐', member_hash_password('oranjes@naver.com', '1234'), '/member/U000001.jpg','010-5555-5555','ZZ@NAVER.COM','M', 52, 0, 0, 1, 'MES00002');
 INSERT INTO T_MEMBER 
-(MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
+(MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
 VALUES
-('moon@naver.com', '문정인', '고양이', member_hash_password('moon@naver.com', '1234'), '/member/u000002.jpg','F', 24, 0, 0, 1, 'MES00002');
+('moon@naver.com', '문정인', '고양이', member_hash_password('moon@naver.com', '1234'), '/member/U000002.jpg','010-5555-5555','ZZ@NAVER.COM','F', 24, 0, 0, 1, 'MES00002');
 INSERT INTO T_MEMBER 
-(MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
+(MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
 VALUES
-('sung@naver.com', '문성윤', '소', member_hash_password('sung@naver.com', '1234'), '/member/u000003.jpg','M', 40, 0, 0, 1, 'MES00003');
+('sung@naver.com', '문성윤', '소', member_hash_password('sung@naver.com', '1234'), '/member/U000003.png','010-5555-5555','ZZ@NAVER.COM','M', 40, 0, 0, 1, 'MES00003');
 INSERT INTO T_MEMBER 
-(MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
+(MEM_ID_ACT, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
 VALUES
-('dong@naver.com', '김동건', '호랑이', member_hash_password('dong@naver.com', '1234'), '/member/u000004.jpg','M', 26, 0, 0, 1, 'MES00003');
+('dong@naver.com', '김동건', '호랑이', member_hash_password('dong@naver.com', '1234'), '/member/U000004.webp','010-5555-5555','ZZ@NAVER.COM','M', 26, 0, 0, 1, 'MES00003');
 SELECT * FROM T_MEMBER;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 운동

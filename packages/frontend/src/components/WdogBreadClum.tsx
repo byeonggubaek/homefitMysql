@@ -45,7 +45,7 @@ const WgodBreadcrumb = (
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage >{menuPos?.NAS_NAME}</BreadcrumbPage>
+            <BreadcrumbPage >{menuPos?.NAV_NAME}</BreadcrumbPage>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -60,7 +60,7 @@ const WgodBreadcrumb = (
                 <DropdownMenuGroup>
                   {menuPos?.NAS_SIBLINGS.map((sib) => (
                     <DropdownMenuItem key={sib.NAS_ID}>
-                      {sib.NAS_ID === menuPos.NAS_ID ? <span className="text-focus">{sib.NAS_NAME}</span> : <Link to={sib.NAS_HREF}>{sib.NAS_NAME}</Link>}
+                      {sib.NAS_ID === menuPos.NAS_ID ? <span className="text-focus"><Link to={sib.NAS_HREF}>{sib.NAS_NAME}</Link></span> : <Link to={sib.NAS_HREF}>{sib.NAS_NAME}</Link>}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuGroup>

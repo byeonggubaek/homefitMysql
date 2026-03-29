@@ -8,10 +8,11 @@ import RewardExchange from "./pages/RewardExchange";
 import RewardPoint from "./pages/RewardPoint";
 import HistoryContent from "./pages/HistoryContent";
 import HistoryState from "./pages/HistoryState";
-import WorkoutTracking from "./pages/WorkoutTracking";
 import MemberLogin from "./pages/MemberLogin.tsx";
 import MemberLogout from "./pages/MemberLogout.tsx";
 import SystemBackend from "./pages/SystemBackend.tsx";
+import WorkoutStart from "./pages/WorkoutStart.tsx";
+import WorkoutDashboard from "./pages/WorkoutDashboard.tsx";
 
 function App() {
   return (
@@ -20,8 +21,12 @@ function App() {
         <Route index element={<Home />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>
-      <Route path="/workout/tracking" element={<MainLayout />}>
-        <Route index element={<WorkoutTracking />} />           {/* / */}
+      <Route path="/workout/dashboard" element={<MainLayout />}>
+        <Route index element={<WorkoutDashboard />} />           {/* / */}
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Route>
+      <Route path="/workout/start" element={<MainLayout />}>
+        <Route index element={<WorkoutStart />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>
       <Route path="/history/state" element={<MainLayout />}>

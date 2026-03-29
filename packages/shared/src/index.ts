@@ -43,6 +43,8 @@ export interface Member {
     MEM_NAME: string;
     MEM_NICKNAME: string;
     MEM_IMG: string;
+    MEM_PNUMBER: string;
+    MEM_EMAIL: string;
     MEM_SEX: string;
     MEM_AGE: number;
     MEM_POINT: number;
@@ -50,11 +52,22 @@ export interface Member {
     MEM_LVL: number;         //
     MES_ID : string;
     MES_NAME: string;
+    MES_FEE: number;
 }
 export interface MemberExists {
     STATUS: string;
     ERROR: string;
     USER?: Member;
+}
+export interface Benefit {
+  BEN_ID: string;
+  BEN_NAME: string;
+}
+export interface Membership {
+  MES_ID: string;
+  MES_NAME: string;
+  MES_FEE: number;
+  MES_BENEFITS: Benefit[];
 }
 /*=======================================================================================================
   홈 트레이닝 관련

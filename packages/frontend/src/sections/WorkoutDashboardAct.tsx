@@ -14,8 +14,10 @@ import { useEffect, useState } from "react"
 import type { Workout, WorkoutDetail } from "shared"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useUser } from "@/hooks/UserContext"
+import { useNavigate } from "react-router-dom"
 
-const WorkoutTrackingAct = () => {
+const WorkoutDashboardAct = () => {
+  const navigate = useNavigate();  // 👈 navigate 함수 생성  
   const { member } = useUser();  // Context에서 공유  
   const [workouts, setWorkout] = useState<WorkoutDetail[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,11 +67,15 @@ const WorkoutTrackingAct = () => {
       setIsLoading(false);  // 성공/실패 상관없이 로딩 종료
     }
   };
+  const handleWorkoutStart = () => {
+    // navigation to workout session page or start workout logic
+    navigate('/workout/start');
+  }
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-3xl">운동 시작하기</CardTitle>
-        <CardDescription className="text-lg text-primary">
+        <CardDescription className="text-sm text-primary">
           AI가 실시간으로 자세를 분석하고 피드백을 제공합니다
         </CardDescription>
         <CardAction>
@@ -108,7 +114,7 @@ const WorkoutTrackingAct = () => {
         </div>
       </CardContent>
       <CardFooter>
-        <Button type="submit" className="w-full text-3xl mt-8 py-8 rounded-2xl shadow-lg">
+        <Button type="submit" className="w-full text-3xl mt-8 py-8 rounded-2xl shadow-lg" onClick={handleWorkoutStart}>
           운동시작하기
           <Play className="size-8" />
         </Button>
@@ -148,4 +154,4 @@ const Workout = ({ workout, index } : { workout: WorkoutDetail, index: number })
 };
 
 
-export default WorkoutTrackingAct;
+export default WorkoutDashboardAct;

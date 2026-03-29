@@ -1,6 +1,6 @@
 import express from 'express';
 import Logger from '../logger.js'
-import { getMember, login } from '../db.js';
+import { getMember, getMemberships, login } from '../db.js';
 import jwt from 'jsonwebtoken';
 import { Member } from 'shared';
 
@@ -142,6 +142,14 @@ memberRouter.get('/getMember', async (req, res) => {
       success: false,
       error: (error as Error).message
     });
+  }
+});
+memberRouter.get('/getMemberships', async (req, res) => {
+  try {
+    const data = await getMemberships();
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err });
   }
 });
 

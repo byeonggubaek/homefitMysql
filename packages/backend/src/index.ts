@@ -10,7 +10,8 @@ import {
   getColDescs, 
   getWorkoutPivot, getWorkoutPivotWithPlan, getWorkoutHistory, 
   getMenuPos,
-  searchMenus} from './db.js';
+  searchMenus,
+  getScripts} from './db.js';
 import aiRouter from './routes/ai.js';
 import workoutRouter from './routes/workout.js';
 
@@ -43,7 +44,7 @@ app.use(
 app.use(express.json());
 app.use("/api/member", memberRouter); // 라우터 등록
 app.use("/api/ai", aiRouter); // AI 라우터 등록
-app.use("/api/workout", workoutRouter); // AI 라우터 등록
+app.use("/api/workout", workoutRouter); // 운동 라우터 등록
 
 // 서버 시작
 let server: any;
@@ -160,6 +161,194 @@ app.get('/api/searchMenus', async (req, res) => {
     });
     await Logger.logApiSuccess(apiLogEntry);
   } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+app.post("/api/getBackendPrompt", async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    const { method, eventHandler, sql } = req.body;
+    // 1. 유효성 검사 (401보다는 400 Bad Request가 더 적절합니다)
+    if (!method || !eventHandler || !sql) {
+      return res.status(400).json({
+        success: false,
+        error: '필수 입력값이 누락되었습니다 (method, eventHandler, sql).'
+      });
+    }
+    apiLogEntry = await Logger.logApiStart('POST /api/getBackendPrompt', [method, eventHandler, sql]);
+    // 2. 테이블 추출 및 중복 제거
+    const tableRegex = /(?:FROM|JOIN)\s+([A-Z0-9_]+)/gi;
+    let match;
+    const tableSet = new Set<string>(); // Set으로 중복 자동 제거
+
+    while ((match = tableRegex.exec(sql)) !== null) {
+      const tableName = match[1].toUpperCase();
+      tableSet.add(tableName);
+    }
+    const tables = Array.from(tableSet);
+    console.log('추출된 테이블:', tables);
+    const scripts = await getScripts(tables);
+    if(scripts.length == 0) {
+      await Logger.logApiError(apiLogEntry, '스크립트 조회 실패');
+      return res.status(401).json({
+        success: false,
+        error: '스크립트 조회 실패'
+      });
+    }
+    else {
+      console.log('추출된 스크립트 :', scripts.toString());
+      let prompt = "";
+
+      if (method === "G") {
+        prompt = `
+  [이벤트 핸들러]
+  ${eventHandler}
+  [테이블 구조]
+  ${scripts.toString()}
+  [쿼리]
+  ${sql}
+  [지시사항]
+  테이블 구조와 쿼리를 분석해서 SELECT 문의 컬럼에 대응되는 type를 선언하고  DB에서 조회해서 
+  Frontend로 보내는 Backend express 이벤트 핸들러를 만들어 줘
+  이때, 입력 쿼리가 2개 이상이고 부모 자식의 관계이면 부모 타입에 자식 타입을 포함시키는 형태로 만들어 주고 그렇지 않으면 각각 독립된 타입으로 만들어 줘
+  [예제]
+  export interface Membership {
+      MES_ID : string;
+      MES_NAME: string;
+      MES_FEE: number;
+  }
+  app.get('/getMembership', async (req, res) => {
+    let apiLogEntry = null;
+    try {
+      const { mes_id } = req.query as { mes_id: string };
+      if (!mes_id) {
+        return res.status(400).json({
+          success: false,
+          error: '멥버쉽 ID가 필요합니다.'
+        });
+      }
+      apiLogEntry = await Logger.logApiStart('GET /api/member/getMember', [mes_id]);
+      const data = await getMembership(mes_id);
+      res.json({
+        success: true,
+        data: data,
+        timestamp: new Date().toISOString()
+      });
+      await Logger.logApiSuccess(apiLogEntry);
+    } catch (error) {
+      await Logger.logApiError(apiLogEntry, error);
+      res.status(500).json({
+        success: false,
+        error: (error as Error).message
+      });
+    }
+  });
+
+  async function _getMembership(P_MES_ID: string): Promise<any> {
+    return select(\`
+  SELECT A.MES_ID,
+        A.MES_NAME,
+        A.MES_FEE
+  FROM T_MEMBERSHIP B 
+  WHERE B.MES_ID = ?
+  \`, [P_MES_ID]);
+  }
+  export const getMembership = async (P_MES_ID: string): Promise<Membership[]> => {
+    const records = await _getMembership(P_MES_ID);
+    return records.length === 0 ? [] : [{
+      MES_ID: records[0].MES_ID,
+      MES_NAME: records[0].MES_NAME,
+      MES_FEE: records[0].MES_FEE
+    }];
+  }
+  `;
+      }
+      else{
+        prompt = ` 
+  [이벤트 핸들러]
+  ${eventHandler}
+  [테이블 구조]
+  ${scripts.toString()}
+  [쿼리]
+  SELECT  B.WOO_ID, 
+          B.WOO_NAME, 
+          B.WOO_IMG, 
+          B.WOO_UNIT,
+          COALESCE(NULLIF(A.WOD_GUIDE, ''), B.WOO_GUIDE) AS WOD_GUIDE,
+          A.WOD_TARGET_REPS,
+          A.WOD_TARGET_SETS
+  FROM    T_WORKOUT_DETAIL A
+  JOIN    T_WORKOUT B ON B.WOO_ID = A.WOO_ID
+  WHERE   A.WOR_ID = ?
+  [지시사항]
+  테이블 구조와 쿼리를 분석해서 SELECT 문의 컬럼에 대응되는 type를 선언하고  DB에서 조회해서 
+  Frontend로 보내는 Backend express 이벤트 핸드러를 만들어 줘
+  이때, 입력 쿼리가 2개 이상이고 부모 자식의 관계이면 부모 타입에 자식 타입을 포함시키는 형태로 만들어 주고 그렇지 않으면 각각 독립된 타입으로 만들어 줘
+  [예제]
+  export interface Membership {
+      MES_ID : string;
+      MES_NAME: string;
+      MES_FEE: number;
+  }
+  app.post('/getMembership', async (req, res) => {
+    let apiLogEntry = null;
+    try {
+      const { mes_id } = req.body; 
+      if (!mes_id) {
+        return res.status(400).json({
+          success: false,
+          error: '멥버쉽 ID가 필요합니다.'
+        });
+      }
+      apiLogEntry = await Logger.logApiStart('POST /api/getMembership', [mes_id]);
+      const data = await getMembership(mes_id);
+      res.json({
+        success: true,
+        data: data,
+        timestamp: new Date().toISOString()
+      });
+      await Logger.logApiSuccess(apiLogEntry);
+    } catch (error) {
+      await Logger.logApiError(apiLogEntry, error);
+      res.status(500).json({
+        success: false,
+        error: (error as Error).message
+      });
+    }
+  });
+
+  async function _getMembership(P_MES_ID: string): Promise<any> {
+    return select(\`
+  SELECT 	A.MES_ID, 
+          A.MES_NAME,
+          A.MES_FEE
+  FROM	T_MEMBERSHIP A
+  WHERE	A.MES_ID = ?
+  \`, [P_MES_ID]);
+  }
+  export const getMembership = async (P_MES_ID: string): Promise<Membership[]> => {
+    const records = await _getMembership(P_MES_ID);
+    return records.length === 0 ? [] : [{
+      MES_ID: records[0].MES_ID,
+      MES_NAME: records[0].MES_NAME,
+      MES_FEE: records[0].MES_FEE
+    }];
+  }`;
+      }
+      console.log('Generated backend prompt:', prompt);
+      res.json({
+        success: true,
+        data: prompt,
+        timestamp: new Date().toISOString()
+      });      
+      await Logger.logApiSuccess(apiLogEntry);
+    }
+  } catch (error) {
+    console.log('Error during backend prompt generation:', (error as Error).message || error);
     await Logger.logApiError(apiLogEntry, error);
     res.status(500).json({
       success: false,
