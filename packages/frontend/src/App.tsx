@@ -10,9 +10,11 @@ import HistoryContent from "./pages/HistoryContent";
 import HistoryState from "./pages/HistoryState";
 import MemberLogin from "./pages/MemberLogin.tsx";
 import MemberLogout from "./pages/MemberLogout.tsx";
-import SystemBackend from "./pages/SystemBackend.tsx";
 import WorkoutStart from "./pages/WorkoutStart.tsx";
 import WorkoutDashboard from "./pages/WorkoutDashboard.tsx";
+import SystemSelect from "./pages/SystemSelect.tsx";
+import SystemInsert from "./pages/SystemInsert.tsx";
+import SystemUpdate from "./pages/SystemUpdate.tsx";
 
 function App() {
   return (
@@ -65,8 +67,16 @@ function App() {
         <Route index element={<MemberLogout />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>           
-      <Route path="/system/backend" element={<MainLayout />}>
-        <Route index element={<SystemBackend />} />           {/* / */}
+      <Route path="/system/select" element={<MainLayout />}>
+        <Route index element={<SystemSelect />} />           {/* / */}
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Route>           
+      <Route path="/system/insert" element={<MainLayout />}>
+        <Route index element={<SystemInsert />} />           {/* / */}
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Route>           
+      <Route path="/system/update" element={<MainLayout />}>
+        <Route index element={<SystemUpdate />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>           
     </Routes>

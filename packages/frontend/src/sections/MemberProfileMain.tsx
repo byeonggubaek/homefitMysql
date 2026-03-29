@@ -1,8 +1,6 @@
 import { useUser } from "@/hooks/UserContext";
 
-import { Smartphone, Mail, Loader2, AlertCircle, Award, Flame } from "lucide-react";
-
-
+import { Smartphone, Mail, Award, Flame } from "lucide-react";
 
 const MemberProfileMain = () => {
     const { member } = useUser();

@@ -18,19 +18,20 @@ import WdogWorkout from "@/components/WdogWorkout"
 
 const WorkoutDashboardAct = () => {
   const navigate = useNavigate();  // 👈 navigate 함수 생성  
-  const { member } = useUser();  // Context에서 공유  
+  const {member} = useUser();  // Context에서 공유  
   const [workouts, setWorkout] = useState<WorkoutDetail[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [intensity, setIntensity] = useState<"low" | "medium" | "high" | undefined>("medium");   
-  const wor_id = 'WOR00001'; // 예시 운동 기록 ID
+  const [wor_id, setWorId] = useState(''); // 예시 운동 기록 ID
   useEffect(() => {
     // 운동정보 조회 
-    fetch(`http://localhost:3001/api/workout/getWorkoutDetails?wor_id=${wor_id}`)
+    fetch(`http://localhost:3001/api/workout/getWorkoutDetails?mem_id=${member?.MEM_ID?? ''}&wor_id=${wor_id}`)
       .then(res => res.json())
       .then(data => {
         setWorkout(data.data); 
+        setWorId(data.data[0]?.WOR_ID || ''); // 첫 번째 운동 기록 ID 저장 (예시)
     });    
-  }, []);   
+  }, [member?.MEM_ID]);   
   const handleAIRecommend = async () => {
     if (isLoading) return;
     

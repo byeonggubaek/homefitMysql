@@ -46,7 +46,7 @@ const formSchema = z.object({
     .max(1024, "쿼리는 최대 1024자 이하여야 합니다."),
 })
 
-const SystemBackendMain = () => {
+const SystemSelectMain = () => {
   const [generatedPrompt, setGeneratedPrompt] = React.useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -60,7 +60,7 @@ const SystemBackendMain = () => {
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
-      await fetch("http://localhost:3001/api/getBackendPrompt", {
+      await fetch("http://localhost:3001/api/system/getSelectPrompt", {
         method: "POST", // 실제 통신은 POST로 데이터를 보냄
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -113,7 +113,7 @@ const SystemBackendMain = () => {
             </CardAction>
           </CardHeader>
           <CardContent>
-            <form id="form-rhf-demo" action="http://localhost:3001/api/getBackendPrompt" method="POST" onSubmit={form.handleSubmit(onSubmit)}>
+            <form id="form-rhf-demo" method="POST" onSubmit={form.handleSubmit(onSubmit)}>
               <FieldGroup>
                 <Controller
                   name="method"
@@ -121,7 +121,7 @@ const SystemBackendMain = () => {
                   render={({ fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor="form-rhf-demo-description">
-                        전송쿼리
+                        조회방식
                       </FieldLabel>                      
                       <RadioGroup defaultValue="G" className="flex flex-row gap-6 w-fit">
                         <div className="flex items-center gap-3">
@@ -237,4 +237,4 @@ const SystemBackendMain = () => {
   )
 }
 
-export default SystemBackendMain
+export default SystemSelectMain
