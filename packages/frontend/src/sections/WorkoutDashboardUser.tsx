@@ -11,13 +11,12 @@ import { UserRoundPlus  } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUser } from '@/hooks/UserContext';
 
-const WorkoutTrackingUser = () => {
+const WorkoutDashboardUser = () => {
   const { member } = useUser();  // Context에서 공유
-
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-2xl text-primary">회원정보 : {member?.MEM_NAME} <span className="text-primary">Lvl</span> </CardTitle>
+        <CardTitle className="text-3xl">회원정보 : <span className="text-primary">Lvl {member?.MEM_LVL} </span> </CardTitle>
         <CardAction className="flex items-center gap-2">
           {member?.MES_ID !== 'MES00001' && <><UserRoundPlus /><Link className="text-md text-focus" to="/member/register">회원가입</Link></>}
         </CardAction>      
@@ -27,8 +26,8 @@ const WorkoutTrackingUser = () => {
           <div>
             <Avatar className="h-32 w-32">
               <AvatarImage
-                src={member?.MEM_IMG}
-                alt={member?.MEM_NAME}
+                src={member?.MEM_IMG || "/member/member.png"}
+                alt={member?.MEM_NICKNAME}
                 className={member?.MES_ID === 'MES00001' ? "grayscale" : ""}            
               />
               <AvatarFallback>사용자</AvatarFallback>
@@ -36,8 +35,7 @@ const WorkoutTrackingUser = () => {
             </Avatar>
           </div>
           <div>
-              <div> ID : <span className="text-primary">{member?.MEM_ID_ACT}</span></div>
-              <div> 이름 : <span className="text-primary">{member?.MEM_NAME}</span></div>
+              <div> 별명 : <span className="text-primary">{member?.MEM_NICKNAME}</span></div>
               <div> 나이 : <span className="text-primary">{member?.MEM_AGE}세</span></div>
               <div> 성별 : <span className="text-primary">{member?.MEM_SEX}</span></div>
           </div> 
@@ -55,4 +53,4 @@ const WorkoutTrackingUser = () => {
   )
 }
 
-export default WorkoutTrackingUser;
+export default WorkoutDashboardUser;

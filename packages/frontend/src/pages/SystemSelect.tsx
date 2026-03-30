@@ -1,15 +1,15 @@
 import WdogBreadClum from "@/components/WdogBreadClum";
-import MemberLoginMain from "@/sections/MemberLoginMain";
+import SystemSelectMain from "@/sections/SystemSelectMain";
 
-export default function MemberLogin() {
+export default function SystemSelect() {
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-4">
-        <WdogBreadClum page="MemberProfile"/> 
+        <WdogBreadClum page="SystemSelect"/> 
       </div>
       <div className="flex gap-4 w-full">
-        <MemberLoginMain />
+        <SystemSelectMain />
       </div>     
     </div>
   );

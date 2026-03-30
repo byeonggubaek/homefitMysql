@@ -8,11 +8,15 @@ import RewardExchange from "./pages/RewardExchange";
 import RewardPoint from "./pages/RewardPoint";
 import HistoryContent from "./pages/HistoryContent";
 import HistoryState from "./pages/HistoryState";
-import WorkoutTracking from "./pages/WorkoutTracking";
 import MemberLogin from "./pages/MemberLogin.tsx";
 import MemberLogout from "./pages/MemberLogout.tsx";
-import RewardMall from "./pages/RewardMall.tsx";
+import WorkoutStart from "./pages/WorkoutStart.tsx";
+import WorkoutDashboard from "./pages/WorkoutDashboard.tsx";
+import SystemSelect from "./pages/SystemSelect.tsx";
+import SystemInsert from "./pages/SystemInsert.tsx";
+import SystemUpdate from "./pages/SystemUpdate.tsx";
 import RewardRankingMain from "./sections/RewardRankingMain.tsx";
+import RewardMall from "./pages/RewardMall.tsx";
 
 function App() {
   return (
@@ -21,8 +25,12 @@ function App() {
         <Route index element={<Home />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>
-      <Route path="/workout/tracking" element={<MainLayout />}>
-        <Route index element={<WorkoutTracking />} />           {/* / */}
+      <Route path="/workout/dashboard" element={<MainLayout />}>
+        <Route index element={<WorkoutDashboard />} />           {/* / */}
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Route>
+      <Route path="/workout/start" element={<MainLayout />}>
+        <Route index element={<WorkoutStart />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>
       <Route path="/history/state" element={<MainLayout />}>
@@ -53,7 +61,7 @@ function App() {
         <Route index element={<MemberRegister />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>            
-      <Route path="/member/profile" element={<MainLayout />}>
+      <Route path="/member/profile/:part" element={<MainLayout />}>
         <Route index element={<MemberProfile />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>      
@@ -67,6 +75,18 @@ function App() {
       </Route>           
       <Route path="/member/logout" element={<MainLayout />}>
         <Route index element={<MemberLogout />} />           {/* / */}
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Route>           
+      <Route path="/system/select" element={<MainLayout />}>
+        <Route index element={<SystemSelect />} />           {/* / */}
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Route>           
+      <Route path="/system/insert" element={<MainLayout />}>
+        <Route index element={<SystemInsert />} />           {/* / */}
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Route>           
+      <Route path="/system/update" element={<MainLayout />}>
+        <Route index element={<SystemUpdate />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>           
     </Routes>

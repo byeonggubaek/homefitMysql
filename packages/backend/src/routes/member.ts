@@ -1,8 +1,8 @@
 import express from 'express';
 import Logger from '../logger.js'
-import { getMember, login } from '../db.js';
+import { getMember, getMemberships, insertMember, login } from '../db.js';
 import jwt from 'jsonwebtoken';
-import { Member } from 'shared';
+import { Member, T_MEMBER } from 'shared';
 
 const memberRouter = express.Router();
 memberRouter.post("/login", async (req, res) => {
@@ -143,6 +143,66 @@ memberRouter.get('/getMember', async (req, res) => {
       error: (error as Error).message
     });
   }
+});
+memberRouter.get('/getMemberships', async (req, res) => {
+  try {
+    const data = await getMemberships();
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err });
+  }
+});
+memberRouter.post('/insertMember', async (req, res) => {
+    let apiLogEntry = null;
+    try {
+        const { 
+            mem_name, mem_nickname, mem_password, mem_img, 
+            mem_pnumber, mem_email, mem_sex, mem_age, mes_id 
+        } = req.body;
+
+        // 필수값 검증
+        if (!mem_name || !mem_password || !mem_sex || !mes_id) {
+            return res.status(400).json({
+                success: false,
+                error: '필수 정보(이름, 패스워드, 성별, 등급)가 누락되었습니다.'
+            });
+        }
+
+        apiLogEntry = await Logger.logApiStart('POST /api/insertMember', [mem_name, mem_email]);
+
+        // 서비스 호출을 위한 데이터 구성
+        const memberData: T_MEMBER = {
+            MEM_ID_VIEW: '', // 서비스 내부에서 생성 및 업데이트 예정
+            MEM_NAME: mem_name,
+            MEM_NICKNAME: mem_nickname ?? null,
+            MEM_PASSWORD: mem_password,
+            MEM_IMG: mem_img ?? null,
+            MEM_PNUMBER: mem_pnumber ?? null,
+            MEM_EMAIL: mem_email ?? null,
+            MEM_SEX: mem_sex,
+            MEM_AGE: Number(mem_age) || 0,
+            MEM_POINT: 0,
+            MEM_EXP_POINT: 0,
+            MEM_LVL: 0,
+            MES_ID: Number(mes_id)
+        };
+
+        const result = await insertMember(memberData);
+
+        res.json({
+            success: true,
+            data: result, // { MEM_ID, MEM_ID_VIEW } 리턴
+            timestamp: new Date().toISOString()
+        });
+
+        await Logger.logApiSuccess(apiLogEntry);
+    } catch (error) {
+        if (apiLogEntry) await Logger.logApiError(apiLogEntry, error);
+        res.status(500).json({
+            success: false,
+            error: (error as Error).message
+        });
+    }
 });
 
 export default memberRouter;

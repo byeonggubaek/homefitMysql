@@ -13,7 +13,7 @@ import { ChartNoAxesCombined  } from 'lucide-react';
 import { useEffect, useState } from "react";
 import type { WorkoutHistory } from "shared";
 
-const WorkoutTrackingHis = () => {
+const WorkoutDashboardHis = () => {
    const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistory[]>([]);
    const P_MEM_ID = 1; // 예시 회원 ID
    useEffect(() => {
@@ -70,4 +70,4 @@ const StampItem = ({ status, date }: { status: 'good' | 'bad', date?: string }) 
   );
 };
 
-export default WorkoutTrackingHis;
+export default WorkoutDashboardHis;

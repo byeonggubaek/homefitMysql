@@ -39,10 +39,12 @@ export interface ColDesc {
 =======================================================================================================*/
 export interface Member {
     MEM_ID: string;
-    MEM_ID_ACT: string;
+    MEM_ID_VIEW: string;
     MEM_NAME: string;
     MEM_NICKNAME: string;
     MEM_IMG: string;
+    MEM_PNUMBER: string;
+    MEM_EMAIL: string;
     MEM_SEX: string;
     MEM_AGE: number;
     MEM_POINT: number;
@@ -50,19 +52,30 @@ export interface Member {
     MEM_LVL: number;         //
     MES_ID : string;
     MES_NAME: string;
+    MES_FEE: number;
 }
 export interface MemberExists {
     STATUS: string;
     ERROR: string;
     USER?: Member;
 }
+export interface Benefit {
+  BEN_ID: string;
+  BEN_NAME: string;
+}
+export interface Membership {
+  MES_ID: string;
+  MES_NAME: string;
+  MES_FEE: number;
+  MES_BENEFITS: Benefit[];
+}
 /*=======================================================================================================
   홈 트레이닝 관련
 =======================================================================================================*/
 export interface WorkoutRecord {
-  WOR_ID: string;
+  WOR_ID: number;
   WOR_DT: Date;
-  WOO_ID: string;
+  WOO_ID: number;
   WOO_NAME: string;
   WOO_NAME_COLOR: string;
   WOD_TARGET_REPS: number;
@@ -78,7 +91,7 @@ export interface WorkoutHistory {
   STATUS: string;
 }
 export interface WorkoutDetail {
-  WOO_ID: string;
+  WOO_ID: number;
   WOO_NAME: string;
   WOO_IMG: string;
   WOO_UNIT: string;
@@ -87,7 +100,7 @@ export interface WorkoutDetail {
   WOD_TARGET_SETS: number;
 }
 export interface Workout {
-  WOO_ID: string;
+  WOO_ID: number;
   WOO_NAME: string;
   WOO_IMG: string;
   WOO_UNIT: string;
@@ -102,6 +115,43 @@ export interface RankingItem {
   MEM_IMG: string;
   CNT: number;
   WORKOUT_TIME: number;
+}
+/*=======================================================================================================
+  등록 관련
+=======================================================================================================*/
+export interface T_MEMBER {
+    MEM_ID?: number;          // PK (AUTO_INCREMENT)
+    MEM_ID_VIEW: string;      // 회원 시각적 ID (예: MEM_00001)
+    MEM_NAME: string;         // 이름
+    MEM_NICKNAME?: string | null;
+    MEM_PASSWORD: string;     // 패스워드 해시
+    MEM_IMG?: string | null;
+    MEM_PNUMBER?: string | null;
+    MEM_EMAIL?: string | null;
+    MEM_SEX: string | null;
+    MEM_AGE: number;
+    MEM_POINT: number;
+    MEM_EXP_POINT: number;
+    MEM_LVL: number;
+    MES_ID: number;           // 등급 코드 (FK)
+}
+export interface T_WORKOUT_RECORD {
+    WOR_ID?: number;           // Primary Key (AUTO_INCREMENT)
+    WOR_ID_VIEW: string;       // 운동기록 시각적 ID (예: WOR_00001)
+    MEM_ID: number;            // 회원 ID
+    WOR_DT?: string | Date | null; // 운동일
+    WOR_DESC?: string | null;  // 운동 설명
+}
+export interface T_WORKOUT_DETAIL {
+    WOR_ID: number;           // FK & PK (운동기록 ID)
+    WOO_ID: number;           // FK & PK (운동 ID)
+    WOD_GUIDE?: string | null; // 운동 가이드
+    WOD_TARGET_REPS: number;  // 권장 횟수
+    WOD_TARGET_SETS: number;  // 권장 세트수
+    WOD_COUNT: number;        // 실제 실행 횟수
+    WOD_POINT: number;        // 획득 포인트
+    WOD_ACCURACY: number;     // 운동 정확도
+    WOD_TIME: number;         // 운동시간(분)
 }
 /*=======================================================================================================
   메뉴 관련
