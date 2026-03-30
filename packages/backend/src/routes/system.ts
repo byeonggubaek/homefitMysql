@@ -228,6 +228,24 @@ ${eventHandler}
 [테이블 구조]
 ${scripts.toString()}
 [트랙잭션]
+export async function execute<T extends RowDataPacket = RowDataPacket>(
+  conn: PoolConnection,
+  sql: string, 
+  binds: any[] = []
+): Promise<any> {
+  let logEntry: any = null;
+  
+  try {
+    await initPool();
+    logEntry = await Logger.logQueryStart(sql, binds);
+    const result = await conn.execute<T[]>(sql, binds);
+    await Logger.logQuerySuccess(logEntry, (result as any).affectedRows || 0);    
+    return result;
+  } catch (error: any) {
+    await Logger.logQueryError(logEntry, error.message || error);
+    throw error;
+  }
+}
 export async function withTransaction<T>(
 handler: (conn: PoolConnection) => Promise<T>,
 ): Promise<T> {
@@ -315,9 +333,11 @@ app.post('/insertAchievement', async (req, res) => {
 
 export const insertAchievement = async (P_ACH: T_ACHIEVEMENT): Promise<{ ACH_AUTO_ID: number, ACH_ID: string }> => {
     return await withTransaction(async (conn: PoolConnection) => {
-        const [insertResult] = await conn.execute(
-            \`INSERT INTO T_ACHIEVEMENT (ACH_ID, ACH_NAME, ACH_IMG, ACH_DESC) 
-             VALUES (?, ?, ?, ?)\`,
+        const [insertResult] = await execute(conn,
+            \`
+INSERT INTO T_ACHIEVEMENT (ACH_ID, ACH_NAME, ACH_IMG, ACH_DESC) 
+VALUES (?, ?, ?, ?)
+            \`,
             [
               '', 
               P_ACH.ACH_NAME, 
@@ -329,8 +349,12 @@ export const insertAchievement = async (P_ACH: T_ACHIEVEMENT): Promise<{ ACH_AUT
         const newAutoId = (insertResult as any).insertId;
         const formattedId = \`ACH\${String(newAutoId).padStart(5, '0')}\`;
 
-        await conn.execute(
-            \`UPDATE T_ACHIEVEMENT SET ACH_ID = ? WHERE ACH_AUTO_ID = ?\`,
+        await await execute(conn,
+            \`
+            UPDATE T_ACHIEVEMENT 
+            SET ACH_ID = ? 
+            WHERE ACH_AUTO_ID = ?
+            \`,
             [formattedId, newAutoId]
         );
 

@@ -22,14 +22,14 @@ const WorkoutDashboardAct = () => {
   const [workouts, setWorkout] = useState<WorkoutDetail[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [intensity, setIntensity] = useState<"low" | "medium" | "high" | undefined>("medium");   
-  const [wor_id, setWorId] = useState(''); // 예시 운동 기록 ID
+  const [wor_id, setWorId] = useState(0); // 예시 운동 기록 ID
   useEffect(() => {
     // 운동정보 조회 
     fetch(`http://localhost:3001/api/workout/getWorkoutDetails?mem_id=${member?.MEM_ID?? ''}&wor_id=${wor_id}`)
       .then(res => res.json())
       .then(data => {
         setWorkout(data.data); 
-        setWorId(data.data[0]?.WOR_ID || ''); // 첫 번째 운동 기록 ID 저장 (예시)
+        setWorId(data.wor_id); // 첫 번째 운동 기록 ID 저장 (예시)
     });    
   }, [member?.MEM_ID]);   
   const handleAIRecommend = async () => {
@@ -60,7 +60,6 @@ const WorkoutDashboardAct = () => {
         WOD_TARGET_REPS: workout.WOD_TARGET_REPS || 0,
         WOD_TARGET_SETS: workout.WOD_TARGET_SETS || 0,
       }));
-      console.log("✅ formatted:",formatted); // 💡 AI 추천 응답 로그
       setWorkout(formatted);
     } catch (error) {
       console.error("❌ AI 추천 실패:", error);

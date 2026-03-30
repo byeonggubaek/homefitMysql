@@ -1,5 +1,5 @@
 import mysql, { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import { NavItem, NavSubItem, ColDesc, WorkoutRecord, ChartData, MenuPos, WorkoutHistory, Member, WorkoutDetail, MemberExists, Workout, BeneFun, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem } from 'shared';
+import { NavItem, NavSubItem, ColDesc, WorkoutRecord, ChartData, MenuPos, WorkoutHistory, Member, WorkoutDetail, MemberExists, Workout, BeneFun, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord } from 'shared';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
 
@@ -67,6 +67,25 @@ export async function select<T extends RowDataPacket = RowDataPacket>(
     const [rows] = await pool!.query<T[]>(sql, binds);
     await Logger.logQuerySuccess(logEntry, rows.length || 0);    
     return rows as T[];
+  } catch (error: any) {
+    await Logger.logQueryError(logEntry, error.message || error);
+    throw error;
+  }
+}
+// 3. 원시 쿼리 실행 - SELECT (결과 반환)
+export async function execute<T extends RowDataPacket = RowDataPacket>(
+  conn: PoolConnection,
+  sql: string, 
+  binds: any[] = []
+): Promise<any> {
+  let logEntry: any = null;
+  
+  try {
+    await initPool();
+    logEntry = await Logger.logQueryStart(sql, binds);
+    const result = await conn.execute<T[]>(sql, binds);
+    await Logger.logQuerySuccess(logEntry, (result as any).affectedRows || 0);    
+    return result;
   } catch (error: any) {
     await Logger.logQueryError(logEntry, error.message || error);
     throw error;
@@ -351,14 +370,16 @@ export const getWorkoutDetails = async (P_WOR_ID: string): Promise<WorkoutDetail
 }
 async function _getWorkouts(): Promise<any> {
   return select(`
-SELECT	WOO_ID, 
-		    WOO_NAME, 
+SELECT  WOO_ID,
+        WOO_ID_VIEW,
+        WOO_NAME,
         WOO_IMG,
+        WOO_DESC,
         WOO_GUIDE,
         WOO_UNIT,
         WOO_TARGET_REPS,
         WOO_TARGET_SETS
-FROM	  T_WORKOUT
+FROM T_WORKOUT
 `, []);
 }
 export const getWorkouts = async (): Promise<Workout[]> => {
@@ -536,43 +557,70 @@ export const getRanking = async (from_dt: string = '', to_dt: string = ''): Prom
     WORKOUT_TIME: sub.WORKOUT_TIME
   }));
 }
-
-export const insertWorkoutRecord = async (P_REC: T_WORKOUT_RECORD): Promise<{ WOR_ID: number, WOR_ID_VIEW: string }> => {
-    return await withTransaction(async (conn) => {
-        // 1. 날짜 처리: 입력값이 없으면 현재 날짜(YYYY-MM-DD) 사용
-        const recordDate = P_REC.WOR_DT ?? new Date().toISOString().split('T')[0];
-
-        console.log("T_WORKOUT_RECORD을 생성합니다.");
-        // 2. 기본 정보 INSERT (WOR_ID_VIEW는 임시 빈 값)
-        const [insertResult] = await conn.execute(
-            `INSERT INTO T_WORKOUT_RECORD (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC) 
-             VALUES (?, ?, ?, ?)`,
+async function _getLatestWorkoutId(P_MEM_ID: number, P_WOR_DT: string): Promise<any> {
+    return select(`
+        SELECT WOR_ID, WOR_ID_VIEW
+        FROM  T_WORKOUT_RECORD
+        WHERE WOR_ID = (
+             SELECT MAX(WOR_ID)
+             FROM   T_WORKOUT_RECORD
+          WHERE  MEM_ID = ?
+          AND    WOR_DT = ?
+          AND    WOR_STATUS = 'N'
+      )  
+    `, [P_MEM_ID, P_WOR_DT]);
+}
+export const getLatestWorkoutId = async (
+    P_MEM_ID: number, 
+    P_WOR_DT: string 
+): Promise<CurWorkoutRecord> => {
+    const records = await _getLatestWorkoutId(P_MEM_ID, P_WOR_DT);
+    
+    // 결과가 없거나 WOR_ID가 null인 경우 처리
+    if (records.length === 0 || records[0].WOR_ID === null) {
+        return {} as CurWorkoutRecord; // 빈 객체 반환 (필요에 따라 null로 변경 가능)}; 
+    }
+    return {
+        WOR_ID: records[0].WOR_ID,
+        WOR_ID_VIEW: records[0].WOR_ID_VIEW
+    };
+}
+export const insertWorkoutRecord = async (P_WOR: T_WORKOUT_RECORD): Promise<CurWorkoutRecord> => {
+    return await withTransaction(async (conn: PoolConnection) => {
+        // 1. 데이터 삽입 (WOR_ID_VIEW는 우선 빈 값으로 입력)
+        const [insertResult] = await execute(conn,
+            `
+            INSERT INTO T_WORKOUT_RECORD (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS) 
+            VALUES (?, ?, ?, ?, ?)
+            `,
             [
                 '', 
-                P_REC.MEM_ID, 
-                recordDate, 
-                P_REC.WOR_DESC
-            ] as any[]
+                P_WOR.MEM_ID, 
+                P_WOR.WOR_DT, 
+                P_WOR.WOR_DESC, 
+                "N" // 초기 상태는 'N'으로 설정 (예: 'N' = Not completed, 'C' = Completed)
+            ]
         );
-        // 생성된 AUTO_INCREMENT ID (PK: WOR_ID) 추출
-        const newAutoId = (insertResult as any).insertId;
 
-        // 3. WOR_ID_VIEW 포맷 생성 (PREFIX_ + 5자리 숫자)
-        // 지시사항 규칙: WOR + 5자리 패딩 적용 (예: WOR_00001)
-        const formattedViewId = `WOR${String(newAutoId).padStart(5, '0')}`;
+        const WOR_ID = (insertResult as any).insertId;
+        
+        // 2. PREFIX(WOR) + 5자리 숫자 형태로 ID 생성 (예: WOR00005)
+        const WOR_ID_VIEW = `WOR${String(WOR_ID).padStart(5, '0')}`;
 
-        console.log("UPDATE 준비", newAutoId, formattedViewId);
-        // 4. 생성된 포맷으로 해당 행 업데이트
-        await conn.execute(
-            `UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?`,
-            [formattedViewId, newAutoId] as any[]
+        // 3. 생성된 가독성 ID로 테이블 업데이트
+        await execute(conn,
+            `
+            UPDATE T_WORKOUT_RECORD 
+            SET WOR_ID_VIEW = ? 
+            WHERE WOR_ID = ?
+            `,
+            [WOR_ID_VIEW, WOR_ID]
         );
-        console.log("UPDATE 완료", newAutoId, formattedViewId);
 
-        // 5. 프라이머리 키(WOR_ID)와 생성된 시각적 ID 리턴
+        // 프라이머리 키(WOR_ID)를 포함하여 결과 리턴
         return { 
-            WOR_ID: newAutoId, 
-            WOR_ID_VIEW: formattedViewId 
+            WOR_ID: WOR_ID, 
+            WOR_ID_VIEW: WOR_ID_VIEW
         };
     });
 };
@@ -580,7 +628,7 @@ export const insertWorkoutDetail = async (P_DET: T_WORKOUT_DETAIL): Promise<{ WO
     return await withTransaction(async (conn) => {
         
         // 1. 상세 내역 INSERT
-        await conn.execute(
+        await execute(conn,
             `INSERT INTO T_WORKOUT_DETAIL (
                 WOR_ID, WOO_ID, WOD_GUIDE, WOD_TARGET_REPS, 
                 WOD_TARGET_SETS, WOD_COUNT, WOD_POINT, WOD_ACCURACY, WOD_TIME
@@ -605,74 +653,83 @@ export const insertWorkoutDetail = async (P_DET: T_WORKOUT_DETAIL): Promise<{ WO
         };
     });
 };
-export const initWorkoutRecord = async (P_REC: T_WORKOUT_RECORD): Promise<{ WOR_ID: number, WOR_ID_VIEW: string }> => {
+export const initWorkoutRecord = async (P_MEM_ID: number, P_WOR_DT: string): Promise<CurWorkoutRecord> => {
     return await withTransaction(async (conn) => {
-        // 1. 날짜 처리: 입력값이 없으면 현재 날짜(YYYY-MM-DD) 사용
-        const recordDate = P_REC.WOR_DT ?? new Date().toISOString().split('T')[0];
-
-        // 2. 기본 정보 INSERT (WOR_ID_VIEW는 임시 빈 값)
-        const [insertResult] = await conn.execute(
-            `INSERT INTO T_WORKOUT_RECORD (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC) 
-             VALUES (?, ?, ?, ?)`,
-            [
-                '', 
-                P_REC.MEM_ID, 
-                recordDate, 
-                P_REC.WOR_DESC
-            ] as any[]
-        );
-        // 생성된 AUTO_INCREMENT ID (PK: WOR_ID) 추출
-        const newAutoId = (insertResult as any).insertId;
-        // 3. WOR_ID_VIEW 포맷 생성 (PREFIX_ + 5자리 숫자)
-        // 지시사항 규칙: WOR + 5자리 패딩 적용 (예: WOR_00001)
-        const formattedViewId = `WOR${String(newAutoId).padStart(5, '0')}`;
-        // 4. 생성된 포맷으로 해당 행 업데이트
-        await conn.execute(
-            `UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?`,
-            [formattedViewId, newAutoId] as any[]
-        );
-        const workouts = await getWorkouts();
-        const workoutDetails: T_WORKOUT_DETAIL[] = workouts.slice(0,3).map((record: Workout) => ({
-          WOR_ID: newAutoId,
-          WOO_ID: record.WOO_ID,
-          WOD_GUIDE: record.WOO_GUIDE,
-          WOD_TARGET_REPS: record.WOO_TARGET_REPS,
-          WOD_TARGET_SETS: record.WOO_TARGET_SETS,
-          WOD_COUNT: 0,
-          WOD_POINT: 0,
-          WOD_ACCURACY: 0,
-          WOD_TIME: 0
-        }));
-        await Promise.all(
-          workoutDetails.map(async (workoutDetail) => {
-            await conn.execute(
-                `INSERT INTO T_WORKOUT_DETAIL (
-                    WOR_ID, WOO_ID, WOD_GUIDE, WOD_TARGET_REPS, 
-                    WOD_TARGET_SETS, WOD_COUNT, WOD_POINT, WOD_ACCURACY, WOD_TIME
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    workoutDetail.WOR_ID, 
-                    workoutDetail.WOO_ID, 
-                    workoutDetail.WOD_GUIDE ?? null,
-                    workoutDetail.WOD_TARGET_REPS,
-                    workoutDetail.WOD_TARGET_SETS,
-                    workoutDetail.WOD_COUNT,
-                    workoutDetail.WOD_POINT,
-                    workoutDetail.WOD_ACCURACY,
-                    workoutDetail.WOD_TIME
-                ] as any[]
-            );
-          })
-        );
+        let WOR_ID = 0; 
+        let WOR_ID_VIEW = "";
+        let LAST_WOR = await getLatestWorkoutId(P_MEM_ID, P_WOR_DT);
+        if (Object.keys(LAST_WOR || {}).length > 0) {
+          WOR_ID = LAST_WOR.WOR_ID;
+          WOR_ID_VIEW = LAST_WOR.WOR_ID_VIEW;
+        }
+        else {
+          const [insertResult] = await execute(conn,
+              `
+INSERT INTO T_WORKOUT_RECORD (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC) 
+VALUES (?, ?, ?, ?)
+              `,
+              [
+                  '', 
+                  P_MEM_ID, 
+                  P_WOR_DT, 
+                  null
+              ] as any[]
+          );
+          // 생성된 AUTO_INCREMENT ID (PK: WOR_ID) 추출
+          WOR_ID = (insertResult as any).insertId;
+          // 3. WOR_ID_VIEW 포맷 생성 (PREFIX_ + 5자리 숫자)
+          // 지시사항 규칙: WOR + 5자리 패딩 적용 (예: WOR_00001)
+          WOR_ID_VIEW = `WOR${String(WOR_ID).padStart(5, '0')}`;
+          // 4. 생성된 포맷으로 해당 행 업데이트
+          await execute(conn,
+              `
+UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?
+              `,
+              [WOR_ID_VIEW, WOR_ID] as any[]
+          );
+          const workouts = await getWorkouts();
+          const workoutDetails: T_WORKOUT_DETAIL[] = workouts.slice(0,3).map((record: Workout) => ({
+            WOR_ID: WOR_ID,
+            WOO_ID: record.WOO_ID,
+            WOD_GUIDE: record.WOO_GUIDE,
+            WOD_TARGET_REPS: record.WOO_TARGET_REPS,
+            WOD_TARGET_SETS: record.WOO_TARGET_SETS,
+            WOD_COUNT: 0,
+            WOD_POINT: 0,
+            WOD_ACCURACY: 0,
+            WOD_TIME: 0
+          }));
+          await Promise.all(
+            workoutDetails.map(async (workoutDetail) => {
+              await execute(conn, 
+                  `
+  INSERT INTO T_WORKOUT_DETAIL (
+      WOR_ID, WOO_ID, WOD_GUIDE, WOD_TARGET_REPS, 
+      WOD_TARGET_SETS, WOD_COUNT, WOD_POINT, WOD_ACCURACY, WOD_TIME
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  `,
+                  [
+                      workoutDetail.WOR_ID, 
+                      workoutDetail.WOO_ID, 
+                      workoutDetail.WOD_GUIDE ?? null,
+                      workoutDetail.WOD_TARGET_REPS,
+                      workoutDetail.WOD_TARGET_SETS,
+                      workoutDetail.WOD_COUNT,
+                      workoutDetail.WOD_POINT,
+                      workoutDetail.WOD_ACCURACY,
+                      workoutDetail.WOD_TIME
+                  ] as any[]
+              );
+            })
+          );          
+        }
         // 5. 프라이머리 키(WOR_ID)와 생성된 시각적 ID 리턴
         return { 
-            WOR_ID: newAutoId, 
-            WOR_ID_VIEW: formattedViewId 
+            WOR_ID: WOR_ID, 
+            WOR_ID_VIEW: WOR_ID_VIEW 
         };
     });
 };
-
-
 
 // =================================================================================================================
 // 오라클 버전 

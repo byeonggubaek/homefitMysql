@@ -99,6 +99,11 @@ export interface WorkoutDetail {
   WOD_TARGET_REPS: number;
   WOD_TARGET_SETS: number;
 }
+export interface CurWorkoutRecord 
+{
+  WOR_ID: number;
+  WOR_ID_VIEW: string;
+}
 export interface Workout {
   WOO_ID: number;
   WOO_NAME: string;

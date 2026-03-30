@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import logo from "../../public/logo.svg";
 import { useUser } from "@/hooks/UserContext";
 import axios from "axios";
 import type { Membership } from "shared";
@@ -28,7 +27,7 @@ const MemberProfilePremium = () => {
             </div>
 
             <div className="w-full border-2 border-[#f0f0f0] rounded-lg p-8 flex flex-col items-center justify-center">
-                <img src={logo} width="100" height="100" alt="로고" className="shadow-sm mb-4" />
+                <img src="/logo.svg" width="100" height="100" alt="로고" className="shadow-sm mb-4" />
                 <div className="w-full border-2 p-6 mt-6">
                     <p className="font-bold mb-4">{member?.MES_NAME} MemberShip 환영합니다</p>
                     <p>{member?.MEM_NICKNAME || "회원"}님, 지금 {member?.MES_NAME} 혜택으로 서비스를 이용 중입니다!</p>

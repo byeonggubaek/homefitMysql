@@ -4,7 +4,6 @@ import WorkoutDashboardUser from "@/sections/WorkoutDashboardUser";
 import WorkoutDashboardHis from "@/sections/WorkoutDashboardHis";
 
 export default function WorkoutDashboard() {
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-4">

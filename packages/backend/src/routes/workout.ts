@@ -27,15 +27,9 @@ workoutRouter.get('/getWorkoutDetails', async (req, res) => {
         timestamp: new Date().toISOString()
       });
     }    
-    if (wor_id == null || wor_id === '') {
+    if (wor_id == null || wor_id === '0') {
       // 데이터 오브젝트 구성
-      const workoutData: T_WORKOUT_RECORD = {
-          WOR_ID_VIEW: '', 
-          MEM_ID: Number(mem_id),
-          WOR_DESC: null,
-          WOR_DT: null
-      };
-      const result = await initWorkoutRecord(workoutData);
+      const result = await initWorkoutRecord(Number(mem_id), new Date().toISOString().split('T')[0]);
       if (result) {
         wor_id = result.WOR_ID.toString();
       }
@@ -58,6 +52,7 @@ workoutRouter.get('/getWorkoutDetails', async (req, res) => {
     });
     await Logger.logApiSuccess(apiLogEntry);
   } catch (error) {
+    console.error("❌ 운동 상세 정보 조회 중 오류 발생:", error); // 💡 오류 로그
     await Logger.logApiError(apiLogEntry, error);
     res.status(500).json({
       success: false,
@@ -88,31 +83,30 @@ workoutRouter.get('/getWorkoutHistory', async (req, res) => {
 workoutRouter.post('/insertWorkoutRecord', async (req, res) => {
     let apiLogEntry = null;
     try {
-        const { mem_id, wor_desc, wor_dt } = req.body;
+        const { mem_id, wor_dt, wor_desc } = req.body;
 
         // 필수값 검증
-        if (!mem_id || !wor_desc) {
+        if (!mem_id) {
             return res.status(400).json({
                 success: false,
-                error: '회원 ID(mem_id)와 운동 설명(wor_desc)이 필요합니다.'
+                error: '회원 ID(mem_id)가 필요합니다.'
             });
         }
+        apiLogEntry = await Logger.logApiStart('POST /api/insertWorkoutRecord', [mem_id, wor_dt, wor_desc]);
 
-        apiLogEntry = await Logger.logApiStart('POST /api/insertWorkoutRecord', [mem_id, wor_desc]);
-
-        // 데이터 오브젝트 구성
         const workoutData: T_WORKOUT_RECORD = {
-            WOR_ID: '', // 서비스 내부에서 생성 및 업데이트 예정
+            WOR_ID_VIEW: '', // 서비스 내부에서 생성 예정
             MEM_ID: Number(mem_id),
-            WOR_DESC: wor_desc,
-            WOR_DT: wor_dt || null // null 전달 시 서비스에서 현재 날짜 처리
+            // 날짜가 넘어오지 않으면 현재 날짜(YYYY-MM-DD)로 설정
+            WOR_DT: wor_dt || new Date().toISOString().split('T')[0],
+            WOR_DESC: wor_desc || null
         };
 
         const result = await insertWorkoutRecord(workoutData);
 
         res.json({
             success: true,
-            data: result, // { WOR_AUTO_ID, WOR_ID } 리턴
+            data: result, // { WOR_ID, WOR_ID_VIEW } 리턴
             timestamp: new Date().toISOString()
         });
 
