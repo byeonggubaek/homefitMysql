@@ -13,6 +13,7 @@ import {
   searchMenus} from './db.js';
 import aiRouter from './routes/ai.js';
 import workoutRouter from './routes/workout.js';
+import rewardRouter from './routes/reward.js';
 
 //=================================================================================================
 // 환경 변수 로드 & 서버 초기화
@@ -44,6 +45,7 @@ app.use(express.json());
 app.use("/api/member", memberRouter); // 라우터 등록
 app.use("/api/ai", aiRouter); // AI 라우터 등록
 app.use("/api/workout", workoutRouter); // AI 라우터 등록
+app.use("/api/reward", rewardRouter); // AI 라우터 등록
 
 // 서버 시작
 let server: any;

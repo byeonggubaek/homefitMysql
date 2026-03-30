@@ -382,7 +382,43 @@ export const login = async (P_MEM_ID_ACT: string, P_MEM_PASSWORD: string): Promi
     };
   }
 } 
-
+async function _getRanking(from_dt: string = '', to_dt: string = ''): Promise<any[]> {
+  return select(`
+SELECT
+    ROW_NUMBER() OVER (ORDER BY B.CNT DESC) AS \`RANK\`,
+    A.MEM_ID,
+    A.MEM_NAME,
+    A.MEM_IMG,
+    B.CNT,
+    B.WORKOUT_TIME
+FROM T_MEMBER A
+JOIN (
+    SELECT
+        WR.MEM_ID,
+        COUNT(*)             AS CNT,
+        SUM(WD.WOD_TIME) AS WORKOUT_TIME
+    FROM T_WORKOUT_RECORD WR
+    JOIN T_WORKOUT_DETAIL WD
+        ON WD.WOR_ID = WR.WOR_ID
+    WHERE WR.WOR_DT >= ?
+      AND WR.WOR_DT <= ?
+    GROUP BY WR.MEM_ID
+) B
+    ON A.MEM_ID = B.MEM_ID
+ORDER BY B.CNT DESC
+`, [from_dt, to_dt]);
+}
+export const getRanking = async (from_dt: string = '', to_dt: string = ''): Promise<RankingItem[]> => {
+  const subMenus = await _getRanking(from_dt, to_dt);
+  return subMenus.map((sub: any) => ({
+    RANK: sub.RANK,
+    MEM_ID: sub.MEM_ID,
+    MEM_NAME: sub.MEM_NAME,
+    MEM_IMG: sub.MEM_IMG,
+    CNT: sub.CNT,
+    WORKOUT_TIME: sub.WORKOUT_TIME
+  }));
+}
 
 // =================================================================================================================
 // 오라클 버전 

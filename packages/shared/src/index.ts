@@ -95,6 +95,14 @@ export interface Workout {
   WOO_TARGET_REPS: number;
   WOO_TARGET_SETS: number;
 }
+export interface RankingItem {
+  RANK: number;
+  MEM_ID: number;
+  MEM_NAME: string;
+  MEM_IMG: string;
+  CNT: number;
+  WORKOUT_TIME: number;
+}
 /*=======================================================================================================
   메뉴 관련
 =======================================================================================================*/
