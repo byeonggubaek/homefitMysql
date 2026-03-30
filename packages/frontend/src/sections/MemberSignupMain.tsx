@@ -37,9 +37,6 @@ const MemberSignupMain = () => {
 
   async function onSubmit(data: FormData) {
     try {
-      if (!confirm("회원가입을 진행하시겠습니까?")) {
-        return;
-      }
       const response = await fetch("http://localhost:3001/api/member/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
