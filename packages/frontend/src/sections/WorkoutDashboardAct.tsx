@@ -8,7 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Hourglass, Play } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
+import { Play } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { WorkoutDetail } from "shared"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -20,6 +21,7 @@ const WorkoutDashboardAct = () => {
   const navigate = useNavigate();  // 👈 navigate 함수 생성  
   const {member} = useUser();  // Context에서 공유  
   const [workouts, setWorkout] = useState<WorkoutDetail[] | null>(null);
+  const [isAiErrorMessage, setIsAiErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [intensity, setIntensity] = useState<"low" | "medium" | "high" | undefined>("medium");   
   const [wor_id, setWorId] = useState(0); // 예시 운동 기록 ID
@@ -42,7 +44,8 @@ const WorkoutDashboardAct = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userProfile: { 
-            mem_id: 1, 
+            mem_id: member?.MEM_ID, 
+            wor_id: Number(wor_id),
             intensity: intensity
           }
         })
@@ -60,9 +63,10 @@ const WorkoutDashboardAct = () => {
         WOD_TARGET_REPS: workout.WOD_TARGET_REPS || 0,
         WOD_TARGET_SETS: workout.WOD_TARGET_SETS || 0,
       }));
-      setWorkout(formatted);
+      setWorkout(formatted);      
     } catch (error) {
       console.error("❌ AI 추천 실패:", error);
+      setIsAiErrorMessage(error instanceof Error ? error.message : "알 수 없는 오류");
     } finally {
       setIsLoading(false);  // 성공/실패 상관없이 로딩 종료
     }
@@ -74,15 +78,16 @@ const WorkoutDashboardAct = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-3xl">운동 시작하기</CardTitle>
+        <CardTitle className="text-3xl">운동 시작하기 {wor_id}</CardTitle>
         <CardDescription className="text-sm text-primary">
           AI가 실시간으로 자세를 분석하고 피드백을 제공합니다
         </CardDescription>
         <CardAction>
           <div className="flex items-end gap-4">
-            {member != null && member?.MES_ID !== 'MES00001' && <>         
-              <div className="flex items-end gap-4">
-                {isLoading && <Hourglass className="size-6 animate-spin" />}              
+            {member != null && member?.MES_ID !== 1 && <>         
+              <div className="flex items-center gap-4">
+                {isLoading && <Spinner className="size-6" />}              
+                {isAiErrorMessage && <span className="text-warning"> {isAiErrorMessage}</span>}              
                 <Button className="text-lg border-2 shadow-lg" onClick={handleAIRecommend} disabled={isLoading}>AI추천</Button>    
               </div> 
               <Select onValueChange={(value) => setIntensity(value as "low" | "medium" | "high")}>

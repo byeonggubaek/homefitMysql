@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CircleDollarSign, LogOutIcon, SettingsIcon, UserIcon, LogIn  } from 'lucide-react';
+import { CircleDollarSign, LogOutIcon, SettingsIcon, UserIcon, LogIn, UserRoundPlus  } from 'lucide-react';
 
 import { useUser } from '@/hooks/UserContext';
 import { useNavigate } from 'react-router-dom';
@@ -41,36 +41,44 @@ const WdogAvatar = () => {
           <AvatarImage
             src={member?.MEM_IMG || '/member/member.png'} // 기본 이미지 경로
             alt={member?.MEM_NAME}
-            className={member?.MEM_ID === "MES00001" ? "grayscale" : ""}
+            className={member?.MEM_ID === 1 ? "grayscale" : ""}
           />
           <AvatarFallback>{member?.MEM_NAME?.slice(0, 2) || 'U'}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuLabel>내 정보</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => navigate('/member/profile/profile')}>
-          <UserIcon />
-          프로필
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/member/profile/premium')}>
-          <CircleDollarSign />
-          구독관리
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/member/profile/setting')}>
-          <SettingsIcon />
-          설정
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
         {member ? (
-          <DropdownMenuItem variant="destructive" onClick={handleLogout} disabled={loading}>
-            <LogOutIcon />
-            {loading ? '로그아웃 중...' : '로그아웃'}
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuLabel>내 정보</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => navigate('/member/profile/profile')}>
+              <UserIcon />
+              프로필
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/member/profile/premium')}>
+              <CircleDollarSign />
+              구독관리
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/member/profile/setting')}>
+              <SettingsIcon />
+              설정
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />          
+            <DropdownMenuItem variant="destructive" onClick={handleLogout} disabled={loading}>
+              <LogOutIcon />
+              {loading ? '로그아웃 중...' : '로그아웃'}
+            </DropdownMenuItem>
+          </>
         ) : (
-          <DropdownMenuItem onClick={() => navigate('/member/login')}>
-            <LogIn />
-            로그인
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem onClick={() => navigate('/member/login')}>
+              <LogIn />
+              로그인
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/member/signup')}>
+              <UserRoundPlus />
+              회원가입
+            </DropdownMenuItem>   
+          </>       
         )}
         {error && <div className="text-red-500">{error}</div>}
       </DropdownMenuContent>

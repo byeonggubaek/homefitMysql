@@ -3,7 +3,6 @@ import MainLayout from '@/layouts/MainLayout.tsx';
 import Home from '@/pages/Home.tsx';
 import MemberPlan from "./pages/MemberPlan";
 import MemberProfile from "./pages/MemberProfile";
-import MemberRegister from "./pages/MemberRegister.tsx";
 import RewardExchange from "./pages/RewardExchange";
 import RewardPoint from "./pages/RewardPoint";
 import HistoryContent from "./pages/HistoryContent";
@@ -17,6 +16,7 @@ import SystemInsert from "./pages/SystemInsert.tsx";
 import SystemUpdate from "./pages/SystemUpdate.tsx";
 import RewardRankingMain from "./sections/RewardRankingMain.tsx";
 import RewardMall from "./pages/RewardMall.tsx";
+import MemberSignup from "./pages/MemberSignup.tsx";
 
 function App() {
   return (
@@ -57,8 +57,8 @@ function App() {
         <Route index element={<RewardMall />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>       
-      <Route path="/member/register" element={<MainLayout />}>
-        <Route index element={<MemberRegister />} />           {/* / */}
+      <Route path="/member/signup" element={<MainLayout />}>
+        <Route index element={<MemberSignup />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>            
       <Route path="/member/profile/:part" element={<MainLayout />}>

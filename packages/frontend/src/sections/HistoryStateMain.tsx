@@ -109,7 +109,6 @@ export default function HistoryStateMain() {
       .then(res => res.json())
       .then(data => {
         setRecordsMonthly(data.data); 
-        console.log(data.data); 
     });    
     // 차트 데이터 
     fetch(`http://localhost:3001/api/get_workout_pivot?memberId=U000001&from=${format(dateRangeMonthly.from!, 'yyyy-MM-dd')}&to=${format(dateRangeMonthly.to!, 'yyyy-MM-dd')}`)
