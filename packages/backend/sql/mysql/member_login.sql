@@ -1,4 +1,4 @@
-CREATE DEFINER=`sc_25K_HI2_p2_2`@`%` PROCEDURE `member_login`(
+CREATE PROCEDURE `member_login`(
     IN  p_mem_id_view    VARCHAR(50),
     IN  p_mem_password 	VARCHAR(256)
 )
