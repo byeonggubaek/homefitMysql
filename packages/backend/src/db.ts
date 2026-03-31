@@ -284,12 +284,10 @@ export const insertMember = async (P_MEM: T_MEMBER): Promise<{ MEM_ID: number, M
     return await withTransaction(async (conn: PoolConnection) => {
         
         // 1. 회원 정보 최초 INSERT (MEM_ID_VIEW는 임시 빈 값)
-        const [insertResult] = await conn.execute(
-            `INSERT INTO T_MEMBER (
-                MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, 
-                MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, 
-                MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL, MES_ID
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        const [Result] = await conn.execute(
+            `
+            CALL member_signup(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @p_result, @p_new_id)
+            `,
             [
                 P_MEM.MEM_ID_VIEW, 
                 P_MEM.MEM_NAME, 
@@ -300,17 +298,17 @@ export const insertMember = async (P_MEM: T_MEMBER): Promise<{ MEM_ID: number, M
                 P_MEM.MEM_EMAIL ?? null, 
                 P_MEM.MEM_SEX,
                 P_MEM.MEM_AGE, 
-                P_MEM.MEM_POINT, 
-                P_MEM.MEM_EXP_POINT, 
-                P_MEM.MEM_LVL, 
                 P_MEM.MES_ID
             ] as any[] // ExecuteValues 타입 에러 방지용 캐스팅
         );
 
+        const [rows] = await conn.execute("SELECT @p_result AS result, @p_new_id AS newId");        
         // 생성된 AUTO_INCREMENT ID (PK) 추출
-        const newId = (insertResult as any).insertId;
-
-        // 4. 프라이머리 키(MEM_ID)와 생성된 시각적 ID 리턴
+        const newId = (rows as any)[0].newId;
+        const result = (rows as any)[0].result;        
+        if (result !== 'SUCCESS') {
+            throw new Error(result === 'DUPLICATE_ID' ? '이미 존재하는 회원 ID입니다.' : '회원가입에 실패했습니다.');
+        }
         return { 
             MEM_ID: newId, 
             MEM_ID_VIEW: P_MEM.MEM_ID_VIEW
@@ -449,6 +447,22 @@ export const login = async (P_MEM_ID_VIEW: string, P_MEM_PASSWORD: string): Prom
     };
   }
 } 
+export const register = async (P_MEM: T_MEMBER): Promise<any> => {
+  try {
+    const result = await insertMember(P_MEM);
+    return {
+      STATUS: "SUCCESS",
+      ERROR: '',
+      DATA: result.MEM_ID,
+    }
+  } catch (error: any) {
+    return {
+      STATUS: "FAIL",
+      ERROR: error.message || '회원가입 중 오류가 발생했습니다.',
+    }
+  }
+}
+
 async function _getBenefits(P_MES_ID: string = ''): Promise<any[]> {
   return select(`
  SELECT B.BEN_ID, 
@@ -629,10 +643,12 @@ export const insertWorkoutDetail = async (P_DET: T_WORKOUT_DETAIL): Promise<{ WO
         
         // 1. 상세 내역 INSERT
         await execute(conn,
-            `INSERT INTO T_WORKOUT_DETAIL (
+            `
+            INSERT INTO T_WORKOUT_DETAIL (
                 WOR_ID, WOO_ID, WOD_GUIDE, WOD_TARGET_REPS, 
                 WOD_TARGET_SETS, WOD_COUNT, WOD_POINT, WOD_ACCURACY, WOD_TIME
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `,
             [
                 P_DET.WOR_ID, 
                 P_DET.WOO_ID, 
@@ -663,7 +679,7 @@ export const initWorkoutRecord = async (P_MEM_ID: number, P_WOR_DT: string): Pro
           WOR_ID_VIEW = LAST_WOR.WOR_ID_VIEW;
         }
         else {
-          const [insertResult] = await execute(conn,
+          const [Result] = await execute(conn,
               `
 INSERT INTO T_WORKOUT_RECORD (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC) 
 VALUES (?, ?, ?, ?)
@@ -676,7 +692,7 @@ VALUES (?, ?, ?, ?)
               ] as any[]
           );
           // 생성된 AUTO_INCREMENT ID (PK: WOR_ID) 추출
-          WOR_ID = (insertResult as any).insertId;
+          WOR_ID = (Result as any).insertId;
           // 3. WOR_ID_VIEW 포맷 생성 (PREFIX_ + 5자리 숫자)
           // 지시사항 규칙: WOR + 5자리 패딩 적용 (예: WOR_00001)
           WOR_ID_VIEW = `WOR${String(WOR_ID).padStart(5, '0')}`;
@@ -728,6 +744,23 @@ UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?
             WOR_ID: WOR_ID, 
             WOR_ID_VIEW: WOR_ID_VIEW 
         };
+    });
+};
+export const deleteWorkoutDetails = async (P_WOR_ID: string): Promise<boolean> => {
+    return await withTransaction(async (conn) => {
+        // 1. 상세 내역 DELETE
+        const [Result] = await execute(conn,
+            `
+            DELETE FROM T_WORKOUT_DETAIL 
+            WHERE WOR_ID = ?
+            `,
+            [
+                P_WOR_ID
+            ] as any[]
+        );
+
+        // 3. 복합 프라이머리 키 리턴
+        return Result.affectedRows > 0;
     });
 };
 

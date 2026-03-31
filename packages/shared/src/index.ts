@@ -38,7 +38,7 @@ export interface ColDesc {
   회원정보
 =======================================================================================================*/
 export interface Member {
-    MEM_ID: string;
+    MEM_ID: number;
     MEM_ID_VIEW: string;
     MEM_NAME: string;
     MEM_NICKNAME: string;
@@ -50,7 +50,7 @@ export interface Member {
     MEM_POINT: number;
     MEM_EXP_POINT: number;   //
     MEM_LVL: number;         //
-    MES_ID : string;
+    MES_ID : number;
     MES_NAME: string;
     MES_FEE: number;
 }

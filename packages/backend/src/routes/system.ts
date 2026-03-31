@@ -168,7 +168,7 @@ systemRouter.post("/getSelectPrompt", async (req, res) => {
     }];
   }`;
       }
-      console.log('Generated backend prompt:', prompt);
+      // console.log('Generated backend prompt:', prompt);
       res.json({
         success: true,
         data: prompt,
