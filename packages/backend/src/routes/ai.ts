@@ -1,8 +1,8 @@
 import express from 'express';
 import Logger from '../logger.js'
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getMember, getWorkouts } from '../db.js';
-import { Workout } from 'shared';
+import { deleteWorkoutDetails, getMember, getWorkouts, insertWorkoutDetail } from '../db.js';
+import { T_WORKOUT_DETAIL, Workout, WorkoutDetail } from 'shared';
 
 const aiRouter = express.Router();
 //================================================================================================
@@ -12,7 +12,6 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 aiRouter.post('/recExercise', async (req, res) => {
   try {
     const { userProfile } = req.body;
-    console.log("AI 추천 요청 - 사용자 프로필:", userProfile); // 💡 사용자 프로필 로그
     const user = await getMember(userProfile.mem_id);
     const workouts = await getWorkouts();
 
@@ -76,12 +75,30 @@ aiRouter.post('/recExercise', async (req, res) => {
     const response = await result.response;
     const rawText = response.text();
     
-    let recommendedExercises: any[] = [];
+    let recommendedExercises: WorkoutDetail[] = [];
     try {
       // JSON 문자열이 ```json ... ``` 으로 둘러싸여 있을 수 있으니 깔끔히 정리
       const cleanText = rawText.replace(/```json|```/g, "").trim();
       recommendedExercises = JSON.parse(cleanText);
-      console.log("결과", recommendedExercises);      
+      console.log("최종결과", recommendedExercises);    
+      await deleteWorkoutDetails(userProfile.wor_id); // 기존 상세 내역 삭제  
+      console.log("삭제 후 추천 운동", recommendedExercises);       
+      const workoutDetails: T_WORKOUT_DETAIL[] = recommendedExercises.slice(0,3).map((recommend: WorkoutDetail) => ({
+            WOR_ID: userProfile.wor_id,
+            WOO_ID: recommend.WOO_ID,
+            WOD_GUIDE: recommend.WOD_GUIDE,
+            WOD_TARGET_REPS: recommend.WOD_TARGET_REPS,
+            WOD_TARGET_SETS: recommend.WOD_TARGET_SETS,
+            WOD_COUNT: 0,
+            WOD_POINT: 0,
+            WOD_ACCURACY: 0,
+            WOD_TIME: 0
+          }));
+      await Promise.all(
+        workoutDetails.map(async (workoutDetail) => {
+          await insertWorkoutDetail(workoutDetail);
+        })
+      );            
     } catch (parseError) {
       console.warn("AI 응답 파싱 실패, fallback 사용");
       recommendedExercises = [

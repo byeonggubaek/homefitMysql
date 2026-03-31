@@ -1,6 +1,6 @@
 import express from 'express';
 import Logger from '../logger.js'
-import { getRanking } from '../db.js';
+import { getGoods, getRanking } from '../db.js';
 
 const rewardRouter = express.Router();
 
@@ -32,6 +32,28 @@ rewardRouter.get('/getRanking', async (req, res) => {
     await Logger.logApiSuccess(apiLogEntry);
   } catch (error) {console.log((error as Error).message);
   
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+rewardRouter.get('/getGoods', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    apiLogEntry = await Logger.logApiStart('GET /getGoods', []);
+
+    const data = await getGoods();
+
+    res.json({
+      success: true,
+      data: data,
+      timestamp: new Date().toISOString()
+    });
+
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
     await Logger.logApiError(apiLogEntry, error);
     res.status(500).json({
       success: false,

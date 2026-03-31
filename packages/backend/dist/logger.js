@@ -2,6 +2,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import sqlString from 'sqlstring';
 class Logger {
     static logDir = './logs';
     static logBuffer = [];
@@ -16,18 +17,49 @@ class Logger {
         const uniqueInput = `${Date.now()}-${Math.random()}`;
         return crypto.createHash('md5').update(uniqueInput).digest('hex').slice(0, 8);
     }
-    /// SQL에 바인드 변수를 적용하여 완성된 SQL 문자열을 반환하는 메서드
-    static applyBindsToSql(sql, binds) {
-        let result = sql;
-        const placeholders = sql.match(/:\w+|:[\d]+/g) || [];
-        placeholders.forEach((ph, index) => {
-            const bindValue = Array.isArray(binds) ? binds[index] : binds[ph.slice(1)];
-            const formattedValue = typeof bindValue === 'string'
-                ? `'${bindValue.replace(/'/g, "''")}'`
-                : bindValue;
-            result = result.replace(ph, formattedValue);
-        });
-        return result;
+    /// SQL에 바인드 변수를 적용하여 완성된 SQL 문자열을 반환하는 메서드 오라클용 
+    // private static applyBindsToSql(sql: string, binds: any[] | Record<string, any>): string {
+    //   let result = sql;
+    //    const placeholders = sql.match(/:\w+|:[\d]+/g) || [];
+    //   placeholders.forEach((ph) => {
+    //     let bindValue: any;
+    //     // 1. 이름 바인딩 우선 (:memberId → binds.memberId)
+    //     const bindName = ph.slice(1);  // :memberId → memberId
+    //     if (typeof binds === 'object' && !Array.isArray(binds) && bindName in binds) {
+    //       bindValue = binds[bindName];
+    //     } 
+    //     // 2. 배열 바인딩 폴백 (순서)
+    //     else if (Array.isArray(binds)) {
+    //       let index = parseInt(bindName) || 0;
+    //       index = index - 1; // :1 → 0-based index
+    //       index = index < binds.length ? index : 0; // 인덱스가 범위를 벗어나면 0으로 처리
+    //       bindValue = binds[index];
+    //     }
+    //     // 3. 기본값
+    //     else {
+    //       bindValue = null;
+    //     }
+    //     // 4. 값 포맷팅
+    //     const formattedValue = this.formatBindValue(bindValue);
+    //     result = result.replace(ph, formattedValue);
+    //   });
+    //   return result;
+    // }
+    // private static formatBindValue(value: any): string {
+    //   if (value === null || value === undefined) return 'NULL';
+    //   if (typeof value === 'string') return `'${value.replace(/'/g, "''")}'`;
+    //   if (typeof value === 'number') return value.toString();
+    //   if (typeof value === 'boolean') return value ? '1' : '0';
+    //   if (value instanceof Date) return `DATE '${value.toISOString().slice(0,10)}'`;
+    //   return value.toString();
+    // }
+    static getExecutedQuery({ sql, values }) {
+        // ? 치환
+        if (Array.isArray(values)) {
+            return sqlString.format(sql, values);
+        }
+        // named placeholders (:name) 치환
+        return sqlString.format(sql, values);
     }
     // 시스템 관련 로그 기록 메서드
     static createLogEntry(type, log) {
@@ -50,6 +82,7 @@ class Logger {
         this.logBuffer.push(JSON.stringify(logEntry));
         await this.flushBuffer();
     }
+    // api 로그 기록 메서드
     static createApiLogEntry(method, binds) {
         return {
             timestamp: new Date().toISOString(),
@@ -89,19 +122,20 @@ class Logger {
         this.logBuffer.push(JSON.stringify(logEntry));
         await this.flushBuffer();
     }
-    static createQueryLogEntry(sql, binds) {
+    // 쿼리 로그 기록 메서드
+    static createQueryLogEntry({ sql, values }) {
         return {
             timestamp: new Date().toISOString(),
             type: 'query start',
             hash: Logger.getHash(),
             duration: 0,
             startTime: Date.now(),
-            sql: this.applyBindsToSql(sql, binds)
+            sql: this.getExecutedQuery({ sql, values })
         };
     }
     static async logQueryStart(sql, binds) {
         await this.initLogDir();
-        const logEntry = this.createQueryLogEntry(sql, binds);
+        const logEntry = this.createQueryLogEntry({ sql, values: binds });
         const logEntryString = JSON.stringify(logEntry).replace(/\\n/g, String.fromCharCode(13) + String.fromCharCode(10));
         this.logBuffer.push(logEntryString);
         return logEntry;

@@ -1,4 +1,4 @@
-CREATE PROCEDURE `member_login`(
+CREATE DEFINER=`sc_25K_HI2_p2_2`@`%` PROCEDURE `member_login`(
     IN  p_mem_id_view    VARCHAR(50),
     IN  p_mem_password 	VARCHAR(256)
 )
@@ -16,6 +16,7 @@ BEGIN
 				A.MEM_POINT,
 				A.MEM_EXP_POINT,
 				A.MEM_LVL,
+                A.MEM_STREAK,
 				A.MES_ID,
 				B.MES_NAME,
 				B.MES_FEE

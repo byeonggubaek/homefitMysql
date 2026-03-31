@@ -1,68 +1,179 @@
+import 'react';
 export interface NavSubItem {
-    id: string;
-    title: string;
-    href: string;
-    description: string;
+    NAS_ID: string;
+    NAS_NAME: string;
+    NAS_HREF: string;
+    NAS_DESC: string;
 }
 export interface NavItem {
-    id: string;
-    title: string;
-    img: string;
-    description: string;
-    sub_menus: NavSubItem[];
+    NAV_ID: string;
+    NAV_NAME: string;
+    NAV_IMG: string;
+    NAV_DESC: string;
+    NAV_SUB_MENUS: NavSubItem[];
 }
-export interface Invoice {
-    id: string;
-    inv_dt: Date;
-    seller_id: string;
-    seller_name: string;
-    area_name: string;
-    payment_status: string;
-    payment_method: string;
-    payment_status_color: string;
-    payment_method_color: string;
-    qty: number;
-    price: number;
-    amount: number;
+export interface MenuPos {
+    NAV_ID: string;
+    NAS_ID: string;
+    NAV_NAME: string;
+    NAS_NAME: string;
+    NAS_SIBLINGS: NavSubItem[];
 }
 export interface ColDesc {
-    id: string;
-    title: string;
-    type: string;
-    width?: number;
-    summary?: string;
-    aggregate?: number;
+    COL_ID: string;
+    COL_NAME: string;
+    COL_TYPE: string;
+    COL_WIDTH?: number;
+    COL_SUM?: string;
+    COL_AGG?: number;
 }
-export interface InvoiceSummarySub {
-    amount: number;
+export interface Member {
+    MEM_ID: number;
+    MEM_ID_VIEW: string;
+    MEM_NAME: string;
+    MEM_NICKNAME: string;
+    MEM_IMG: string;
+    MEM_PNUMBER: string;
+    MEM_EMAIL: string;
+    MEM_SEX: string;
+    MEM_AGE: number;
+    MEM_POINT: number;
+    MEM_EXP_POINT: number;
+    MEM_LVL: number;
+    MES_ID: number;
+    MES_NAME: string;
+    MES_FEE: number;
 }
-export interface InvoiceSummary {
-    month: string;
-    sub_amounts: InvoiceSummarySub[];
+export interface MemberExists {
+    STATUS: string;
+    ERROR: string;
+    USER?: Member;
 }
-export interface MapPosition {
-    lat: number;
-    lng: number;
+export interface Benefit {
+    BEN_ID: string;
+    BEN_NAME: string;
+}
+export interface Membership {
+    MES_ID: number;
+    MES_NAME: string;
+    MES_FEE: number;
+    MES_BENEFITS: Benefit[];
+}
+export interface WorkoutRecord {
+    WOR_ID: number;
+    WOR_DT: Date;
+    WOO_ID: number;
+    WOO_NAME: string;
+    WOO_NAME_COLOR: string;
+    WOD_TARGET_REPS: number;
+    WOD_TARGET_SETS: number;
+    WOD_COUNT_P: number;
+    WOD_COUNT: number;
+    WOD_COUNT_S: number;
+    WOD_POINT: number;
+    WOR_DESC?: string;
+}
+export interface WorkoutHistory {
+    WO_DT: string;
+    STATUS: string;
+}
+export interface WorkoutDetail {
+    WOO_ID: number;
+    WOO_NAME: string;
+    WOO_IMG: string;
+    WOO_UNIT: string;
+    WOD_GUIDE: string;
+    WOD_TARGET_REPS: number;
+    WOD_TARGET_SETS: number;
+}
+export interface CurWorkoutRecord {
+    WOR_ID: number;
+    WOR_ID_VIEW: string;
+}
+export interface Workout {
+    WOO_ID: number;
+    WOO_NAME: string;
+    WOO_IMG: string;
+    WOO_UNIT: string;
+    WOO_GUIDE: string;
+    WOO_TARGET_REPS: number;
+    WOO_TARGET_SETS: number;
+}
+export interface RankingItem {
+    RANK: number;
+    MEM_ID: number;
+    MEM_NAME: string;
+    MEM_IMG: string;
+    CNT: number;
+    WORKOUT_TIME: number;
+}
+export interface T_MEMBER {
+    MEM_ID?: number;
+    MEM_ID_VIEW: string;
+    MEM_NAME: string;
+    MEM_NICKNAME?: string | null;
+    MEM_PASSWORD: string;
+    MEM_IMG?: string | null;
+    MEM_PNUMBER?: string | null;
+    MEM_EMAIL?: string | null;
+    MEM_SEX: string | null;
+    MEM_AGE: number;
+    MEM_POINT: number;
+    MEM_EXP_POINT: number;
+    MEM_LVL: number;
+    MES_ID: number;
+}
+export interface T_WORKOUT_RECORD {
+    WOR_ID?: number;
+    WOR_ID_VIEW: string;
+    MEM_ID: number;
+    WOR_DT?: string | Date | null;
+    WOR_DESC?: string | null;
+}
+export interface T_WORKOUT_DETAIL {
+    WOR_ID: number;
+    WOO_ID: number;
+    WOD_GUIDE?: string | null;
+    WOD_TARGET_REPS: number;
+    WOD_TARGET_SETS: number;
+    WOD_COUNT: number;
+    WOD_POINT: number;
+    WOD_ACCURACY: number;
+    WOD_TIME: number;
+}
+export interface ChartData {
+    COLUMNS: Record<string, any>;
+    DATA: Record<string, any>;
 }
 export interface Postcode {
-    postcode: string;
-    address: string;
-    roadAddress: string;
+    POSTCODE: string;
+    ADDRESS: string;
+    ROAD_ADDRESS: string;
+}
+export interface MapPosition {
+    LAT: number;
+    LNG: number;
 }
 export interface BusinessTypeResult {
-    name: string;
-    fullCategory: string;
-    leafCategory: string;
-    mainCategory: string;
-    subCategory: string;
+    NAME: string;
+    FULL_CATEGORY: string;
+    LEAF_CATEGORY: string;
+    MAIN_CATEGORY: string;
+    SUB_CATEGORY: string;
 }
 export interface ShopLocation {
-    name: string;
-    fullAddress: string;
-    coords: {
-        lat: number;
-        lng: number;
+    NAME: string;
+    FULL_ADDRESS: string;
+    COORDS: {
+        LAT: number;
+        LNG: number;
     };
-    category: string;
-    matchScore: number;
+    CATEGORY: string;
+    MATCH_SCORE: number;
+}
+declare module 'express-session' {
+    interface SessionData {
+        user: Member | null;
+        isLogined: boolean;
+    }
 }

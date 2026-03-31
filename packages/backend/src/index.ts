@@ -109,7 +109,8 @@ app.get('/api/getMenus', async (req, res) => {
   let apiLogEntry = null;
   try {
     apiLogEntry = await Logger.logApiStart('GET /api/getMenus', []);
-    const data = await getMenus();
+    const { mem_id } = req.query as { mem_id: string };  
+    const data = await getMenus(mem_id);
     res.json({
       success: true,
       data: data,

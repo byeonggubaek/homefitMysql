@@ -16,13 +16,15 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from '@/components/ui/button';
+import { useUser } from '@/hooks/UserContext';
 
-const WorkoutStartMain: React.FC = () => {
+const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
+  const { member } = useUser();  // Context에서 공유
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
   const requestRef = useRef<number | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 상태 관리
   const [isDetecting, setIsDetecting] = useState(false);
@@ -182,10 +184,14 @@ const WorkoutStartMain: React.FC = () => {
   // 데이터 로딩 (기존 로직 유지)
   const [workouts, setWorkout] = useState<WorkoutDetail[] | null>(null);
   useEffect(() => {
-    fetch(`http://localhost:3001/api/workout/getWorkoutDetails?wor_id=WOR00001`)
+    if (!wor_id) return;
+    fetch(`http://localhost:3001/api/workout/getWorkoutDetails?mem_id=${member?.MEM_ID}&wor_id=${wor_id}`)
       .then(res => res.json())
-      .then(data => setWorkout(data.data));    
-  }, []);
+      .then(data => {
+        setWorkout(data.data); 
+        console.log("Fetched workout details:", data.data);
+      });    
+  }, [wor_id, member?.MEM_ID]);
 
   return (
     <div className="w-full flex items-start gap-6 bg-slate-50"> 
@@ -196,7 +202,7 @@ const WorkoutStartMain: React.FC = () => {
             <div className="flex justify-between items-end">
               <div>
                 <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">
-                  {isDetecting ? currentExercise : "운동 시작"}
+                  {isDetecting ? currentExercise : `운동 시작 #${wor_id ?? ''}`}
                 </CardTitle>
                 <CardDescription className="text-sm">실시간 자세 분석 중</CardDescription>
               </div>
@@ -264,8 +270,8 @@ const WorkoutStartMain: React.FC = () => {
       </div>
 
       {/* 오른쪽 목표 리스트 영역 */}
-      <div className="w-1/2">
-        <Card className="border-none shadow-lg">
+      <div className="w-full">
+        <Card className="w-full border-none shadow-lg">
           <CardHeader className="border-b py-3">
             <CardTitle className="text-lg">오늘의 목표</CardTitle>
           </CardHeader>

@@ -18,7 +18,7 @@ const WorkoutDashboardUser = () => {
       <CardHeader>
         <CardTitle className="text-3xl">회원정보 : <span className="text-primary">Lvl {member?.MEM_LVL} </span> </CardTitle>
         <CardAction className="flex items-center gap-2">
-          {member?.MES_ID !== 'MES00001' && <><UserRoundPlus /><Link className="text-md text-focus" to="/member/register">회원가입</Link></>}
+          {member?.MES_ID !== 1 && <><UserRoundPlus /><Link className="text-md text-focus" to="/member/register">회원가입</Link></>}
         </CardAction>      
       </CardHeader>
       <CardContent>
@@ -28,7 +28,7 @@ const WorkoutDashboardUser = () => {
               <AvatarImage
                 src={member?.MEM_IMG || "/member/member.png"}
                 alt={member?.MEM_NICKNAME}
-                className={member?.MES_ID === 'MES00001' ? "grayscale" : ""}            
+                className={member?.MES_ID === 1 ? "grayscale" : ""}            
               />
               <AvatarFallback>사용자</AvatarFallback>
               <AvatarBadge className="w-3 h-3 border-2 border-background bg-green-600 dark:bg-green-800" />         

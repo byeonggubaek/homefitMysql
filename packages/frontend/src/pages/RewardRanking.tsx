@@ -11,7 +11,7 @@ export default function RewardRanking() {
       </div>
       <div className="flex gap-4 w-full">
         <RewardRankingMain />
-      </div>
+     </div>
     </div>
   );
 }
