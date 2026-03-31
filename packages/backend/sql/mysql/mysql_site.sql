@@ -66,11 +66,7 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0001', '프로필','/menu/profile.jpg', '개인 정보를 관리합니다.', 'MemberProfile', '/member/profile/profile');
 INSERT INTO T_NAV_SUB_ITEM VALUES
-<<<<<<< HEAD
 ('NAV00004', 'S0002', '회원등록','/menu/signup.png', '개인 정보를 등록합니다.', 'MemberSignup', '/member/signup');
-=======
-('NAV00004', 'S0002', '회원등록','/menu/register.png', '개인 정보를 등록합니다.', 'MemberSignup', '/member/signup');
->>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0003', '운동목표','/menu/plan.jpg', '운동 목표를 설정하고 관리합니다.', 'MemberPlan', '/member/plan');
 INSERT INTO T_NAV_SUB_ITEM VALUES
@@ -96,13 +92,8 @@ CREATE TABLE T_CODE_DESC
     CONSTRAINT T_CODE_DESC_PK PRIMARY KEY (COD_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-<<<<<<< HEAD
 INSERT INTO T_CODE_DESC VALUES ('COD00001', '지급상태');
-INSERT INTO T_CODE_DESC VALUES ('COD00002', '지급방식');
-=======
-INSERT INTO T_CODE_DESC VALUES ('COD00001', '지불상태');
 INSERT INTO T_CODE_DESC VALUES ('COD00002', '지불방법');
->>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
 INSERT INTO T_CODE_DESC VALUES ('COD00003', '성별');
 INSERT INTO T_CODE_DESC VALUES ('COD00004', '운동상태');
 
@@ -308,14 +299,10 @@ CREATE TABLE T_MEMBER
     MEM_SEX        	VARCHAR(5)    NOT NULL COMMENT '성별 코드 (T_MINOR_DESC : CD00003 참조)',
     MEM_AGE        	INT           NOT NULL DEFAULT 0 COMMENT '나이',
     MEM_POINT      	INT           NOT NULL DEFAULT 0 COMMENT '현재 포인트',
-    MEM_EXP_POINT  	INT           NOT NULL DEFAULT 0 COMMENT '누적 경험치 (4500점=1레벨)',
+    MEM_EXP_POINT	INT 		  NOT NULL DEFAULT 0 COMMENT '누적 경험치 (4500점=1레벨)',
     MEM_LVL        	INT           NOT NULL DEFAULT 0 COMMENT '회원 레벨',
-<<<<<<< HEAD
-    MES_ID 			INT	  		  NOT NULL DEFAULT 1 COMMENT '회원 등급 코드 (T_MEMBERSHIP 참조)',
-=======
     MEM_STREAK		INT           NOT NULL DEFAULT 0 COMMENT '연속목표 당성일',
-    MES_ID 			INT	  		  NOT NULL COMMENT '회원 등급 코드 (T_MEMBERSHIP 참조)',
->>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
+    MES_ID 			INT	  		  NOT NULL DEFAULT 1 COMMENT '회원 등급 코드 (T_MEMBERSHIP 참조)',
     CONSTRAINT T_MEMBER_PK PRIMARY KEY (MEM_ID),
 	CONSTRAINT T_MEMBER_MES_ID_FK FOREIGN KEY (MES_ID) REFERENCES T_MEMBERSHIP(MES_ID)      
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -429,11 +416,7 @@ CREATE TABLE T_WORKOUT_RECORD
     MEM_ID		INT		      NOT NULL COMMENT '회원 ID',
     WOR_DT		DATE          NOT NULL DEFAULT (CURRENT_DATE)  COMMENT '운동일',
     WOR_DESC	VARCHAR(512)  NULL COMMENT '운동 설명',
-<<<<<<< HEAD
     WOR_STATUS  VARCHAR(2)	  NOT NULL DEFAULT 'N' COMMENT '운동 상태 (T_MINOR_DESC : CD00004 참조)',
-=======
-    WOR_STATUS  VARCHAR(2) 	  NOT NULL DEFAULT 'N' COMMENT '운동상태 (T_MINOR_DESC : CD00004 참조)',
->>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
     CONSTRAINT T_WORKOUT_RECORD_PK PRIMARY KEY (WOR_ID),
     CONSTRAINT T_WORKOUT_RECORD_MEM_ID_FK FOREIGN KEY (MEM_ID) REFERENCES T_MEMBER(MEM_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -455,8 +438,6 @@ INSERT INTO T_WORKOUT_RECORD
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
 ('WOR00004', 2, '2026-03-12', '두번째 운동', 'N');
-<<<<<<< HEAD
-=======
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
@@ -465,7 +446,6 @@ INSERT INTO T_WORKOUT_RECORD
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
 ('WOR00006', 4, '2026-03-01', '첫번째 운동', 'N');
->>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
 
 SELECT * FROM T_WORKOUT_RECORD;
 --------------------------------------------------------------------------------------------------------------------------------

@@ -50,10 +50,7 @@ export interface Member {
     MEM_POINT: number;
     MEM_EXP_POINT: number;   //
     MEM_LVL: number;         //
-<<<<<<< HEAD
-=======
     MEM_STREAK: number;    
->>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
     MES_ID : number;
     MES_NAME: string;
     MES_FEE: number;

@@ -788,30 +788,18 @@ UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?
 export const deleteWorkoutDetails = async (P_WOR_ID: string): Promise<boolean> => {
     return await withTransaction(async (conn) => {
         // 1. 상세 내역 DELETE
-<<<<<<< HEAD
         const [Result] = await execute(conn,
             `
             DELETE FROM T_WORKOUT_DETAIL 
-=======
-        const [result] = await execute(conn,
-            `
-            DELETE 
-            FROM T_WORKOUT_DETAIL
->>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
             WHERE WOR_ID = ?
             `,
             [
                 P_WOR_ID
             ] as any[]
-<<<<<<< HEAD
         );
 
         // 3. 복합 프라이머리 키 리턴
         return Result.affectedRows > 0;
-=======
-        );        // 3. 복합 프라이머리 키 리턴
-        return result.affectedRows > 0;
->>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
     });
 };
 

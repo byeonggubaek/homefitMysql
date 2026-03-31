@@ -1,6 +1,6 @@
 import express from 'express';
 import Logger from '../logger.js'
-import { addMemberPlan, deleteMemberPlan, getMember, getMemberships, getMonthStatus, insertMember, login, MemberPlans } from '../db.js';
+import { getMember, getMemberships, insertMember, login } from '../db.js';
 import jwt from 'jsonwebtoken';
 import { Member, T_MEMBER } from 'shared';
 
@@ -182,6 +182,7 @@ memberRouter.post('/signup', async (req, res) => {
             MEM_POINT: 0,
             MEM_EXP_POINT: 0,
             MEM_LVL: 0,
+            MEM_STREAK: 0,
             MES_ID: Number(mes_id)
         };
 
