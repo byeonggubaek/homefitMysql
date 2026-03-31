@@ -50,6 +50,10 @@ export interface Member {
     MEM_POINT: number;
     MEM_EXP_POINT: number;   //
     MEM_LVL: number;         //
+<<<<<<< HEAD
+=======
+    MEM_STREAK: number;    
+>>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
     MES_ID : number;
     MES_NAME: string;
     MES_FEE: number;
@@ -64,7 +68,7 @@ export interface Benefit {
   BEN_NAME: string;
 }
 export interface Membership {
-  MES_ID: string;
+  MES_ID: number;
   MES_NAME: string;
   MES_FEE: number;
   MES_BENEFITS: Benefit[];
@@ -121,6 +125,15 @@ export interface RankingItem {
   CNT: number;
   WORKOUT_TIME: number;
 }
+export interface Goods 
+{
+  GOD_ID: number;   // PK (AUTO_INCREMENT)
+  GOD_ID_VIEW : string;   // varchar(8)
+  GOD_NAME    : string;   // varchar(50)
+  GOD_PRICE   : number;   // int
+  GOD_DCRATE  : number;   // int
+  GOD_IMG     : string | null;  // varchar(256), nullable
+}
 /*=======================================================================================================
   등록 관련
 =======================================================================================================*/
@@ -138,6 +151,7 @@ export interface T_MEMBER {
     MEM_POINT: number;
     MEM_EXP_POINT: number;
     MEM_LVL: number;
+    MEM_STREAK: number;
     MES_ID: number;           // 등급 코드 (FK)
 }
 export interface T_WORKOUT_RECORD {

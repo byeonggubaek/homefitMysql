@@ -66,7 +66,11 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0001', '프로필','/menu/profile.jpg', '개인 정보를 관리합니다.', 'MemberProfile', '/member/profile/profile');
 INSERT INTO T_NAV_SUB_ITEM VALUES
+<<<<<<< HEAD
 ('NAV00004', 'S0002', '회원등록','/menu/signup.png', '개인 정보를 등록합니다.', 'MemberSignup', '/member/signup');
+=======
+('NAV00004', 'S0002', '회원등록','/menu/register.png', '개인 정보를 등록합니다.', 'MemberSignup', '/member/signup');
+>>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0003', '운동목표','/menu/plan.jpg', '운동 목표를 설정하고 관리합니다.', 'MemberPlan', '/member/plan');
 INSERT INTO T_NAV_SUB_ITEM VALUES
@@ -92,8 +96,13 @@ CREATE TABLE T_CODE_DESC
     CONSTRAINT T_CODE_DESC_PK PRIMARY KEY (COD_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+<<<<<<< HEAD
 INSERT INTO T_CODE_DESC VALUES ('COD00001', '지급상태');
 INSERT INTO T_CODE_DESC VALUES ('COD00002', '지급방식');
+=======
+INSERT INTO T_CODE_DESC VALUES ('COD00001', '지불상태');
+INSERT INTO T_CODE_DESC VALUES ('COD00002', '지불방법');
+>>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
 INSERT INTO T_CODE_DESC VALUES ('COD00003', '성별');
 INSERT INTO T_CODE_DESC VALUES ('COD00004', '운동상태');
 
@@ -171,6 +180,7 @@ WHERE  COL_TBL_NAME = 'WorkoutRecord';
 DROP TABLE IF EXISTS T_WORKOUT_DETAIL;
 DROP TABLE IF EXISTS T_WORKOUT_RECORD;
 DROP TABLE IF EXISTS T_INVOICE;
+DROP TABLE IF EXISTS T_MEMBER_PLAN;
 DROP TABLE IF EXISTS T_MEMBER;
 DROP TABLE IF EXISTS T_WORKOUT;
 DROP TABLE IF EXISTS T_ACHIEVEMENT;
@@ -300,7 +310,12 @@ CREATE TABLE T_MEMBER
     MEM_POINT      	INT           NOT NULL DEFAULT 0 COMMENT '현재 포인트',
     MEM_EXP_POINT  	INT           NOT NULL DEFAULT 0 COMMENT '누적 경험치 (4500점=1레벨)',
     MEM_LVL        	INT           NOT NULL DEFAULT 0 COMMENT '회원 레벨',
+<<<<<<< HEAD
     MES_ID 			INT	  		  NOT NULL DEFAULT 1 COMMENT '회원 등급 코드 (T_MEMBERSHIP 참조)',
+=======
+    MEM_STREAK		INT           NOT NULL DEFAULT 0 COMMENT '연속목표 당성일',
+    MES_ID 			INT	  		  NOT NULL COMMENT '회원 등급 코드 (T_MEMBERSHIP 참조)',
+>>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
     CONSTRAINT T_MEMBER_PK PRIMARY KEY (MEM_ID),
 	CONSTRAINT T_MEMBER_MES_ID_FK FOREIGN KEY (MES_ID) REFERENCES T_MEMBERSHIP(MES_ID)      
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -308,21 +323,21 @@ ALTER TABLE T_MEMBER ADD INDEX T_MEMBER_MEM_ID_VIEW_IX (MEM_ID_VIEW);
 
 -- member_hash_password는 MySQL에 따로 함수 구현 필요
 INSERT INTO T_MEMBER 
-(MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
+(MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MEM_STREAK, MES_ID)
 VALUES
-('oranjes@naver.com', '백병구', '쥐', member_hash_password('oranjes@naver.com', '1234'), '/member/U000001.jpg','010-5555-5555','ZZ@NAVER.COM','M', 52, 0, 0, 1, 3);
+('oranjes@naver.com', '백병구', '쥐', member_hash_password('oranjes@naver.com', '1234'), '/member/U000001.jpg','010-5555-5555','ZZ@NAVER.COM','M', 52, 400, 10000, 2, 2, 3);
 INSERT INTO T_MEMBER 
-(MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
+(MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MEM_STREAK, MES_ID)
 VALUES
-('moon@naver.com', '문정인', '고양이', member_hash_password('moon@naver.com', '1234'), '/member/U000002.jpg','010-5555-5555','ZZ@NAVER.COM','F', 24, 0, 0, 1, 2);
+('moon@naver.com', '문정인', '고양이', member_hash_password('moon@naver.com', '1234'), '/member/U000002.jpg','010-5555-5555','ZZ@NAVER.COM','F', 24, 350, 0, 1, 2, 2);
 INSERT INTO T_MEMBER 
-(MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
+(MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MEM_STREAK, MES_ID)
 VALUES
-('sung@naver.com', '문성윤', '소', member_hash_password('sung@naver.com', '1234'), '/member/U000003.png','010-5555-5555','ZZ@NAVER.COM','M', 40, 0, 0, 1, 1);
+('sung@naver.com', '문성윤', '소', member_hash_password('sung@naver.com', '1234'), '/member/U000003.png','010-5555-5555','ZZ@NAVER.COM','M', 40, 1200, 0, 1, 2, 1);
 INSERT INTO T_MEMBER 
-(MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MES_ID)
+(MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MEM_STREAK, MES_ID)
 VALUES
-('dong@naver.com', '김동건', '호랑이', member_hash_password('dong@naver.com', '1234'), '/member/U000004.webp','010-5555-5555','ZZ@NAVER.COM','M', 26, 0, 0, 1, 1);
+('dong@naver.com', '김동건', '호랑이', member_hash_password('dong@naver.com', '1234'), '/member/U000004.webp','010-5555-5555','ZZ@NAVER.COM','M', 4200, 0, 0, 1, 2, 1);
 SELECT * FROM T_MEMBER;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 운동
@@ -369,6 +384,42 @@ VALUES
 
 SELECT * FROM T_WORKOUT;
 --------------------------------------------------------------------------------------------------------------------------------
+-- 운동 계획
+--------------------------------------------------------------------------------------------------------------------------------
+CREATE TABLE T_MEMBER_PLAN (
+    MEP_ID          INT AUTO_INCREMENT NOT NULL COMMENT '계획 고유번호',
+    MEM_ID          INT NOT NULL COMMENT '회원 내부 ID',
+    WOO_ID          INT NOT NULL COMMENT '운동 ID (T_WORKOUT 참조)',
+    MEP_DATE        DATE NOT NULL COMMENT '계획된 날짜',
+    MEP_TARGET      INT NOT NULL DEFAULT 0 COMMENT '목표 수치',
+    MEP_UNIT        VARCHAR(10) NOT NULL COMMENT '단위 (회, 초, 세트 등)',
+    MEP_ACHIEVED    CHAR(1) DEFAULT 'N' COMMENT '달성 여부 (Y/N)',
+    MEP_DT          DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
+    
+    CONSTRAINT T_MEMBER_PLAN_PK PRIMARY KEY (MEP_ID),
+    CONSTRAINT T_MEMBER_PLAN_MEM_FK FOREIGN KEY (MEM_ID) REFERENCES T_MEMBER(MEM_ID),
+    CONSTRAINT T_MEMBER_PLAN_WOO_FK FOREIGN KEY (WOO_ID) REFERENCES T_WORKOUT(WOO_ID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 테스트 데이터
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 1, '2026-03-28', 30, '초');
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 2, '2026-03-28', 20, '회');
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 3, '2026-03-28', 10, '회');
+
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 1, '2026-03-29', 30, '초');
+
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 1, '2026-03-30', 30, '초');
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 2, '2026-03-30', 20, '회');
+
+SELECT	*
+FROM	T_MEMBER_PLAN;
+--------------------------------------------------------------------------------------------------------------------------------
 -- 운동기록 
 --------------------------------------------------------------------------------------------------------------------------------
 CREATE TABLE T_WORKOUT_RECORD 
@@ -378,7 +429,11 @@ CREATE TABLE T_WORKOUT_RECORD
     MEM_ID		INT		      NOT NULL COMMENT '회원 ID',
     WOR_DT		DATE          NOT NULL DEFAULT (CURRENT_DATE)  COMMENT '운동일',
     WOR_DESC	VARCHAR(512)  NULL COMMENT '운동 설명',
+<<<<<<< HEAD
     WOR_STATUS  VARCHAR(2)	  NOT NULL DEFAULT 'N' COMMENT '운동 상태 (T_MINOR_DESC : CD00004 참조)',
+=======
+    WOR_STATUS  VARCHAR(2) 	  NOT NULL DEFAULT 'N' COMMENT '운동상태 (T_MINOR_DESC : CD00004 참조)',
+>>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
     CONSTRAINT T_WORKOUT_RECORD_PK PRIMARY KEY (WOR_ID),
     CONSTRAINT T_WORKOUT_RECORD_MEM_ID_FK FOREIGN KEY (MEM_ID) REFERENCES T_MEMBER(MEM_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -400,6 +455,17 @@ INSERT INTO T_WORKOUT_RECORD
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
 ('WOR00004', 2, '2026-03-12', '두번째 운동', 'N');
+<<<<<<< HEAD
+=======
+INSERT INTO T_WORKOUT_RECORD 
+(WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
+VALUES
+('WOR00005', 3, '2026-03-01', '첫번째 운동', 'N');
+INSERT INTO T_WORKOUT_RECORD 
+(WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
+VALUES
+('WOR00006', 4, '2026-03-01', '첫번째 운동', 'N');
+>>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
 
 SELECT * FROM T_WORKOUT_RECORD;
 --------------------------------------------------------------------------------------------------------------------------------
@@ -435,6 +501,18 @@ INSERT INTO T_WORKOUT_DETAIL VALUES
 (3, 2, '', 30, 2, 60, 0, 0, 0);
 INSERT INTO T_WORKOUT_DETAIL VALUES
 (4, 1, '', 15, 3, 45, 450, 95, 10);
+
+INSERT INTO T_WORKOUT_DETAIL VALUES
+(5, 1, '', 30, 3, 45, 450, 95, 20);
+INSERT INTO T_WORKOUT_DETAIL VALUES
+(5, 2, '', 30, 2, 60, 600, 92, 20);
+
+INSERT INTO T_WORKOUT_DETAIL VALUES
+(6, 1, '', 30, 3, 45, 1450, 95, 20);
+INSERT INTO T_WORKOUT_DETAIL VALUES
+(6, 2, '', 30, 2, 60, 600, 92, 20);
+INSERT INTO T_WORKOUT_DETAIL VALUES
+(6, 3, '', 20, 3, 55, 0, 0, 0);
 
 SELECT * FROM T_WORKOUT_DETAIL;
 --------------------------------------------------------------------------------------------------------------------------------
@@ -558,15 +636,55 @@ ALTER TABLE T_GOODS ADD INDEX T_GOODS_GOD_ID_VIEW_IX (GOD_ID_VIEW);
 INSERT INTO T_GOODS 
 (GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
 VALUES
-('GOD00001', '운동 매트', '/goods/custom_program.jpg','AI가 나만의 운동 프로그램을 생성해줍니다', 10000, 10);
+('GOD00001', '운동 매트', '/mallimg/yoga-mat.jpg','AI가 나만의 운동 프로그램을 생성해줍니다', 10000, 10);
 INSERT INTO T_GOODS 
 (GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
 VALUES
-('GOD00002', '덤벨 세트', '/goods/home_training_discount.jpg','홈트레이닝 용품을 할인된 가격에 구매하세요', 50000, 20);
+('GOD00002', '덤벨 세트', '/mallimg/dumbbell-set.jpg','홈트레이닝 용품을 할인된 가격에 구매하세요', 50000, 20);
 INSERT INTO T_GOODS 
 (GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
 VALUES
-('GOD00003', '저항 밴드', '/goods/nutrition_guide.jpg','영양 가이드북을 제공합니다', 20000, 15);
+('GOD00003', '저항 밴드', '/mallimg/resistance-band.jpg','영양 가이드북을 제공합니다', 20000, 15);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
+VALUES
+('GOD00004', '스포츠 물병', '/mallimg/water-bottle.jpg','스포츠용 물병', 9000, 10);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
+VALUES
+('GOD00005', '폼롤러', '/mallimg/foam-roller.jpg','폼롤러', 22000, 25);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
+VALUES
+('GOD00006', '케틀벨', '/mallimg/kettlebell.jpg','케틀벨', 47000, 20);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
+VALUES
+('GOD00007', '줄넘기', '/mallimg/jump-rope.jpg','줄넘기', 11000, 15);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
+VALUES
+('GOD00008', '운동 장갑', '/mallimg/gym-gloves.jpg','운동 장갑', 17000, 20);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
+VALUES
+('GOD00009', '풀업 바', '/mallimg/pull-up-bar.jpg','풀업 바', 69000, 35);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
+VALUES
+('GOD00010', '운동 타월', '/mallimg/towel.jpg','운동 타월', 7000, 1);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
+VALUES
+('GOD00011', '스트레칭 매트', '/mallimg/stretch-mat.jpg','스트레칭 매트', 26, 18);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, GOD_IMG, GOD_DESC, GOD_PRICE, GOD_DCRATE)
+VALUES
+('GOD00012', '힙 밴드 세트', '/mallimg/hip-band.jpg','힙 밴드 세트', 140, 22);
+INSERT INTO T_GOODS 
+(GOD_ID_VIEW, GOD_NAME, God_IMG, God_DESC, God_PRICE, God_DCRATE)
+VALUES
+('GOD00013', '마사지 건', '/mallimg/massage-gun.jpg','마사지 건', 89000, 40);
 
 SELECT  *
 FROM    T_GOODS;

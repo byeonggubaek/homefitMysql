@@ -16,6 +16,7 @@ BEGIN
 				A.MEM_POINT,
 				A.MEM_EXP_POINT,
 				A.MEM_LVL,
+                A.MEM_STREAK,
 				A.MES_ID,
 				B.MES_NAME,
 				B.MES_FEE

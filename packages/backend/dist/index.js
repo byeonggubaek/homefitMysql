@@ -1,16 +1,41 @@
 import express from 'express';
+import memberRouter from "./routes/member.js";
 import cors from 'cors';
-import { closePool, getMenus, getInvoices, getColDescs } from './db.js';
 import dotenv from 'dotenv';
+import session from 'express-session';
 import Logger from './logger.js';
+import { closePool, getMenus, getColDescs, getWorkoutPivot, getWorkoutPivotWithPlan, getMenuPos, searchMenus } from './db.js';
+import aiRouter from './routes/ai.js';
+import workoutRouter from './routes/workout.js';
+import systemRouter from './routes/system.js';
+import rewardRouter from './routes/reward.js';
 //=================================================================================================
 // 환경 변수 로드 & 서버 초기화
 //=================================================================================================
 dotenv.config();
 const PORT = Number(process.env.PORT) || 3001;
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173", // 프론트 주소
+    credentials: true, // 쿠키/세션 사용 시 필수
+}));
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod', // .env 필수!
+    resave: false, // 변경 시에만 재저장 (성능 ↑)
+    saveUninitialized: false, // 빈 세션 저장 안 함 (보안 ↑)
+    cookie: {
+        secure: process.env.NODE_ENV === 'production', // HTTPS 자동
+        httpOnly: true, // JS 접근 방지 (XSS 방어)
+        sameSite: 'lax', // CSRF 방어
+        maxAge: 1000 * 60 * 60 * 24 // 24시간
+    }
+}));
 app.use(express.json());
+app.use("/api/member", memberRouter); // 라우터 등록
+app.use("/api/ai", aiRouter); // AI 라우터 등록
+app.use("/api/workout", workoutRouter); // AI 라우터 등록
+app.use("/api/system", systemRouter); // 시스템 라우터 등록
+app.use("/api/reward", rewardRouter); // 시스템 라우터 등록
 // 서버 시작
 let server;
 server = app.listen(PORT, () => {
@@ -61,18 +86,18 @@ async function gracefulShutdown(signal) {
         process.exit(0);
     }
 }
-// API: 메뉴 전체 조회
-// GET /api/get_menus
-// PARAMETER : 없음
-app.get('/api/get_menus', async (req, res) => {
+//================================================================================================
+//   
+//================================================================================================
+app.get('/api/getMenus', async (req, res) => {
     let apiLogEntry = null;
     try {
-        apiLogEntry = await Logger.logApiStart('GET /api/get_menus', []);
-        const menus = await getMenus();
-        let menu = res.json({
+        apiLogEntry = await Logger.logApiStart('GET /api/getMenus', []);
+        const data = await getMenus();
+        res.json({
             success: true,
-            data: menus,
-            count: menus.length,
+            data: data,
+            count: data.length,
             timestamp: new Date().toISOString()
         });
         await Logger.logApiSuccess(apiLogEntry);
@@ -85,9 +110,58 @@ app.get('/api/get_menus', async (req, res) => {
         });
     }
 });
-// API: 테이블 컬럼 설명 조회
-// GET /api/get_col_descs?table=테이블명
-// PARAMETER : table (필수) - 컬럼 설명을 조회할 테이블 이름
+app.get('/api/getMenuPos', async (req, res) => {
+    let apiLogEntry = null;
+    try {
+        const { page } = req.query;
+        apiLogEntry = await Logger.logApiStart('GET /api/getMenuPos', [page]);
+        const data = await getMenuPos(page);
+        res.json({
+            success: true,
+            data: data,
+            timestamp: new Date().toISOString()
+        });
+        await Logger.logApiSuccess(apiLogEntry);
+    }
+    catch (error) {
+        await Logger.logApiError(apiLogEntry, error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+app.get('/api/searchMenus', async (req, res) => {
+    let apiLogEntry = null;
+    try {
+        const { key } = req.query;
+        if (!key) {
+            return res.status(400).json({
+                success: false,
+                error: '검색어가 필요합니다.'
+            });
+        }
+        apiLogEntry = await Logger.logApiStart('GET /api/searchMenus', [key]);
+        const data = await searchMenus(key);
+        res.json({
+            success: true,
+            data: data,
+            count: data.length,
+            timestamp: new Date().toISOString()
+        });
+        await Logger.logApiSuccess(apiLogEntry);
+    }
+    catch (error) {
+        await Logger.logApiError(apiLogEntry, error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+//================================================================================================
+// 포팅전 
+//================================================================================================
 app.get('/api/get_col_descs', async (req, res) => {
     let apiLogEntry = null;
     try {
@@ -116,49 +190,36 @@ app.get('/api/get_col_descs', async (req, res) => {
         });
     }
 });
-// API: 전체 매출내역 조회
-// GET /api/get_invoices
-// PARAMETER : 없음
-app.get('/api/get_invoices', async (req, res) => {
+app.get('/api/getWorkoutPivot', async (req, res) => {
     let apiLogEntry = null;
     try {
-        apiLogEntry = await Logger.logApiStart('GET /api/get_invoices', []);
-        const invoices = await getInvoices();
-        res.json({
-            success: true,
-            data: invoices,
-            count: invoices.length,
-            timestamp: new Date().toISOString()
-        });
-        await Logger.logApiSuccess(apiLogEntry);
-    }
-    catch (error) {
-        await Logger.logApiError(apiLogEntry, error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-// API: 메뉴 검색
-// GET /api/search_menus?title=검색어
-// PARAMETER : title (필수) - 검색할 메뉴 제목
-app.get('/api/search_menus', async (req, res) => {
-    let apiLogEntry = null;
-    try {
-        const { title } = req.query; // 👈 req.query 사용!
-        if (!title) {
+        const { memberId } = req.query;
+        const { from } = req.query;
+        const { to } = req.query;
+        if (!memberId) {
             return res.status(400).json({
                 success: false,
-                error: '검색어가 필요합니다.'
+                error: '회원 ID가 필요합니다.'
             });
         }
-        apiLogEntry = await Logger.logApiStart('GET /api/search_menus', [title]);
-        const menus = await getMenus(title);
+        if (!from) {
+            return res.status(400).json({
+                success: false,
+                error: '시작일이 필요합니다.'
+            });
+        }
+        if (!to) {
+            return res.status(400).json({
+                success: false,
+                error: '종료일이 필요합니다.'
+            });
+        }
+        apiLogEntry = await Logger.logApiStart('GET /api/getWorkoutPivot', [memberId, from, to]);
+        const records = await getWorkoutPivot(memberId, from, to);
         res.json({
             success: true,
-            data: menus,
-            count: menus.length,
+            data: records.data,
+            columns: records.columns,
             timestamp: new Date().toISOString()
         });
         await Logger.logApiSuccess(apiLogEntry);
@@ -171,6 +232,51 @@ app.get('/api/search_menus', async (req, res) => {
         });
     }
 });
+app.get('/api/get_workout_pivot_with_plan', async (req, res) => {
+    let apiLogEntry = null;
+    try {
+        const { memberId } = req.query;
+        const { from } = req.query;
+        const { to } = req.query;
+        if (!memberId) {
+            return res.status(400).json({
+                success: false,
+                error: '회원 ID가 필요합니다.'
+            });
+        }
+        if (!from) {
+            return res.status(400).json({
+                success: false,
+                error: '시작일이 필요합니다.'
+            });
+        }
+        if (!to) {
+            return res.status(400).json({
+                success: false,
+                error: '종료일이 필요합니다.'
+            });
+        }
+        apiLogEntry = await Logger.logApiStart('GET /api/get_workout_pivot_with_plan', [memberId, from, to]);
+        const records = await getWorkoutPivotWithPlan(memberId, from, to);
+        res.json({
+            success: true,
+            data: records.data,
+            columns: records.columns,
+            timestamp: new Date().toISOString()
+        });
+        await Logger.logApiSuccess(apiLogEntry);
+    }
+    catch (error) {
+        await Logger.logApiError(apiLogEntry, error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+//================================================================================================
+// 우편번호 
+//================================================================================================
 // API: 우편번호 검색 (한국우편사업진흥원)
 // GET /api/get_postcodes?zipcode=우편번호
 // PARAMETER : zipcode (필수) - 검색할 우편번호 (5자리)

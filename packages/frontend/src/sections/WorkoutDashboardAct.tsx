@@ -20,7 +20,7 @@ import WdogWorkout from "@/components/WdogWorkout"
 const WorkoutDashboardAct = () => {
   const navigate = useNavigate();  // 👈 navigate 함수 생성  
   const {member} = useUser();  // Context에서 공유  
-  const [workouts, setWorkout] = useState<WorkoutDetail[] | null>(null);
+  const [workouts, setWorkouts] = useState<WorkoutDetail[]>([]);
   const [isAiErrorMessage, setIsAiErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [intensity, setIntensity] = useState<"low" | "medium" | "high" | undefined>("medium");   
@@ -30,14 +30,15 @@ const WorkoutDashboardAct = () => {
     fetch(`http://localhost:3001/api/workout/getWorkoutDetails?mem_id=${member?.MEM_ID?? ''}&wor_id=${wor_id}`)
       .then(res => res.json())
       .then(data => {
-        setWorkout(data.data); 
+        setWorkouts(data.data); 
         setWorId(data.wor_id); // 첫 번째 운동 기록 ID 저장 (예시)
+        console.log("운동 상세 정보:", data.data); // 💡 운동 상세 정보 로그
     });    
   }, [member?.MEM_ID]);   
   const handleAIRecommend = async () => {
     if (isLoading) return;
     
-    setIsLoading(true);  // 로딩 시작!
+    setIsLoading(true);  
     try {
       const response = await fetch('http://localhost:3001/api/ai/recExercise', {
         method: 'POST',
@@ -63,7 +64,7 @@ const WorkoutDashboardAct = () => {
         WOD_TARGET_REPS: workout.WOD_TARGET_REPS || 0,
         WOD_TARGET_SETS: workout.WOD_TARGET_SETS || 0,
       }));
-      setWorkout(formatted);      
+      setWorkouts(formatted);      
     } catch (error) {
       console.error("❌ AI 추천 실패:", error);
       setIsAiErrorMessage(error instanceof Error ? error.message : "알 수 없는 오류");
@@ -73,12 +74,12 @@ const WorkoutDashboardAct = () => {
   };
   const handleWorkoutStart = () => {
     // navigation to workout session page or start workout logic
-    navigate('/workout/start');
+    navigate('/workout/start/' + wor_id); // 예시: 운동 시작 페이지로 이동
   }
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-3xl">운동 시작하기 {wor_id}</CardTitle>
+        <CardTitle className="text-3xl">운동 시작하기 #{wor_id}</CardTitle>
         <CardDescription className="text-sm text-primary">
           AI가 실시간으로 자세를 분석하고 피드백을 제공합니다
         </CardDescription>

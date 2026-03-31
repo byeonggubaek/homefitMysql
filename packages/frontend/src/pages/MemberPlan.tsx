@@ -1,14 +1,18 @@
 import WdogBreadClum from "@/components/WdogBreadClum";
+import MemberPlans from "@/sections/MemberPlans";
+
+
 
 export default function MemberPlan() {
 
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex gap-4">
-        <WdogBreadClum page="MemberPlan"/> 
-      </div>
-      <div className="flex gap-4">
-      </div>
-    </div>
-  );
-}
+  return (
+    <div className="flex flex-col gap-3">
+      <div>
+        <WdogBreadClum page="MemberPlan"/> 
+      </div>
+      <div>
+       <MemberPlans/>
+      </div>
+    </div>
+  );
+} 

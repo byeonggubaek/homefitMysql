@@ -1,6 +1,6 @@
 import express from 'express';
 import Logger from '../logger.js'
-import { getMember, getMemberships, insertMember, login } from '../db.js';
+import { addMemberPlan, deleteMemberPlan, getMember, getMemberships, getMonthStatus, insertMember, login, MemberPlans } from '../db.js';
 import jwt from 'jsonwebtoken';
 import { Member, T_MEMBER } from 'shared';
 
@@ -201,6 +201,103 @@ memberRouter.post('/signup', async (req, res) => {
             error: (error as Error).message
         });
     }
+});
+// 1. 특정 날짜의 계획 가져오기
+memberRouter.get('/getMemberPlan', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    const { memberId, date } = req.query as { memberId: string; date: string };
+    
+    if (!memberId || !date) {
+      return res.status(400).json({ success: false, error: '회원 ID와 날짜가 필요합니다.' });
+    }
+
+    apiLogEntry = await Logger.logApiStart('GET /getMemberPlan', [memberId, date]);
+    const data = await MemberPlans(Number(memberId), date);
+    
+    res.json({
+      success: true,
+      data: data,
+      timestamp: new Date().toISOString()
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+// 2. 새로운 계획 추가하기
+memberRouter.post('/insertMemberPlan', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    const { MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT } = req.body;
+    
+    apiLogEntry = await Logger.logApiStart('POST /insertMemberPlan', [MEM_ID, WOO_ID, MEP_DATE]);
+    
+    await addMemberPlan({
+      MEM_ID: Number(MEM_ID),
+      WOO_ID: WOO_ID,
+      MEP_DATE: MEP_DATE,
+      MEP_TARGET: Number(MEP_TARGET),
+      MEP_UNIT: MEP_UNIT
+    });
+
+    res.json({ success: true, message: '계획이 등록되었습니다.' });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+// 3. 계획 삭제하기
+memberRouter.delete('/deleteMemberPlan', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    const { goalId } = req.query as { goalId: string };
+    
+    if (!goalId) {
+      return res.status(400).json({ success: false, error: '삭제할 계획 ID가 필요합니다.' });
+    }
+
+    apiLogEntry = await Logger.logApiStart('DELETE /deleteMemberPlan', [goalId]);
+    await deleteMemberPlan(Number(goalId));
+
+    res.json({ success: true, message: '계획이 삭제되었습니다.' });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+// 4. 월간 운동 요약 가져오기 (달력 동그라미 표시용)
+memberRouter.get('/getMonthlyMemberPlan', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    const { memberId, month } = req.query as { memberId: string; month: string };
+    
+    if (!memberId || !month) {
+      return res.status(400).json({ success: false, error: '회원 ID와 월 정보가 필요합니다.' });
+    }
+
+    apiLogEntry = await Logger.logApiStart('GET /getMonthlyMemberPlan', [memberId, month]);
+    
+    // db.ts 에서 만든 함수 실행!
+    const data = await getMonthStatus(Number(memberId), month);
+    
+    res.json({
+      success: true,
+      data: data,
+      timestamp: new Date().toISOString()
+    });
+    
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
 });
 
 export default memberRouter;

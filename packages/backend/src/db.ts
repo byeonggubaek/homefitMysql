@@ -1,5 +1,5 @@
 import mysql, { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import { NavItem, NavSubItem, ColDesc, WorkoutRecord, ChartData, MenuPos, WorkoutHistory, Member, WorkoutDetail, MemberExists, Workout, BeneFun, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord } from 'shared';
+import { NavItem, NavSubItem, ColDesc, WorkoutRecord, ChartData, MenuPos, WorkoutHistory, Member, WorkoutDetail, MemberExists, Workout, BeneFun, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods } from 'shared';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
 
@@ -146,17 +146,29 @@ export const getSubMenus = async (P_NAV_ID: string = ''): Promise<NavSubItem[]> 
     NAS_DESC: record.NAS_DESC || ''
   }));
 }
-async function _getMenus(): Promise<any[]> {
-  return select(`
-SELECT  NAV_ID, 
-        NAV_NAME, 
-        NAV_IMG, 
-        NAV_DESC 
-FROM    T_NAV_ITEM
-`);
+async function _getMenus(mem_id: string): Promise<any[]> {
+  if(!mem_id){
+    return select(`
+      SELECT  NAV_ID, 
+              NAV_NAME, 
+              NAV_IMG, 
+              NAV_DESC 
+      FROM    T_NAV_ITEM
+      WHERE   NAV_ID = 'NAV09999'      
+      `);
+  }
+  else{
+    return select(`
+      SELECT  NAV_ID, 
+              NAV_NAME, 
+              NAV_IMG, 
+              NAV_DESC 
+      FROM    T_NAV_ITEM
+      `);
+  }
 }
-export const getMenus = async (): Promise<NavItem[]> => {
-  const records = await _getMenus();
+export const getMenus = async (mem_id: string): Promise<NavItem[]> => {
+  const records = await _getMenus(mem_id);
   // 1단계: NavItem[]로 변환 (map 사용!)
   let menus: NavItem[] = records.map((record: any) => ({
     NAV_ID: record.NAV_ID,
@@ -248,6 +260,7 @@ SELECT A.MEM_ID,
        A.MEM_POINT,
        A.MEM_EXP_POINT,
        A.MEM_LVL,
+       A.MEM_STREAK,
        A.MES_ID,
        B.MES_NAME,
        B.MES_FEE
@@ -275,6 +288,7 @@ export const getMember = async (P_MEM_ID: string): Promise<Member[]> => {
     MEM_POINT: records[0].MEM_POINT,
     MEM_EXP_POINT: records[0].MEM_EXP_POINT,
     MEM_LVL: records[0].MEM_LVL,
+    MEM_STREAK: records[0].MEM_STREAK,
     MES_ID: records[0].MES_ID,
     MES_NAME: records[0].MES_NAME,
     MES_FEE: records[0].MES_FEE
@@ -340,7 +354,7 @@ export const getWorkoutHistory = async (P_MEM_ID: string = ''): Promise<any> => 
   const result = await _getWorkoutHistory(P_MEM_ID);
   return result.length > 0 ? result[0].RESULT : null;
 }
-async function _getWorkoutDetails(P_WOR_ID: string): Promise<any[]> {
+async function _getWorkoutDetails(P_WOR_ID: number): Promise<any[]> {
   return select(`
     SELECT  B.WOO_ID, 
             B.WOO_NAME, 
@@ -354,7 +368,7 @@ async function _getWorkoutDetails(P_WOR_ID: string): Promise<any[]> {
     WHERE   A.WOR_ID = ?
     `, [P_WOR_ID]);
 }
-export const getWorkoutDetails = async (P_WOR_ID: string): Promise<WorkoutDetail[]> => {
+export const getWorkoutDetails = async (P_WOR_ID: number): Promise<WorkoutDetail[]> => {
   const records = await _getWorkoutDetails(P_WOR_ID);
   return records.map((record: any) => ({
     WOO_ID : record.WOO_ID,
@@ -419,6 +433,7 @@ async function _checkMember(P_MEM_ID_VIEW: string, P_MEM_PASSWORD: string): Prom
       MEM_POINT: record.MEM_POINT,
       MEM_EXP_POINT: record.MEM_EXP_POINT,
       MEM_LVL: record.MEM_LVL,
+      MEM_STREAK: record.MEM_STREAK,
       MES_ID: record.MES_ID,
       MES_NAME: record.MES_NAME,
       MES_FEE: record.MES_FEE
@@ -571,6 +586,29 @@ export const getRanking = async (from_dt: string = '', to_dt: string = ''): Prom
     WORKOUT_TIME: sub.WORKOUT_TIME
   }));
 }
+async function _getGoods(): Promise<any[]> {
+  return select(`
+SELECT  GOD_ID,
+        GOD_ID_VIEW,
+        GOD_NAME,
+        GOD_PRICE,
+        GOD_DCRATE,
+        GOD_IMG
+FROM T_GOODS
+`);
+}
+export const getGoods = async (): Promise<Goods[]> => {
+  const records = await _getGoods();
+  return records.map((record: any) => ({
+    GOD_ID: record.GOD_ID,
+    GOD_ID_VIEW: record.GOD_ID_VIEW,
+    GOD_NAME: record.GOD_NAME,
+    GOD_PRICE: record.GOD_PRICE,
+    GOD_DCRATE: record.GOD_DCRATE,
+    GOD_IMG: record.GOD_IMG
+  }));
+};
+
 async function _getLatestWorkoutId(P_MEM_ID: number, P_WOR_DT: string): Promise<any> {
     return select(`
         SELECT WOR_ID, WOR_ID_VIEW
@@ -640,7 +678,7 @@ export const insertWorkoutRecord = async (P_WOR: T_WORKOUT_RECORD): Promise<CurW
 };
 export const insertWorkoutDetail = async (P_DET: T_WORKOUT_DETAIL): Promise<{ WOR_ID: number, WOO_ID: number }> => {
     return await withTransaction(async (conn) => {
-        
+        console.log('Inserting workout detail:', P_DET);
         // 1. 상세 내역 INSERT
         await execute(conn,
             `
@@ -653,12 +691,12 @@ export const insertWorkoutDetail = async (P_DET: T_WORKOUT_DETAIL): Promise<{ WO
                 P_DET.WOR_ID, 
                 P_DET.WOO_ID, 
                 P_DET.WOD_GUIDE ?? null,
-                P_DET.WOD_TARGET_REPS,
-                P_DET.WOD_TARGET_SETS,
-                P_DET.WOD_COUNT,
-                P_DET.WOD_POINT,
-                P_DET.WOD_ACCURACY,
-                P_DET.WOD_TIME
+                P_DET.WOD_TARGET_REPS ?? 0,
+                P_DET.WOD_TARGET_SETS ?? 0,
+                P_DET.WOD_COUNT ?? 0,
+                P_DET.WOD_POINT ?? 0,
+                P_DET.WOD_ACCURACY ?? 0,
+                P_DET.WOD_TIME ?? 0
             ] as any[]
         );
 
@@ -704,6 +742,7 @@ UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?
               [WOR_ID_VIEW, WOR_ID] as any[]
           );
           const workouts = await getWorkouts();
+          console.log('Workouts to initialize:', workouts);
           const workoutDetails: T_WORKOUT_DETAIL[] = workouts.slice(0,3).map((record: Workout) => ({
             WOR_ID: WOR_ID,
             WOO_ID: record.WOO_ID,
@@ -749,21 +788,117 @@ UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?
 export const deleteWorkoutDetails = async (P_WOR_ID: string): Promise<boolean> => {
     return await withTransaction(async (conn) => {
         // 1. 상세 내역 DELETE
+<<<<<<< HEAD
         const [Result] = await execute(conn,
             `
             DELETE FROM T_WORKOUT_DETAIL 
+=======
+        const [result] = await execute(conn,
+            `
+            DELETE 
+            FROM T_WORKOUT_DETAIL
+>>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
             WHERE WOR_ID = ?
             `,
             [
                 P_WOR_ID
             ] as any[]
+<<<<<<< HEAD
         );
 
         // 3. 복합 프라이머리 키 리턴
         return Result.affectedRows > 0;
+=======
+        );        // 3. 복합 프라이머리 키 리턴
+        return result.affectedRows > 0;
+>>>>>>> ce8dc81bd369a118f79184ea6bf9bb3caa7cf9b1
     });
 };
 
+// 1. 특정 날짜의 운동 계획 조회 (운동 정보 JOIN)
+async function _MemberPlans(P_MEM_ID: number, P_DATE: string): Promise<any[]> {
+  return select(`
+    SELECT  A.MEP_ID,
+            A.MEM_ID,
+            A.WOO_ID,
+            B.WOO_NAME,
+            B.WOO_IMG,
+            A.MEP_TARGET,
+            A.MEP_UNIT,
+            A.MEP_ACHIEVED
+    FROM    T_MEMBER_PLAN A
+    JOIN    T_WORKOUT B ON B.WOO_ID = A.WOO_ID
+    WHERE   A.MEM_ID = ? 
+      AND   A.MEP_DATE = ?
+    ORDER BY A.MEP_ID ASC
+  `, [P_MEM_ID, P_DATE]);
+}
+
+export const MemberPlans = async (P_MEM_ID: number, P_DATE: string): Promise<any[]> => {
+  const records = await _MemberPlans(P_MEM_ID, P_DATE);
+  return records.map((record: any) => ({
+    MEP_ID: record.MEP_ID,
+    MEM_ID: record.MEM_ID,
+    WOO_ID: record.WOO_ID,
+    WOO_NAME: record.WOO_NAME,
+    WOO_IMG: record.WOO_IMG,
+    MEP_TARGET: record.MEP_TARGET,
+    MEP_UNIT: record.MEP_UNIT,
+    MEP_ACHIEVED: record.MEP_ACHIEVED
+  }));
+}
+
+// 2. 새로운 운동 계획 추가
+export const addMemberPlan = async (plan: {
+  MEM_ID: number;
+  WOO_ID: string;
+  MEP_DATE: string;
+  MEP_TARGET: number;
+  MEP_UNIT: string;
+}): Promise<void> => {
+  await withTransaction(async (conn) => {
+    const [result] = await execute(conn,
+        `
+      INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+      VALUES (?, ?, ?, ?, ?)
+        `,
+        [
+            plan.MEM_ID,
+            plan.WOO_ID,
+            plan.MEP_DATE,
+            plan.MEP_TARGET,
+            plan.MEP_UNIT
+        ] as any[]
+    );        // 3. 복합 프라이머리 키 리턴
+  });
+}
+
+// 3. 운동 계획 삭제
+export const deleteMemberPlan = async (P_MEP_ID: number): Promise<void> => {
+  await withTransaction(async (conn) => {
+      const [result] = await execute(conn,
+        `
+      DELETE FROM T_MEMBER_PLAN WHERE MEP_ID = ?
+        `,
+        [
+           P_MEP_ID
+        ] as any[]
+    );        // 3. 복합 프라이머리 키 리턴
+  });
+}
+
+// 월간 운동 요약 정보 조회
+export const getMonthStatus = async (P_MEM_ID: number, P_MONTH: string): Promise<any[]> => {
+  return select(`
+    SELECT 
+      MEP_DATE,
+      COUNT(*) as TOTAL_COUNT,
+      SUM(CASE WHEN MEP_ACHIEVED = 'Y' THEN 1 ELSE 0 END) as DONE_COUNT
+    FROM T_MEMBER_PLAN
+    WHERE MEM_ID = ? AND MEP_DATE LIKE ?
+    GROUP BY MEP_DATE
+  `, [P_MEM_ID, `${P_MONTH}%`]); 
+}
 // =================================================================================================================
 // 오라클 버전 
 // =================================================================================================================

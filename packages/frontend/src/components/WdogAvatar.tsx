@@ -41,7 +41,7 @@ const WdogAvatar = () => {
           <AvatarImage
             src={member?.MEM_IMG || '/member/member.png'} // 기본 이미지 경로
             alt={member?.MEM_NAME}
-            className={member?.MEM_ID === 1 ? "grayscale" : ""}
+            className={member?.MEM_ID !== 1 ? "grayscale" : ""}
           />
           <AvatarFallback>{member?.MEM_NAME?.slice(0, 2) || 'U'}</AvatarFallback>
         </Avatar>

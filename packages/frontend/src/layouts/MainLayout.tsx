@@ -6,17 +6,19 @@ import { useDarkMode } from '@/hooks/useDarkMode';
 import WdogNavi from '@/components/WdogNavi'
 import WdogAutoInput from '@/components/WdogAutoInput'
 import WdogAvatar from '@/components/WdogAvatar';
+import { useUser } from '@/hooks/UserContext';
 
 export default function MainLayout() {
+  const {member} = useUser(); // 정보도 가져오기
   const isDarkMode = useDarkMode(); // 훅 호출
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   useEffect(() => {
-    fetch('http://localhost:3001/api/getMenus')
+    fetch('http://localhost:3001/api/getMenus?mem_id=' + (member?.MEM_ID ?? ""))  // 👈 memberId 쿼리 추가
       .then(res => res.json())
       .then(data => {
         setNavItems(data.data);  // 👈 바로 사용!
       });
-  }, []);
+  }, [member?.MEM_ID]);  // 👈 memberId가 변경될 때마다 다시 호출
   return (
     <div className="flex flex-col w-screen min-h-screen ">  
       {/* Header */}

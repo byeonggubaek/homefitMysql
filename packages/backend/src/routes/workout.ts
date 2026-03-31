@@ -9,6 +9,7 @@ workoutRouter.get('/getWorkoutDetails', async (req, res) => {
   let apiLogEntry = null;
   try {
     let { mem_id, wor_id } = req.query as {mem_id: string, wor_id: string | null};
+    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutDetails', [wor_id]);
     const workouts = await getWorkouts();
     if (mem_id == null || mem_id === '') {
       const workoutDetails: WorkoutDetail[] = workouts.map((record: Workout) => ({
@@ -27,7 +28,8 @@ workoutRouter.get('/getWorkoutDetails', async (req, res) => {
         timestamp: new Date().toISOString()
       });
     }    
-    if (wor_id == null || wor_id === '0') {
+    let data = await getWorkoutDetails(Number(wor_id));
+    if (data.length === 0) {
       // 데이터 오브젝트 구성
       const result = await initWorkoutRecord(Number(mem_id), new Date().toISOString().split('T')[0]);
       if (result) {
@@ -39,10 +41,9 @@ workoutRouter.get('/getWorkoutDetails', async (req, res) => {
           error: "운동 기록 생성에 실패했습니다."
         });
         return;
-      }
+      }    
+      data = await getWorkoutDetails(Number(wor_id));
     }
-    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutDetails', [wor_id]);
-    const data = await getWorkoutDetails(wor_id);
     res.json({
       success: true,
       data: data,
@@ -118,6 +119,27 @@ workoutRouter.post('/insertWorkoutRecord', async (req, res) => {
             error: (error as Error).message
         });
     }
+});
+workoutRouter.get('/getWorkouts', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutDetails', [] );
+    const workouts = await getWorkouts();
+    res.json({
+      success: true,
+      data: workouts,
+      count: workouts.length,
+      timestamp: new Date().toISOString()
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    console.error("❌ 운동 상세 정보 조회 중 오류 발생:", error); // 💡 오류 로그
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
 });
 
 export default workoutRouter;

@@ -1,21 +1,7 @@
+import { useUser } from "@/hooks/UserContext";
 import { ShoppingCart, X } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
-
-const rewardItems = [
-  { id: 1, name: "요가 매트", price: 29000, discount: 20, image: "/mallimg/yoga-mat.jpg" },
-  { id: 2, name: "덤벨 세트", price: 59000, discount: 30, image: "/mallimg/dumbbell-set.jpg" },
-  { id: 3, name: "저항 밴드", price: 12000, discount: 15, image: "/mallimg/resistance-band.jpg" },
-  { id: 4, name: "스포츠 물병", price: 9000, discount: 10, image: "/mallimg/water-bottle.jpg" },
-  { id: 5, name: "폼롤러", price: 22000, discount: 25, image: "/mallimg/foam-roller.jpg" },
-  { id: 6, name: "케틀벨", price: 47000, discount: 20, image: "/mallimg/kettlebell.jpg" },
-  { id: 7, name: "줄넘기", price: 11000, discount: 15, image: "/mallimg/jump-rope.jpg" },
-  { id: 8, name: "운동 장갑", price: 17000, discount: 20, image: "/mallimg/gym-gloves.jpg" },
-  { id: 9, name: "풀업 바", price: 69000, discount: 35, image: "/mallimg/pull-up-bar.jpg" },
-  { id: 10, name: "운동 타월", price: 7000, discount: 10, image: "/mallimg/towel.jpg" },
-  { id: 11, name: "스트레칭 매트", price: 26000, discount: 18, image: "/mallimg/stretch-mat.jpg" },
-  { id: 12, name: "힙 밴드 세트", price: 14000, discount: 22, image: "/mallimg/hip-band.jpg" },
-  { id: 13, name: "마사지 건", price: 89000, discount: 40, image: "/mallimg/massage-gun.jpg" },
-]
+import { useEffect, useMemo, useState } from "react";
+import type { Goods } from "shared";
 
 const formatPrice = (price: number) => `${price.toLocaleString("ko-KR")}원`
 const formatPoints = (points: number) => `${points.toLocaleString("ko-KR")}P`
@@ -23,29 +9,17 @@ const getOriginalPrice = (price: number, discount: number) =>
   Math.round(price / (1 - discount / 100))
 
 export default function RewardMallMain() {
-  const currentPoints = 700
-  const [displayPoints, setDisplayPoints] = useState(0)
+  const { member } = useUser(); 
   const [cartItems, setCartItems] = useState<number[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
 
+  const [rewardItems, setRewardItems] = useState<Goods[]>([]);
+
   useEffect(() => {
-    let frame = 0
-    const totalFrames = 32
-
-    const interval = setInterval(() => {
-      frame += 1
-
-      if (frame < totalFrames) {
-        const randomValue = Math.floor(Math.random() * 9000) + 100
-        setDisplayPoints(randomValue)
-      } else {
-        setDisplayPoints(currentPoints)
-        clearInterval(interval)
-      }
-    }, 55)
-
-    return () => clearInterval(interval)
-  }, [])
+    fetch(`http://localhost:3001/api/reward/getGoods`)
+      .then(res => res.json())
+      .then(data => setRewardItems(data.data || []));
+  }, []);
 
   const handleAddToCart = (itemId: number) => {
     setCartItems((prev) => (prev.includes(itemId) ? prev : [...prev, itemId]))
@@ -55,11 +29,11 @@ export default function RewardMallMain() {
     setCartItems((prev) => prev.filter((id) => id !== itemId))
   }
 
-  const cartProducts = rewardItems.filter((item) => cartItems.includes(item.id))
+  const cartProducts = rewardItems.filter((item) => cartItems.includes(item.GOD_ID))
   const cartCount = cartProducts.length
 
   const cartTotalPrice = useMemo(() => {
-    return cartProducts.reduce((sum, item) => sum + item.price, 0)
+    return cartProducts.reduce((sum, item) => sum + item.GOD_PRICE, 0)
   }, [cartProducts])
 
   return (
@@ -83,7 +57,7 @@ export default function RewardMallMain() {
           >
             <ShoppingCart className="h-9 w-9" />
             {cartCount > 0 && (
-              <span className="absolute -right-2 -top-2 flex h-9 min-w-[36px] items-center justify-center rounded-full bg-[#02899C] px-2 text-lg font-bold text-white shadow-md">
+              <span className="absolute -right-2 -top-2 flex h-9 min-w-9 items-center justify-center rounded-full bg-[#02899C] px-2 text-lg font-bold text-white shadow-md">
                 {cartCount}
               </span>
             )}
@@ -93,34 +67,33 @@ export default function RewardMallMain() {
 
       <main className="mx-auto max-w-7xl px-6 py-8">
         {/* 포인트 카드 */}
-        <section className="mb-10 overflow-hidden rounded-[2rem] border border-[#CDEAE5] bg-gradient-to-r from-[#02899C] via-[#17A7A4] to-[#7FCDC4] p-8 text-white shadow-xl">
+        <section className="mb-10 overflow-hidden rounded-[2rem] p-8 shadow-xl bg-[#02899C] text-white">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-2xl font-semibold tracking-[0.18em] opacity-90">
                 MY POINT
               </p>
-
               <div className="mt-4 flex items-end gap-3">
                 <span className="font-mono text-7xl font-black tracking-tight sm:text-8xl">
-                  {displayPoints.toLocaleString("ko-KR")}
+                  {member?.MEM_POINT ? formatPoints(member?.MEM_POINT) : "0P"}
                 </span>
                 <span className="mb-2 text-3xl font-bold sm:text-4xl">P</span>
               </div>
 
-              <p className="mt-4 text-xl text-white/90">
+              <p className="mt-4 text-xl">
                 포인트로 다양한 리워드를 만나보세요! 
               </p>
             </div>
 
             <div className="grid w-full max-w-xl grid-cols-2 gap-4">
               <div className="rounded-3xl bg-white/15 p-5 backdrop-blur-sm">
-                <p className="text-lg text-white/80">이번 달에 적립 될 포인트</p>
+                <p className="text-lg">이번 달에 적립 될 포인트</p>
                 <p className="mt-2 text-3xl font-bold">+1,250P</p>
               </div>
               <div className="rounded-3xl bg-white/15 p-5 backdrop-blur-sm">
-                <p className="text-lg text-white/80">사용 가능</p>
+                <p className="text-lg ">사용 가능</p>
                 <p className="mt-2 text-3xl font-bold">
-                  {formatPoints(currentPoints)}
+                  {member?.MEM_POINT ? formatPoints(member?.MEM_POINT) : "0P"}
                 </p>
               </div>
             </div>
@@ -142,25 +115,25 @@ export default function RewardMallMain() {
         {/* 상품 그리드 */}
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {rewardItems.map((item) => (
-            <div key={item.id} className="p-1">
+            <div key={item.GOD_ID} className="p-1">
               <article className="group overflow-hidden rounded-2xl border border-[#BFE6E0] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <button
                   type="button"
                   className="block w-full text-left"
-                  onClick={() => handleAddToCart(item.id)}
+                  onClick={() => handleAddToCart(item.GOD_ID)}
                 >
                   <div className="relative aspect-square overflow-hidden bg-[#EFF9F7]">
                     <img
-                      src={item.image}
-                      alt={item.name}
+                      src={item.GOD_IMG || "/goods/default.jpg"}
+                      alt={item.GOD_NAME}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
 
                     <div className="absolute left-3 top-3 rounded-full bg-[#FF5F5F] px-3 py-1 text-sm font-bold text-white shadow-md">
-                      {item.discount}% 할인
+                      {item.GOD_DCRATE }% 할인
                     </div>
 
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/55 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       <span className="inline-flex rounded-full bg-white px-4 py-2 text-base font-bold text-[#02899C] shadow">
                         장바구니 담기
                       </span>
@@ -169,15 +142,15 @@ export default function RewardMallMain() {
 
                   <div className="p-4">
                     <p className="text-[1.15rem] font-bold leading-snug text-[#203436]">
-                      {item.name}
+                      {item.GOD_NAME}
                     </p>
 
                     <div className="mt-3 flex items-end gap-2">
                       <span className="text-[1.35rem] font-black text-[#02899C]">
-                        {formatPrice(item.price)}
+                        {formatPrice(item.GOD_PRICE)}
                       </span>
                       <span className="pb-0.5 text-sm text-gray-400 line-through">
-                        {formatPrice(getOriginalPrice(item.price, item.discount))}
+                        {formatPrice(getOriginalPrice(item.GOD_PRICE, item.GOD_DCRATE))}
                       </span>
                     </div>
                   </div>
@@ -190,7 +163,7 @@ export default function RewardMallMain() {
 
       {/* 장바구니 모달 */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 px-4">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/45 px-4">
           <div className="w-full max-w-xl overflow-hidden rounded-[2rem] bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#E7F3F0] px-6 py-5">
               <div>
@@ -209,7 +182,7 @@ export default function RewardMallMain() {
               </button>
             </div>
 
-            <div className="max-h-[420px] overflow-y-auto px-6 py-5">
+            <div className="max-h-105 overflow-y-auto px-6 py-5">
               {cartProducts.length === 0 ? (
                 <div className="py-16 text-center">
                   <p className="text-2xl font-bold text-[#02899C]">
@@ -222,28 +195,28 @@ export default function RewardMallMain() {
                 <div className="space-y-4">
                   {cartProducts.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.GOD_ID}
                       className="flex items-center gap-4 rounded-3xl border border-[#DCEFEB] bg-[#FBFEFD] p-4"
                     >
                       <img
-                        src={item.image}
-                        alt={item.name}
+                        src={item.GOD_IMG || "/goods/default.jpg"}
+                        alt={item.GOD_NAME}
                         className="h-24 w-24 rounded-2xl object-cover"
                       />
 
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xl font-bold text-[#1F3436]">
-                          {item.name}
+                          {item.GOD_NAME}
                         </p>
                         <p className="mt-2 text-lg font-semibold text-[#02899C]">
-                          {formatPrice(item.price)}
+                          {formatPrice(item.GOD_PRICE)}
                         </p>
                       </div>
 
                       <button
                         type="button"
                         className="shrink-0 rounded-full bg-[#02899C] px-4 py-2 text-base font-bold text-white transition-opacity hover:opacity-90"
-                        onClick={() => handleRemoveFromCart(item.id)}
+                        onClick={() => handleRemoveFromCart(item.GOD_ID)}
                       >
                         삭제
                       </button>

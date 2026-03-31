@@ -29,7 +29,7 @@ function App() {
         <Route index element={<WorkoutDashboard />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>
-      <Route path="/workout/start" element={<MainLayout />}>
+      <Route path="/workout/start/:wor_id" element={<MainLayout />}>
         <Route index element={<WorkoutStart />} />           {/* / */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>
