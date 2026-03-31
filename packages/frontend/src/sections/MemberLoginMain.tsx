@@ -48,7 +48,7 @@ export default function MemberLoginMain() {
     });
   };
   return (
-    <div className="w-full relative z-10 flex items-start  justify-start">
+    <div className="w-full flex items-start  justify-start">
       {/* 로고 */}
       <div className="w-1/2 text-center p-8">
         <div className="mx-auto rounded-2xl backdrop-blur-sm flex items-center justify-center mb-6">

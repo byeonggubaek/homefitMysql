@@ -30,9 +30,11 @@ export default function MainLayout() {
           <div className='w-4/6'>
             <WdogNavi navItems={navItems} /> 
           </div>
-          <div className="w-1/6">
-            <WdogAutoInput />
-          </div>
+          {member &&
+            <div className="w-1/6">
+              <WdogAutoInput />
+            </div>
+          }
           <div className="w-5">
             <WdogAvatar/>
           </div>
