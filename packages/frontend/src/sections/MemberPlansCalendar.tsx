@@ -259,7 +259,7 @@ const MemberPlansCalendar = () => {
       </div>
 
       {/* ---------------- [ 우측: 일별 계획 영역 ] ---------------- */}
-      <div className="bg-slate-50 rounded-[32px] p-8 flex flex-col h-full min-h-[500px]">
+      <div className="bg-slate-50 rounded-[32px] p-8 flex flex-col h-full min-h-125">
         <div className="mb-6">
           <p className="text-indigo-500 text-sm font-bold mb-1 tracking-tight">DAILY PLAN</p>
           <h2 className="text-2xl font-black text-slate-800">
@@ -338,7 +338,7 @@ const MemberPlansCalendar = () => {
               <div className="space-y-6">
                 {/* 1. 운동 선택 (DB 데이터 연동) */}
                 <div>
-                  <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wider">Workout</label>
+                  <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wider">운동 선택</label>
                   <select
                     value={selectedWooId}
                     onChange={(e) => setSelectedWooId(e.target.value)}
@@ -354,16 +354,17 @@ const MemberPlansCalendar = () => {
 
                 {/* 2. 목표 수치 입력 (단위 자동 연동) */}
                 <div>
-                  <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wider">Target</label>
+                  <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wider">목표 수치</label>
                   <div className="relative">
                     <input
                       type="number"
                       value={target}
+                      min={0}
                       onChange={(e) => setTarget(e.target.value)}
                       placeholder="얼마나 할까요?"
                       className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
                     />
-                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                    <span className="absolute right-10 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
                       {currentUnit}
                     </span>
                   </div>

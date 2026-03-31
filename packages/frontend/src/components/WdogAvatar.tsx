@@ -49,7 +49,7 @@ const WdogAvatar = () => {
       <DropdownMenuContent>
         {member ? (
           <>
-            <DropdownMenuLabel>내 정보</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-sm font-semibold text-focus">내 정보</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => navigate('/member/profile/profile')}>
               <UserIcon />
               프로필

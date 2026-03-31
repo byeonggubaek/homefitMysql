@@ -19,7 +19,7 @@ const formSchema = z.object({
   mem_password: z.string().min(4, "4자 이상"),
   mem_pnumber: z.string().regex(/^\d{3}-\d{3,4}-\d{4}$/, "010-0000-0000 형식").optional().or(z.literal("")),
   mem_sex: z.enum(["M", "F"]),
-  mem_age: z.number().int().positive("나이는 양수여야 합니다."),
+  mem_age: z.number().int().nonnegative("나이는 0 이상이어야 합니다."),
   mes_id: z.enum(["1", "2", "3"], { message: "등급을 선택해주세요." }),
 });
 
@@ -160,7 +160,7 @@ const MemberSignupMain = () => {
                     render={({ field, fieldState }) => (
                       <div className="flex flex-col items-start group space-y-1.5" data-invalid={fieldState.invalid}>
                         <label className="text-sm font-semibold group-data-[invalid=true]:text-destructive">나이</label>
-                        <Input type="number" {...field} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : "")} className="group-data-[invalid=true]:border-destructive" />
+                        <Input type="number" {...field} min={0} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : "")} className="group-data-[invalid=true]:border-destructive" />
                         {fieldState.error && <p className="text-xs text-destructive">{fieldState.error.message}</p>}
                       </div>
                     )}
