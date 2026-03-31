@@ -52,7 +52,7 @@ const MemberPlansCalendar = () => {
   // [1] 컴포넌트 켜질 때 딱 한 번! DB에서 전체 운동 목록 가져오기
   const loadWorkoutList = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/workout/getWorkouts');
+      const res = await axios.get('http://localhost:3001/api/workout/getWorkouts');
       if (res.data.success && res.data.data.length > 0) {
         setWorkoutList(res.data.data);
         setSelectedWooId(res.data.data[0].WOO_ID);
@@ -72,7 +72,7 @@ const MemberPlansCalendar = () => {
 
     try {
       setLoading(true);
-      const res = await axios.get(`http://localhost:3001/getMemberPlan`, {
+      const res = await axios.get(`http://localhost:3001/api/member/getMemberPlan`, {
         params: { memberId: member.MEM_ID, date: formatDate(selectedDate) }
       });
       if (res.data.success) {
@@ -91,7 +91,6 @@ const MemberPlansCalendar = () => {
 
   // [3] 새로운 목표 DB에 저장하기
   const handleSave = async () => {
-
     if (!member?.MEM_ID) {
       alert("로그인 정보가 없습니다.");
       return;
@@ -104,8 +103,7 @@ const MemberPlansCalendar = () => {
       alert("운동을 선택해주세요."); // 👈 십중팔구 여기서 걸릴 겁니다!
       return;
     }
-
-    const selectedWorkoutObj = workoutList.find(w => w.WOO_ID === selectedWooId);
+    const selectedWorkoutObj = workoutList.find(w => w.WOO_ID === Number(selectedWooId));
     if (!selectedWorkoutObj) {
       alert("해당 운동 정보를 찾을 수 없습니다.");
       return;
@@ -114,14 +112,13 @@ const MemberPlansCalendar = () => {
     try {
       const newPlan = {
         MEM_ID: member.MEM_ID,
-        WOO_ID: selectedWooId,
+        WOO_ID: Number(selectedWooId),
         MEP_DATE: formatDate(selectedDate),
         MEP_TARGET: Number(target),
         MEP_UNIT: selectedWorkoutObj.WOO_UNIT
       };
 
-
-      const res = await axios.post('http://localhost:3001/insertMemberPlan', newPlan);
+      const res = await axios.post('http://localhost:3001/api/member/insertMemberPlan', newPlan);
       if (res.data.success) {
         setIsModalOpen(false);
         setTarget('');
@@ -137,7 +134,7 @@ const MemberPlansCalendar = () => {
   };
 
   // 현재 선택된 운동의 단위 표시용
-  const currentUnit = workoutList.find(w => w.WOO_ID === selectedWooId)?.WOO_UNIT || '회';
+  const currentUnit = workoutList.find(w => w.WOO_ID === Number(selectedWooId))?.WOO_UNIT || '회';
 
 // [4] 운동 계획 삭제하기
   const handleDelete = async (MEP_ID: number) => {
@@ -145,8 +142,8 @@ const MemberPlansCalendar = () => {
     if (!window.confirm("이 운동 계획을 삭제하시겠습니까?")) return;
 
     try {
-      // 🚨 백엔드 index.ts 에서 설정한 경로 /api/MemberPlan/:goalId 로 요청을 보냅니다.
-      const res = await axios.delete(`http://localhost:3001/deleteMemberPlan/${MEP_ID}`);
+      // 🚨 백엔드 index.ts 에서 설정한 경로 /api/member/deleteMemberPlan/:goalId 로 요청을 보냅니다.
+      const res = await axios.delete(`http://localhost:3001/api/member/deleteMemberPlan?goalId=${MEP_ID}`);
       
       if (res.data.success) {
         // ✅ 삭제 성공 시 화면을 새로고침합니다.
@@ -164,7 +161,7 @@ const MemberPlansCalendar = () => {
       // "2026-03" 형태로 잘라서 보냅니다.
       const yearMonth = formatDate(viewDate).substring(0, 7); 
       
-      const res = await axios.get(`http://localhost:3001/getMonthlyMemberPlan`, {
+      const res = await axios.get(`http://localhost:3001/api/member/getMonthlyMemberPlan`, {
         params: { memberId: member.MEM_ID, month: yearMonth }
       });
       

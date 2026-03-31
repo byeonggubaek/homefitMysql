@@ -10,7 +10,6 @@ workoutRouter.get('/getWorkoutDetails', async (req, res) => {
   try {
     let { mem_id, wor_id } = req.query as {mem_id: string, wor_id: string | null};
     apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutDetails', [wor_id]);
-    console.log("🔍 운동 상세 정보 조회 요청 - mem_id:", mem_id, "wor_id:", wor_id); // 💡 요청 로그
     const workouts = await getWorkouts();
     if (mem_id == null || mem_id === '') {
       const workoutDetails: WorkoutDetail[] = workouts.map((record: Workout) => ({
@@ -124,7 +123,7 @@ workoutRouter.post('/insertWorkoutRecord', async (req, res) => {
 workoutRouter.get('/getWorkouts', async (req, res) => {
   let apiLogEntry = null;
   try {
-    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutDetails', [wor_id]);
+    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutDetails', [] );
     const workouts = await getWorkouts();
     res.json({
       success: true,

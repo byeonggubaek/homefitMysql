@@ -16,8 +16,6 @@ export default function MemberPlan() {
      if (!member) {
           return <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-bold text-slate-400">데이터를 불러오는 중입니다...</div>;
      }
-     // [ 로딩 뷰 끝 ]
-     console.log("멤버 정보:", member.MEM_EXP_POINT, Math.min((member.MEM_EXP_POINT % 4500) * 100 / 4500, 100)); // 디버깅용 로그
      return (
           <div className="flex flex-col gap-3 bg-[#F8FAFC] min-h-screen pb-10">
 

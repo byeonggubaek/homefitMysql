@@ -390,7 +390,22 @@ CREATE TABLE T_MEMBER_PLAN (
 
 -- 테스트 데이터
 INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
-VALUES (1, 2, '2026-03-28', 30, '회');
+VALUES (1, 1, '2026-03-28', 30, '초');
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 2, '2026-03-28', 20, '회');
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 3, '2026-03-28', 10, '회');
+
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 1, '2026-03-29', 30, '초');
+
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 1, '2026-03-30', 30, '초');
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
+VALUES (1, 2, '2026-03-30', 20, '회');
+
+SELECT	*
+FROM	T_MEMBER_PLAN;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 운동기록 
 --------------------------------------------------------------------------------------------------------------------------------
