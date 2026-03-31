@@ -66,7 +66,7 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0001', '프로필','/menu/profile.jpg', '개인 정보를 관리합니다.', 'MemberProfile', '/member/profile/profile');
 INSERT INTO T_NAV_SUB_ITEM VALUES
-('NAV00004', 'S0002', '회원등록','/menu/register.png', '개인 정보를 등록합니다.', 'MemberRegister', '/member/register');
+('NAV00004', 'S0002', '회원등록','/menu/register.png', '개인 정보를 등록합니다.', 'MemberSignup', '/member/signup');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0003', '운동목표','/menu/plan.jpg', '운동 목표를 설정하고 관리합니다.', 'MemberPlan', '/member/plan');
 INSERT INTO T_NAV_SUB_ITEM VALUES
