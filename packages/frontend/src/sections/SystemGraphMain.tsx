@@ -41,7 +41,7 @@ const formSchema = z.object({
     .max(1024, "쿼리는 최대 1024자 이하여야 합니다."),
 })
 
-const SystemUpdateMain = () => {
+const SystemGraphMain = () => {
   const [generatedPrompt, setGeneratedPrompt] = React.useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,7 +54,7 @@ const SystemUpdateMain = () => {
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
-      await fetch("http://localhost:3001/api/system/getUpdatePrompt", {
+      await fetch("http://localhost:3001/api/system/getGraphPrompt", {
         method: "POST", // 실제 통신은 POST로 데이터를 보냄
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -142,7 +142,7 @@ const SystemUpdateMain = () => {
                         <InputGroupTextarea
                           {...field}
                           id="form-rhf-demo-description"
-                          placeholder="쿼리를 입력하세요 ex) UPDATE T_MEMBER SET MEM_NAME = ? WHERE MEM_ID = ?"
+                          placeholder="쿼리를 입력하세요 ex) SELECT * FROM T_MEMBER WHERE MEM_ID = ?"
                           className="min-h-40 resize-none"
                           aria-invalid={fieldState.invalid}
                         />
@@ -210,4 +210,4 @@ const SystemUpdateMain = () => {
   )
 }
 
-export default SystemUpdateMain
+export default SystemGraphMain

@@ -3,6 +3,7 @@
 -- History   : 2026-02-03 - 최초 작성 
 -- Remark    : MySQL 용 SQL
 
+START TRANSACTION;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 메뉴삭제 
 --------------------------------------------------------------------------------------------------------------------------------
@@ -67,7 +68,6 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0001', '프로필','/menu/profile.jpg', '개인 정보를 관리합니다.', 'MemberProfile', '/member/profile/profile');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0002', '운동목표','/menu/plan.jpg', '운동 목표를 설정하고 관리합니다.', 'MemberPlan', '/member/plan');
-('NAV00004', 'S0002', '운동목표','/menu/plan.jpg', '운동 목표를 설정하고 관리합니다.', 'MemberPlan', '/member/plan');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0003', '회원등록','/menu/register.png', '개인 정보를 등록합니다.', 'MemberSignup', '/member/signup');
 INSERT INTO T_NAV_SUB_ITEM VALUES
@@ -76,6 +76,8 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00005', 'S0002', '생성','/menu/insert.jpg', 'Backend 생성 service를 자동생성합니다.', 'SystemInsert', '/system/insert');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00005', 'S0003', '수정','/menu/update.jpg', 'Backend 수정 service를 자동생성합니다.', 'SystemUpdate', '/system/update');
+INSERT INTO T_NAV_SUB_ITEM VALUES
+('NAV00005', 'S0004', '그래프','/menu/graph.jpg', 'Backend 그래프 service를 자동생성합니다.', 'SystemGraph', '/system/graph');
 
 SELECT * FROM T_NAV_SUB_ITEM;
 --------------------------------------------------------------------------------------------------------------------------------
@@ -147,21 +149,21 @@ CREATE TABLE T_COLUMN_DESC
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 1, 1, 'WOR_ID', '운동번호', 'key', 80,  NULL);
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 2, 2, 'WOR_DT', '운동일', 'dat', 100, NULL);
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 3, 3, 'WOO_NAME', '운동명', 'lst', 100, NULL);
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 4, 4, 'WOD_TARGET_REPS', '반복횟수', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 4, 4, 'WOD_TARGET_REPS', '반복횟수/초', 'qty', 100, 'sum');
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 5, 5, 'WOD_TARGET_SETS', '세트수', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 6, 6, 'WOD_COUNT', '실행횟수', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 6, 6, 'WOD_COUNT', '실행횟수/초', 'qty', 100, 'sum');
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 7, 7, 'WOD_POINT', '획득포인트', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 8, 8, 'WOD_DESC', '운동내역', 'str', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 8, 8, 'WOR_DESC', '운동내역', 'str', 100, 'sum');
 
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 1, 1, 'WOR_ID', '운동번호', 'key', 80,  NULL);
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 2, 2, 'WOR_DT', '운동일', 'dat', 100, NULL);
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 3, 3, 'WOO_NAME', '운동명', 'lst', 100, NULL);
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 4, 4, 'WOD_TARGET_REPS', '반복횟수', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 4, 4, 'WOD_TARGET_REPS', '반복횟수/초', 'qty', 100, 'sum');
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 5, 5, 'WOD_TARGET_SETS', '세트수', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 6, 6, 'WOD_COUNT_P', '권장횟수', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 7, 7, 'WOD_COUNT', '실행횟수', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 8, 8, 'WOD_COUNT_S', '잔여횟수', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 9, 9, 'WOD_DESC', '운동내역', 'str', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 6, 6, 'WOD_COUNT_P', '권장횟수/초', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 7, 7, 'WOD_COUNT', '실행횟수/초', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 8, 8, 'WOD_COUNT_S', '잔여횟수/초', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 9, 9, 'WOR_DESC', '운동내역', 'str', 100, 'sum');
 
 SELECT *
 FROM   T_COLUMN_DESC
@@ -426,27 +428,27 @@ ALTER TABLE T_WORKOUT_RECORD ADD INDEX T_WORKOUT_RECORD_WOR_ID_VIEW_IX (WOR_ID_V
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00001', 1, '2026-03-01', '첫번째 운동', 'N');
+('WOR00001', 1, '2026-03-28', '첫번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00002', 1, '2026-03-22', '두번째 운동', 'N');
+('WOR00002', 1, '2026-03-31', '두번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00003', 2, '2026-03-04', '첫번째 운동', 'N');
+('WOR00003', 2, '2026-03-28', '첫번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00004', 2, '2026-03-12', '두번째 운동', 'N');
+('WOR00004', 2, '2026-03-30', '두번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00005', 3, '2026-03-01', '첫번째 운동', 'N');
+('WOR00005', 3, '2026-03-31', '첫번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00006', 4, '2026-03-01', '첫번째 운동', 'N');
+('WOR00006', 4, '2026-03-31', '첫번째 운동', 'C');
 
 SELECT * FROM T_WORKOUT_RECORD;
 --------------------------------------------------------------------------------------------------------------------------------

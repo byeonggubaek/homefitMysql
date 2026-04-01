@@ -1,5 +1,5 @@
 import mysql, { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import { NavItem, NavSubItem, ColDesc, WorkoutRecord, ChartData, MenuPos, WorkoutHistory, Member, WorkoutDetail, MemberExists, Workout, BeneFun, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods } from 'shared';
+import { NavItem, NavSubItem, ColDesc, WorkoutRecord, Member, WorkoutDetail, MemberExists, Workout, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods, ChartData } from 'shared';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
 
@@ -457,7 +457,7 @@ export const insertMember = async (P_MEM: T_MEMBER): Promise<{ MEM_ID: number, M
     });
 };
 // 2.6. 혜택조회 
-async function _getBenefits(P_MES_ID: string = ''): Promise<any[]> {
+async function _getBenefits(P_MES_ID: number): Promise<any[]> {
   return select(`
  SELECT B.BEN_ID, 
         B.BEN_NAME
@@ -467,7 +467,7 @@ async function _getBenefits(P_MES_ID: string = ''): Promise<any[]> {
  WHERE  A.MES_ID = ?
 `, [P_MES_ID]);
 }
-export const getBenefits = async (P_MES_ID: string = ''): Promise<Benefit[]> => {
+export const getBenefits = async (P_MES_ID: number): Promise<Benefit[]> => {
   const records = await _getBenefits(P_MES_ID);
   // 1단계: 메뉴 객체 생성
   return records.map((record: any) => ({
@@ -647,13 +647,18 @@ export const getWorkoutRecords = async (mem_id: number, start_dt: string, end_dt
 // 3.4. 운동 기록 조회 - 그래프에서 사용한다 
 async function _getWorkoutRecordsByPivot(mem_id: number, start_dt: string, end_dt: string): Promise<any[]> {
   return select(`
-    CALL usp_get_workout_pivot_json(?, ?, ?, @p_result_json);
-    SELECT @p_result_json AS RESULT;
+    CALL getWorkoutRecordsByPivot(?, ?, ?, @vsql, @data, @columns);
+    SELECT @vsql AS VSQL, @data AS DATA, @columns AS COLUMNS;
   `, [mem_id, start_dt, end_dt]);
 }
-export const getWorkoutRecordsByPivot = async (mem_id: number, start_dt: string, end_dt: string): Promise<any> => {
+export const getWorkoutRecordsByPivot = async (mem_id: number, start_dt: string, end_dt: string): Promise<ChartData> => {
   const records = await _getWorkoutRecordsByPivot(mem_id, start_dt, end_dt);
-  return records.length > 1 ? records[1][0].RESULT: null;
+  const resultRow = (records && records[1] && records[1][0]) ? records[1][0] : null;
+  return {
+    VSQL: resultRow ? resultRow.VSQL : null,
+    DATA: resultRow?.DATA ? JSON.parse(resultRow.DATA) : [],
+    COLUMNS: resultRow?.COLUMNS ? JSON.parse(resultRow.COLUMNS) : []
+  };
 };
 // 3.5. 운동 기록 조회 - 오늘의 운동 운동 스탬프 조회 (최근 7일간의 운동 기록 여부 조회, 오늘의 운동에서 사용) - 날짜 범위 대신 최근 7일간의 기록 여부만 조회하여 간단한 결과 반환 (예: 날짜별로 'G' 또는 'B' 상태 반환)
 async function _getWorkoutHistory(P_MEM_ID: string = ''): Promise<any> {
@@ -879,7 +884,6 @@ export const deleteWorkoutDetails = async (P_WOR_ID: string): Promise<boolean> =
         return Result.affectedRows > 0;
     });
 };
-
 // =================================================================================================================
 // 4. 운동계획 
 // =================================================================================================================

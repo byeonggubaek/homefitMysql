@@ -16,7 +16,7 @@ export default function MemberLoginMain() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();  // 👈 폼 기본 제출 방지
+    e.preventDefault();  
     
     if (!mem_id_act || !mem_password) {
       alert('아이디와 비밀번호를 모두 입력해주세요.');

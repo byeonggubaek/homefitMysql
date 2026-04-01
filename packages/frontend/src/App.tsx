@@ -17,78 +17,45 @@ import SystemUpdate from "./pages/SystemUpdate.tsx";
 import RewardRankingMain from "./sections/RewardRankingMain.tsx";
 import RewardMall from "./pages/RewardMall.tsx";
 import MemberSignup from "./pages/MemberSignup.tsx";
+import SystemGraph from "./pages/SystemGraph.tsx";
 
 function App() {
   return (
     <Routes>
+      {/* 모든 페이지를 MainLayout으로 감쌉니다. */}
       <Route path="/" element={<MainLayout />}>
-        <Route index element={<Home />} />           {/* / */}
+        <Route index element={<Home />} />
+        
+        {/* Workout */}
+        <Route path="workout/dashboard" element={<WorkoutDashboard />} />
+        <Route path="workout/start/:wor_id" element={<WorkoutStart />} />
+        
+        {/* History */}
+        <Route path="history/state" element={<HistoryState />} />
+        <Route path="history/content" element={<HistoryContent />} />
+        
+        {/* Reward */}
+        <Route path="reward/exchange" element={<RewardExchange />} />
+        <Route path="reward/point" element={<RewardPoint />} />
+        <Route path="reward/ranking" element={<RewardRankingMain />} />
+        <Route path="reward/mall" element={<RewardMall />} />
+        
+        {/* Member */}
+        <Route path="member/signup" element={<MemberSignup />} />
+        <Route path="member/profile/:part" element={<MemberProfile />} />
+        <Route path="member/plan" element={<MemberPlan />} />
+        <Route path="member/login" element={<MemberLogin />} />
+        <Route path="member/logout" element={<MemberLogout />} />
+        
+        {/* System */}
+        <Route path="system/select" element={<SystemSelect />} />
+        <Route path="system/insert" element={<SystemInsert />} />
+        <Route path="system/update" element={<SystemUpdate />} />
+        <Route path="system/graph" element={<SystemGraph />} />
+
+        {/* 위 경로 외 모든 요청에 대한 404 처리 */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>
-      <Route path="/workout/dashboard" element={<MainLayout />}>
-        <Route index element={<WorkoutDashboard />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>
-      <Route path="/workout/start/:wor_id" element={<MainLayout />}>
-        <Route index element={<WorkoutStart />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>
-      <Route path="/history/state" element={<MainLayout />}>
-        <Route index element={<HistoryState />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>      
-      <Route path="/history/content" element={<MainLayout />}>
-        <Route index element={<HistoryContent />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>      
-      <Route path="/reward/exchange" element={<MainLayout />}>
-        <Route index element={<RewardExchange />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>      
-      <Route path="/reward/point" element={<MainLayout />}>
-        <Route index element={<RewardPoint />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>    
-      <Route path="/reward/ranking" element={<MainLayout />}>
-        <Route index element={<RewardRankingMain />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>           
-      <Route path="/reward/mall" element={<MainLayout />}>
-        <Route index element={<RewardMall />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>       
-      <Route path="/member/signup" element={<MainLayout />}>
-        <Route index element={<MemberSignup />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>            
-      <Route path="/member/profile/:part" element={<MainLayout />}>
-        <Route index element={<MemberProfile />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>      
-      <Route path="/member/plan" element={<MainLayout />}>
-        <Route index element={<MemberPlan />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>    
-      <Route path="/member/login" element={<MainLayout />}>
-        <Route index element={<MemberLogin />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>           
-      <Route path="/member/logout" element={<MainLayout />}>
-        <Route index element={<MemberLogout />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>           
-      <Route path="/system/select" element={<MainLayout />}>
-        <Route index element={<SystemSelect />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>           
-      <Route path="/system/insert" element={<MainLayout />}>
-        <Route index element={<SystemInsert />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>           
-      <Route path="/system/update" element={<MainLayout />}>
-        <Route index element={<SystemUpdate />} />           {/* / */}
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Route>           
     </Routes>
   );
 }

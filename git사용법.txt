@@ -30,7 +30,7 @@ git push origin --delete <브랜치명>
 #6. git merge 
 git switch main 
 git pull 
-git merge <브랜치명>
+git merge <브랜치명>g
 
 
 

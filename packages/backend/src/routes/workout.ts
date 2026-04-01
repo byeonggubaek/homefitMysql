@@ -159,12 +159,10 @@ workoutRouter.get('/getWorkoutRecordsByPivot', async (req: Request, res: Respons
     }        
     apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutRecordsByPivot', [mem_id, from, to]);
     const records = await getWorkoutRecordsByPivot(Number(mem_id), from, to);
-    const data = records ? JSON.parse(records) : null; // JSON 문자열을 객체로 변환
-    
     res.json({
       success: true,
-      data: data.data,
-      columns: data.columns,      
+      data: records.DATA,
+      columns: records.COLUMNS,      
       timestamp: new Date().toISOString()
     });
     await Logger.logApiSuccess(apiLogEntry);
