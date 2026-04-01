@@ -314,7 +314,6 @@ export const insertMember = async (P_MEM: T_MEMBER): Promise<{ MEM_ID: number, M
             P_MEM.MES_ID
         ] as any[] // ExecuteValues 타입 에러 방지용 캐스팅
       );
-      console.log('Inserting member result:', insertResult);
       const [rows] = await execute(
         conn,
         `
@@ -681,7 +680,6 @@ export const insertWorkoutRecord = async (P_WOR: T_WORKOUT_RECORD): Promise<CurW
 };
 export const insertWorkoutDetail = async (P_DET: T_WORKOUT_DETAIL): Promise<{ WOR_ID: number, WOO_ID: number }> => {
     return await withTransaction(async (conn) => {
-        console.log('Inserting workout detail:', P_DET);
         // 1. 상세 내역 INSERT
         await execute(conn,
             `

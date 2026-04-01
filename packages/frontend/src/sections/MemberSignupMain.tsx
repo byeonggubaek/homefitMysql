@@ -58,14 +58,22 @@ const MemberSignupMain = () => {
   const isUpperFieldsFilled = watchId.length >= 10 && watchPassword.length >= 4;
 
   return (
-    <div className="flex w-full gap-4 p-6 bg-slate-50 items-stretch font-sans antialiased">
+    <div className="flex w-full gap-4 rounded-2xl bg-slate-50 items-stretch font-sans antialiased">
+      {/* 로고 */}
+      <div className="w-1/2 text-center p-8">
+        <div className="mx-auto rounded-2xl backdrop-blur-sm flex items-center justify-center mb-6">
+          <img src="/menu/member.jpg" alt="로그인" className="rounded-2xl"/>
+        </div>
+        <h2 className="text-3xl font-bold mb-2 text-focus">HomeFit</h2>
+        <p className="text-lg text-primary">홈트레이닝 세계로 들어오세요</p>
+      </div>           
       {/* 왼쪽: 입력 폼 */}
       <div className="w-1/2 text-center p-8">
         <Card className="h-full shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
             <div>
-              <CardTitle className="text-2xl font-bold tracking-tight">회원 가입 정보 입력</CardTitle>
-              <CardDescription className="text-slate-500">회원 정보를 입력하세요.</CardDescription>
+              <CardTitle className="text-2xl font-bold tracking-tight text-left">회원 정보 입력</CardTitle>
+              <CardDescription className="text-slate-500 text-lg">회원 정보를 입력하세요.</CardDescription>
             </div>
             <CardAction>
               <div className="flex gap-2">

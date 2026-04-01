@@ -164,7 +164,6 @@ systemRouter.post("/getSelectPrompt", async (req, res) => {
     }];
   }`;
             }
-            console.log('Generated backend prompt:', prompt);
             res.json({
                 success: true,
                 data: prompt,
@@ -186,7 +185,6 @@ systemRouter.post("/getInsertPrompt", async (req, res) => {
     let apiLogEntry = null;
     try {
         const { eventHandler, table } = req.body;
-        console.log('eventHandler:', eventHandler, 'and table:', table);
         // 1. 유효성 검사 (401보다는 400 Bad Request가 더 적절합니다)
         if (!eventHandler || !table) {
             return res.status(400).json({
@@ -207,7 +205,6 @@ systemRouter.post("/getInsertPrompt", async (req, res) => {
             tableSet.add(tableName);
         }
         const tables = Array.from(tableSet);
-        console.log('Extracted tables:', tables);
         const scripts = await getScripts(tables);
         if (scripts.length == 0) {
             await Logger.logApiError(apiLogEntry, '스크립트 조회 실패');
@@ -360,7 +357,6 @@ VALUES (?, ?, ?, ?)
     });
 };
     `;
-            console.log('Generated backend prompt:', prompt);
             res.json({
                 success: true,
                 data: prompt,

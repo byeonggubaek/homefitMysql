@@ -153,7 +153,6 @@ memberRouter.get('/getMemberships', async (req, res) => {
   }
 });
 memberRouter.post('/signup', async (req, res) => {
-memberRouter.post('/signup', async (req, res) => {
     let apiLogEntry = null;
     try {
         const { 
@@ -187,9 +186,7 @@ memberRouter.post('/signup', async (req, res) => {
             MEM_STREAK: 0,
             MES_ID: Number(mes_id)
         };
-        console.log('회원가입 서비스 호출 전 데이터:', memberData);
         const result = await insertMember(memberData);
-        console.log('회원가입 결과:', result);  
         res.json({
             success: true,
             data: result, // { MEM_ID, MEM_ID_VIEW } 리턴

@@ -212,7 +212,6 @@ systemRouter.post("/getInsertPrompt", async (req, res) => {
         tableSet.add(tableName);
     }
     const tables = Array.from(tableSet);
-    console.log('Extracted tables:', tables);
     const scripts = await getScripts(tables);
     if(scripts.length == 0) {
       await Logger.logApiError(apiLogEntry, '스크립트 조회 실패');
@@ -365,8 +364,6 @@ VALUES (?, ?, ?, ?)
     });
 };
     `;
-
-      console.log('Generated backend prompt:', prompt);
       res.json({
         success: true,
         data: prompt,

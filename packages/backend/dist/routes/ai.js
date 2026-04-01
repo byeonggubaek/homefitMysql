@@ -9,7 +9,6 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 aiRouter.post('/recExercise', async (req, res) => {
     try {
         const { userProfile } = req.body;
-        console.log("AI 추천 요청 - 사용자 프로필:", userProfile); // 💡 사용자 프로필 로그
         const user = await getMember(userProfile.mem_id);
         const workouts = await getWorkouts();
         const model = genAI.getGenerativeModel({
@@ -74,7 +73,6 @@ aiRouter.post('/recExercise', async (req, res) => {
             // JSON 문자열이 ```json ... ``` 으로 둘러싸여 있을 수 있으니 깔끔히 정리
             const cleanText = rawText.replace(/```json|```/g, "").trim();
             recommendedExercises = JSON.parse(cleanText);
-            console.log("결과", recommendedExercises);
         }
         catch (parseError) {
             console.warn("AI 응답 파싱 실패, fallback 사용");
