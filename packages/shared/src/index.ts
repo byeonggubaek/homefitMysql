@@ -75,6 +75,7 @@ export interface Membership {
 =======================================================================================================*/
 export interface WorkoutRecord {
   WOR_ID: number;
+  WOR_ID_VIEW: string;
   WOR_DT: Date;
   WOO_ID: number;
   WOO_NAME: string;

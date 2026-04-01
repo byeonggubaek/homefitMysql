@@ -4,7 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import Logger from './logger.js';
-import { closePool, getMenus, getColDescs, getWorkoutPivot, getWorkoutPivotWithPlan, getMenuPos, searchMenus } from './db.js';
+import { closePool, getMenus, getColDescs, getMenuPos, searchMenus } from './db.js';
 import aiRouter from './routes/ai.js';
 import workoutRouter from './routes/workout.js';
 import systemRouter from './routes/system.js';
@@ -147,121 +147,6 @@ app.get('/api/searchMenus', async (req, res) => {
             success: true,
             data: data,
             count: data.length,
-            timestamp: new Date().toISOString()
-        });
-        await Logger.logApiSuccess(apiLogEntry);
-    }
-    catch (error) {
-        await Logger.logApiError(apiLogEntry, error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-//================================================================================================
-// 포팅전 
-//================================================================================================
-app.get('/api/get_col_descs', async (req, res) => {
-    let apiLogEntry = null;
-    try {
-        const { table } = req.query; // 👈 req.query 사용!
-        if (!table) {
-            return res.status(400).json({
-                success: false,
-                error: 'table 이름이 필요합니다.'
-            });
-        }
-        apiLogEntry = await Logger.logApiStart('GET /api/get_col_descs', [table]);
-        const colDescs = await getColDescs(table);
-        res.json({
-            success: true,
-            data: colDescs,
-            count: colDescs.length,
-            timestamp: new Date().toISOString()
-        });
-        await Logger.logApiSuccess(apiLogEntry);
-    }
-    catch (error) {
-        await Logger.logApiError(apiLogEntry, error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-app.get('/api/getWorkoutPivot', async (req, res) => {
-    let apiLogEntry = null;
-    try {
-        const { memberId } = req.query;
-        const { from } = req.query;
-        const { to } = req.query;
-        if (!memberId) {
-            return res.status(400).json({
-                success: false,
-                error: '회원 ID가 필요합니다.'
-            });
-        }
-        if (!from) {
-            return res.status(400).json({
-                success: false,
-                error: '시작일이 필요합니다.'
-            });
-        }
-        if (!to) {
-            return res.status(400).json({
-                success: false,
-                error: '종료일이 필요합니다.'
-            });
-        }
-        apiLogEntry = await Logger.logApiStart('GET /api/getWorkoutPivot', [memberId, from, to]);
-        const records = await getWorkoutPivot(memberId, from, to);
-        res.json({
-            success: true,
-            data: records.data,
-            columns: records.columns,
-            timestamp: new Date().toISOString()
-        });
-        await Logger.logApiSuccess(apiLogEntry);
-    }
-    catch (error) {
-        await Logger.logApiError(apiLogEntry, error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-app.get('/api/get_workout_pivot_with_plan', async (req, res) => {
-    let apiLogEntry = null;
-    try {
-        const { memberId } = req.query;
-        const { from } = req.query;
-        const { to } = req.query;
-        if (!memberId) {
-            return res.status(400).json({
-                success: false,
-                error: '회원 ID가 필요합니다.'
-            });
-        }
-        if (!from) {
-            return res.status(400).json({
-                success: false,
-                error: '시작일이 필요합니다.'
-            });
-        }
-        if (!to) {
-            return res.status(400).json({
-                success: false,
-                error: '종료일이 필요합니다.'
-            });
-        }
-        apiLogEntry = await Logger.logApiStart('GET /api/get_workout_pivot_with_plan', [memberId, from, to]);
-        const records = await getWorkoutPivotWithPlan(memberId, from, to);
-        res.json({
-            success: true,
-            data: records.data,
-            columns: records.columns,
             timestamp: new Date().toISOString()
         });
         await Logger.logApiSuccess(apiLogEntry);

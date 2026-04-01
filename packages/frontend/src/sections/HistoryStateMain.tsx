@@ -12,8 +12,10 @@ import WdogChartPie from "@/components/WdogChartPie";
 import WdogInputDateTermState from "@/components/WdogInputDateTermState";
 import { format, addDays, startOfMonth, endOfMonth } from "date-fns";
 import { type DateRange } from 'react-day-picker';
+import { useUser } from "@/hooks/UserContext";
 
 export default function HistoryStateMain() {  
+  const { member } = useUser();  // Context에서 공유
   //================================================================================================================
   // 기준 데이터
   //================================================================================================================
@@ -28,13 +30,13 @@ export default function HistoryStateMain() {
   const [columnsAchievement, setColumnsAchievement] = useState<ColDesc[]>([]);
   useEffect(() => {
     // 일별 상세 테이블 
-    fetch('http://localhost:3001/api/get_col_descs?table=WorkoutRecord')
+    fetch('http://localhost:3001/api/getColDesc?table=WorkoutRecord')
       .then(res => res.json())
       .then(data => {
         setColumnsRecord(data.data);  
       });
     // 일별 성취 테이블
-    fetch('http://localhost:3001/api/get_col_descs?table=WorkoutAchievement')
+    fetch('http://localhost:3001/api/getColDesc?table=WorkoutAchievement')
       .then(res => res.json())
       .then(data => {
         setColumnsAchievement(data.data);  
@@ -62,30 +64,67 @@ export default function HistoryStateMain() {
     setDateDescription(`${format(dateRange.from!, 'yyyy-MM-dd')} ~ ${format(dateRange.to!, 'yyyy-MM-dd')}`);
   }, [])
   useEffect(() => {
-    // 그리드 데이터 
-    fetch(`http://localhost:3001/api/get_workout_records?memberId=U000001&from=${format(dateRange.from!, 'yyyy-MM-dd')}&to=${format(dateRange.to!, 'yyyy-MM-dd')}`)
-      .then(res => res.json())
-      .then(data => {
-        setRecords(data.data);  
-    });    
-    // 차트 데이터 
-    fetch(`http://localhost:3001/api/get_workout_pivot?memberId=U000001&from=${format(dateRange.from!, 'yyyy-MM-dd')}&to=${format(dateRange.to!, 'yyyy-MM-dd')}`)
-      .then(res => res.json())
-      .then(data => {
-        setChartDataRecord(data.data);
-        const config = createWorkoutChartConfig(data.columns, colors); 
-        setChartConfigRecord(config);
+    if (!member?.MEM_ID || !dateRange.from || !dateRange.to) return;
 
-      });
-    // 차트 데이터 (성취 : 계획 대비 실적)  
-    fetch(`http://localhost:3001/api/get_workout_pivot_with_plan?memberId=U000001&from=${format(dateRange.from!, 'yyyy-MM-dd')}&to=${format(dateRange.to!, 'yyyy-MM-dd')}`)
-      .then(res => res.json())
-      .then(data => {
-        setChartDataAchievement(data.data);
-        const config = createWorkoutChartConfigWithPlan(data.columns, colors); 
-        setChartConfigAchievement(config);
-      });      
-  }, [dateRange]);    
+    const memId = member.MEM_ID;
+    const startDt = format(dateRange.from, 'yyyy-MM-dd');
+    const endDt = format(dateRange.to, 'yyyy-MM-dd');
+
+    const fetchData = async () => {
+      try {
+        // API 경로 정의
+        const gridUrl  = `http://localhost:3001/api/workout/getWorkoutRecords?mem_id=${memId}&start_dt=${startDt}&end_dt=${endDt}`;
+        const chartUrl = `http://localhost:3001/api/workout/getWorkoutRecordsByPivot?mem_id=${memId}&from=${startDt}&to=${endDt}`;
+
+        // Promise.all로 병렬 호출
+        const [gridRes, chartRes] = await Promise.all([
+          fetch(gridUrl),
+          fetch(chartUrl)
+        ]);
+        const gridJson = await gridRes.json();
+        const chartJson = await chartRes.json();
+        // 그리드 데이터 업데이트
+        if (gridJson.success) {
+          setRecords(gridJson.data);
+        }
+        // 차트 데이터 및 설정 업데이트
+        if (chartJson.success) {
+          setChartDataRecord(JSON.parse(chartJson.data));
+          const config = createWorkoutChartConfig(JSON.parse(chartJson.columns), colors);
+          setChartConfigRecord(config);
+        }
+      } catch (error) {
+        console.error("Data fetching failed:", error);
+      }
+    };
+
+    fetchData();
+  }, [member?.MEM_ID, dateRange.from, dateRange.to]);  
+  // useEffect(() => {
+  //   // 그리드 데이터 
+  //   fetch(`http://localhost:3001/api/workout/getWorkoutRecords?mem_id=${member?.MEM_ID?? ''}&start_dt=${format(dateRange.from!, 'yyyy-MM-dd')}&end_dt=${format(dateRange.to!, 'yyyy-MM-dd')}`)
+  //     .then(res => res.json())
+  //     .then(data => {
+  //       setRecords(data.data);  
+  //   });    
+  //   // 차트 데이터 
+  //   fetch(`http://localhost:3001/api/workout/getWorkoutRecordsByPivot?mem_id=${member?.MEM_ID?? ''}&from=${format(dateRange.from!, 'yyyy-MM-dd')}&to=${format(dateRange.to!, 'yyyy-MM-dd')}`)
+  //     .then(res => res.json())
+  //     .then(data => {
+  //       setChartDataRecord(data.data);
+  //       const config = createWorkoutChartConfig(data.columns, colors); 
+  //       setChartConfigRecord(config);
+
+  //   //   });
+  //   // // 차트 데이터 (성취 : 계획 대비 실적)  
+  //   // fetch(`http://localhost:3001/api/get_workout_pivot_with_plan?memberId=${member?.MEM_ID?? ''}&from=${format(dateRange.from!, 'yyyy-MM-dd')}&to=${format(dateRange.to!, 'yyyy-MM-dd')}`)
+  //   //   .then(res => res.json())
+  //   //   .then(data => {
+  //   //     setChartDataAchievement(data.data);
+  //   //     const config = createWorkoutChartConfigWithPlan(data.columns, colors); 
+  //   //     setChartConfigAchievement(config);
+  //   //   });      
+  // }, [member?.MEM_ID, dateRange.from, dateRange.to]);    
   //================================================================================================================
   // 월별 데이터
   //================================================================================================================
@@ -105,22 +144,22 @@ export default function HistoryStateMain() {
   }, [])
   useEffect(() => {
     // 그리드 데이터 
-    fetch(`http://localhost:3001/api/get_workout_records?memberId=U000001&from=${format(dateRangeMonthly.from!, 'yyyy-MM-dd')}&to=${format(dateRangeMonthly.to!, 'yyyy-MM-dd')}`)
+    fetch(`http://localhost:3001/api/workout/getWorkoutRecords?mem_id=${member?.MEM_ID?? ''}&start_dt=${format(dateRangeMonthly.from!, 'yyyy-MM-dd')}&end_dt=${format(dateRangeMonthly.to!, 'yyyy-MM-dd')}`)
       .then(res => res.json())
       .then(data => {
         setRecordsMonthly(data.data); 
     });    
     // 차트 데이터 
-    fetch(`http://localhost:3001/api/get_workout_pivot?memberId=U000001&from=${format(dateRangeMonthly.from!, 'yyyy-MM-dd')}&to=${format(dateRangeMonthly.to!, 'yyyy-MM-dd')}`)
-      .then(res => res.json())
-      .then(data => {
-        const mothlyData = data.data.map((item: any) => {
-          const { wo_dt, ...rest } = item;  // wo_dt 제외하고 나머지 복사
-          return rest;
-        });
-        setChartDataRecordMonthly(mothlyData);
-      });
-  }, [dateRangeMonthly]);   
+    // fetch(`http://localhost:3001/api/get_workout_pivot?memberId=${member?.MEM_ID?? ''}&from=${format(dateRangeMonthly.from!, 'yyyy-MM-dd')}&to=${format(dateRangeMonthly.to!, 'yyyy-MM-dd')}`)
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     const mothlyData = data.data.map((item: any) => {
+    //       const { wo_dt, ...rest } = item;  // wo_dt 제외하고 나머지 복사
+    //       return rest;
+    //     });
+    //     setChartDataRecordMonthly(mothlyData);
+    //   });
+  }, [member?.MEM_ID, dateRangeMonthly]);   
   //================================================================================================================
   // 탭 이벤트 
   //================================================================================================================
@@ -139,61 +178,63 @@ export default function HistoryStateMain() {
         )}
       </div>      
       <div>
-        <Tabs defaultValue="record" className="w-full" onValueChange={handleTabChange}>
-          <TabsList>
-            <TabsTrigger value="record">일별 상세</TabsTrigger>
-            <TabsTrigger value="achievement">일별 성취</TabsTrigger>
-            <TabsTrigger value="monthly">월별 운동내역</TabsTrigger>            
-          </TabsList>
-          <TabsContent value="record">  
-            <div className="flex gap-4">
-              <div className="w-1/2 border rounded-lg p-4 mb-4">
-                <WdogTable columns={columnsRecord} records={records} caption="일별 상세" colors={colors}/>
+        { records && 
+          <Tabs defaultValue="record" className="w-full" onValueChange={handleTabChange}>
+            <TabsList>
+              <TabsTrigger value="record">일별 상세</TabsTrigger>
+              <TabsTrigger value="achievement">일별 성취</TabsTrigger>
+              <TabsTrigger value="monthly">월별 운동내역</TabsTrigger>            
+            </TabsList>
+            <TabsContent value="record">  
+              <div className="flex gap-4">
+                <div className="w-1/2 border rounded-lg p-4 mb-4">
+                  <WdogTable columns={columnsRecord} records={records} caption="일별 상세" colors={colors}/>
+                </div>
+                <div className="w-1/2 border rounded-lg p-4 mb-4 ">
+                  <WdogChartBar 
+                    chartData={chartDataRecord} 
+                    chartConfig={chartConfigRecord}
+                    xAxisKey="wo_dt"
+                    title="일별 운동 추이"
+                    description={`${dateDescription} : 단위 횟수`}
+                  />
+                </div>
               </div>
-              <div className="w-1/2 border rounded-lg p-4 mb-4 ">
-                <WdogChartBar 
-                  chartData={chartDataRecord} 
-                  chartConfig={chartConfigRecord}
-                  xAxisKey="wo_dt"
-                  title="일별 운동 추이"
-                  description={`${dateDescription} : 단위 횟수`}
-                />
-              </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="achievement">
-            <div className="flex gap-4">            
-              <div className="w-1/2 border rounded-lg p-4 mb-4">
-                <WdogTable columns={columnsAchievement} records={records} caption="일별 성취" colors={colors}/>
-              </div>        
-              <div className="w-1/2 border rounded-lg p-4 mb-4">
-                <WdogChartBarStackedWithLegend 
-                  chartData={chartDataAchievement} 
-                  chartConfig={chartConfigAchievement}
-                  xAxisKey="wo_dt"
-                  title="일별 운동 성취"
-                  description={`${dateDescription} : 단위 횟수`}
-                />
-              </div>
-            </div>              
-          </TabsContent>
-          <TabsContent value="monthly">
-            <div className="flex gap-4">            
-              <div className="w-1/2 border rounded-lg p-4 mb-4">
-                <WdogChartPie 
-                  chartData={chartDataRecordMonthly} 
-                  chartConfig={chartConfigRecord}
-                  title="월별 운동 집계"
-                  description={`${dateDescriptionMonthly} : 단위 횟수`}
-                  circle_detail="총 운동횟수"            
-                />                
-              </div>        
-              <div className="w-1/2 border rounded-lg p-4 mb-4">
-                <WdogTable columns={columnsRecord} records={recordsMonthly} caption="월별 상세" colors={colors}/>
-              </div>
-            </div>              
-          </TabsContent>          
-        </Tabs>        
+            </TabsContent>
+            <TabsContent value="achievement">
+              <div className="flex gap-4">            
+                <div className="w-1/2 border rounded-lg p-4 mb-4">
+                  <WdogTable columns={columnsAchievement} records={records} caption="일별 성취" colors={colors}/>
+                </div>        
+                <div className="w-1/2 border rounded-lg p-4 mb-4">
+                  <WdogChartBarStackedWithLegend 
+                    chartData={chartDataAchievement} 
+                    chartConfig={chartConfigAchievement}
+                    xAxisKey="wo_dt"
+                    title="일별 운동 성취"
+                    description={`${dateDescription} : 단위 횟수`}
+                  />
+                </div>
+              </div>              
+            </TabsContent>
+            <TabsContent value="monthly">
+              <div className="flex gap-4">            
+                <div className="w-1/2 border rounded-lg p-4 mb-4">
+                  <WdogChartPie 
+                    chartData={chartDataRecordMonthly} 
+                    chartConfig={chartConfigRecord}
+                    title="월별 운동 집계"
+                    description={`${dateDescriptionMonthly} : 단위 횟수`}
+                    circle_detail="총 운동횟수"            
+                  />                
+                </div>        
+                <div className="w-1/2 border rounded-lg p-4 mb-4">
+                  <WdogTable columns={columnsRecord} records={recordsMonthly} caption="월별 상세" colors={colors}/>
+                </div>
+              </div>              
+            </TabsContent>          
+          </Tabs>  
+        }      
       </div>
     </>
   );

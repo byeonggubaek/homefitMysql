@@ -12,18 +12,19 @@ import { Link } from "react-router-dom";
 import { ChartNoAxesCombined  } from 'lucide-react';
 import { useEffect, useState } from "react";
 import type { WorkoutHistory } from "shared";
+import { useUser } from "@/hooks/UserContext";
 
 const WorkoutDashboardHis = () => {
+  const {member} = useUser();  // Context에서 공유
    const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistory[]>([]);
-   const P_MEM_ID = 1; // 예시 회원 ID
    useEffect(() => {
      // 그리드 데이터 
-     fetch(`http://localhost:3001/api/workout/getWorkoutHistory?P_MEM_ID=${P_MEM_ID}`)
+     fetch(`http://localhost:3001/api/workout/getWorkoutHistory?mem_id=${member?.MEM_ID ?? ''}`)
        .then(res => res.json())
        .then(data => {
          setWorkoutHistory(data.data);  
      });    
-   }, []);    
+   }, [member?.MEM_ID]);    
   
   const unregisterd = true; // 예시로 등록 여부를 나타내는 변수
   return (
@@ -39,7 +40,7 @@ const WorkoutDashboardHis = () => {
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2">
-          {workoutHistory.map((workout, index) => (
+          {workoutHistory && workoutHistory.map((workout, index) => (
             <StampItem
               key={index}
               status={workout.STATUS === 'G' ? 'good' : 'bad'}

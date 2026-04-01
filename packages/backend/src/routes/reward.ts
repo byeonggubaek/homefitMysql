@@ -1,10 +1,11 @@
 import express from 'express';
+import { Request, Response } from 'express';
 import Logger from '../logger.js'
 import { getGoods, getRanking } from '../db.js';
 
 const rewardRouter = express.Router();
 
-rewardRouter.get('/getRanking', async (req, res) => {
+rewardRouter.get('/getRanking', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { from_dt } = req.query as { from_dt: string };
@@ -39,7 +40,7 @@ rewardRouter.get('/getRanking', async (req, res) => {
     });
   }
 });
-rewardRouter.get('/getGoods', async (req, res) => {
+rewardRouter.get('/getGoods', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     apiLogEntry = await Logger.logApiStart('GET /getGoods', []);

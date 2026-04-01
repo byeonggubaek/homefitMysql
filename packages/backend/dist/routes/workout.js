@@ -79,40 +79,4 @@ workoutRouter.get('/getWorkoutHistory', async (req, res) => {
         });
     }
 });
-workoutRouter.post('/insertWorkoutRecord', async (req, res) => {
-    let apiLogEntry = null;
-    try {
-        const { mem_id, wor_dt, wor_desc } = req.body;
-        // 필수값 검증
-        if (!mem_id) {
-            return res.status(400).json({
-                success: false,
-                error: '회원 ID(mem_id)가 필요합니다.'
-            });
-        }
-        apiLogEntry = await Logger.logApiStart('POST /api/insertWorkoutRecord', [mem_id, wor_dt, wor_desc]);
-        const workoutData = {
-            WOR_ID_VIEW: '', // 서비스 내부에서 생성 예정
-            MEM_ID: Number(mem_id),
-            // 날짜가 넘어오지 않으면 현재 날짜(YYYY-MM-DD)로 설정
-            WOR_DT: wor_dt || new Date().toISOString().split('T')[0],
-            WOR_DESC: wor_desc || null
-        };
-        const result = await insertWorkoutRecord(workoutData);
-        res.json({
-            success: true,
-            data: result, // { WOR_ID, WOR_ID_VIEW } 리턴
-            timestamp: new Date().toISOString()
-        });
-        await Logger.logApiSuccess(apiLogEntry);
-    }
-    catch (error) {
-        if (apiLogEntry)
-            await Logger.logApiError(apiLogEntry, error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
 export default workoutRouter;

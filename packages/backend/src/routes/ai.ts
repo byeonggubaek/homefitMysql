@@ -1,5 +1,5 @@
 import express from 'express';
-import Logger from '../logger.js'
+import { Request, Response } from 'express';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { deleteWorkoutDetails, getMember, getWorkouts, insertWorkoutDetail } from '../db.js';
 import { T_WORKOUT_DETAIL, Workout, WorkoutDetail } from 'shared';
@@ -9,7 +9,7 @@ const aiRouter = express.Router();
 // AI 설정 
 //================================================================================================
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-aiRouter.post('/recExercise', async (req, res) => {
+aiRouter.post('/recExercise', async (req: Request, res: Response) => {
   try {
     const { userProfile } = req.body;
     const user = await getMember(userProfile.mem_id);

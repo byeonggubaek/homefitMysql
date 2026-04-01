@@ -1,11 +1,12 @@
 import express from 'express';
+import { Request, Response } from 'express';
 import Logger from '../logger.js'
 import { addMemberPlan, deleteMemberPlan, getMember, getMemberships, getMonthStatus, insertMember, login, MemberPlans } from '../db.js';
 import jwt from 'jsonwebtoken';
 import { Member, T_MEMBER } from 'shared';
 
 const memberRouter = express.Router();
-memberRouter.post("/login", async (req, res) => {
+memberRouter.post("/login", async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { mem_id_act, mem_password } = req.body;  // 👈 자동 파싱    
@@ -67,7 +68,7 @@ memberRouter.post("/login", async (req, res) => {
     });
   }
 });
-memberRouter.post("/logout", async (req, res) => {
+memberRouter.post("/logout", async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     apiLogEntry = await Logger.logApiStart('POST /api/member/logout', []);
@@ -101,58 +102,7 @@ memberRouter.post("/logout", async (req, res) => {
     });
   }
 });
-
-memberRouter.get('/me', async (req, res) => {
-  let apiLogEntry = null;  
-  try {
-    apiLogEntry = await Logger.logApiStart('GET /api/member/me', []);
-    if (req.session.user) {
-      res.json(req.session.user);
-      await Logger.logApiSuccess(apiLogEntry);
-    } else {
-      await Logger.logApiError(apiLogEntry, "로그인 필요");
-      res.status(401).json({ message: '로그인 필요' });
-    }
-  } catch (error) {
-    await Logger.logApiError(apiLogEntry, error);
-    res.status(500).json({ message: '서버 오류' });
-  };
-});
-memberRouter.get('/getMember', async (req, res) => {
-  let apiLogEntry = null;
-  try {
-    const { mem_id } = req.query as { mem_id: string };
-    if (!mem_id) {
-      return res.status(400).json({
-        success: false,
-        error: '회원 ID가 필요합니다.'
-      });
-    }
-    apiLogEntry = await Logger.logApiStart('GET /api/member/getMember', [mem_id]);
-    const data = await getMember(mem_id);
-    res.json({
-      success: true,
-      data: data,
-      timestamp: new Date().toISOString()
-    });
-    await Logger.logApiSuccess(apiLogEntry);
-  } catch (error) {
-    await Logger.logApiError(apiLogEntry, error);
-    res.status(500).json({
-      success: false,
-      error: (error as Error).message
-    });
-  }
-});
-memberRouter.get('/getMemberships', async (req, res) => {
-  try {
-    const data = await getMemberships();
-    res.json({ success: true, data });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err });
-  }
-});
-memberRouter.post('/signup', async (req, res) => {
+memberRouter.post('/signup', async (req: Request, res: Response) => {
     let apiLogEntry = null;
     try {
         const { 
@@ -203,8 +153,58 @@ memberRouter.post('/signup', async (req, res) => {
         });
     }
 });
+memberRouter.get('/me', async (req: Request, res: Response) => {
+  let apiLogEntry = null;  
+  try {
+    apiLogEntry = await Logger.logApiStart('GET /api/member/me', []);
+    if (req.session.user) {
+      res.json(req.session.user);
+      await Logger.logApiSuccess(apiLogEntry);
+    } else {
+      await Logger.logApiError(apiLogEntry, "로그인 필요");
+      res.status(401).json({ message: '로그인 필요' });
+    }
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({ message: '서버 오류' });
+  };
+});
+memberRouter.get('/getMember', async (req: Request, res: Response) => {
+  let apiLogEntry = null;
+  try {
+    const { mem_id } = req.query as { mem_id: string };
+    if (!mem_id) {
+      return res.status(400).json({
+        success: false,
+        error: '회원 ID가 필요합니다.'
+      });
+    }
+    apiLogEntry = await Logger.logApiStart('GET /api/member/getMember', [mem_id]);
+    const data = await getMember(mem_id);
+    res.json({
+      success: true,
+      data: data,
+      timestamp: new Date().toISOString()
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+memberRouter.get('/getMemberships', async (req: Request, res: Response) => {
+  try {
+    const data = await getMemberships();
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err });
+  }
+});
 // 1. 특정 날짜의 계획 가져오기
-memberRouter.get('/getMemberPlan', async (req, res) => {
+memberRouter.get('/getMemberPlan', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { memberId, date } = req.query as { memberId: string; date: string };
@@ -227,9 +227,8 @@ memberRouter.get('/getMemberPlan', async (req, res) => {
     res.status(500).json({ success: false, error: (error as Error).message });
   }
 });
-
 // 2. 새로운 계획 추가하기
-memberRouter.post('/insertMemberPlan', async (req, res) => {
+memberRouter.post('/insertMemberPlan', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT } = req.body;
@@ -251,9 +250,8 @@ memberRouter.post('/insertMemberPlan', async (req, res) => {
     res.status(500).json({ success: false, error: (error as Error).message });
   }
 });
-
 // 3. 계획 삭제하기
-memberRouter.delete('/deleteMemberPlan', async (req, res) => {
+memberRouter.delete('/deleteMemberPlan', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { goalId } = req.query as { goalId: string };
@@ -272,9 +270,8 @@ memberRouter.delete('/deleteMemberPlan', async (req, res) => {
     res.status(500).json({ success: false, error: (error as Error).message });
   }
 });
-
 // 4. 월간 운동 요약 가져오기 (달력 동그라미 표시용)
-memberRouter.get('/getMonthlyMemberPlan', async (req, res) => {
+memberRouter.get('/getMonthlyMemberPlan', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { memberId, month } = req.query as { memberId: string; month: string };

@@ -1,10 +1,11 @@
 import express from 'express';
+import { Request, Response } from 'express';
 import Logger from '../logger.js'
 import { getScripts } from '../db.js';
 
 const systemRouter = express.Router();
 
-systemRouter.post("/getSelectPrompt", async (req, res) => {
+systemRouter.post("/getSelectPrompt", async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { method, eventHandler, sql } = req.body;
@@ -185,7 +186,7 @@ systemRouter.post("/getSelectPrompt", async (req, res) => {
     });
   }
 });
-systemRouter.post("/getInsertPrompt", async (req, res) => {
+systemRouter.post("/getInsertPrompt", async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { eventHandler, table } = req.body;
@@ -276,7 +277,6 @@ try {
 입력된 테이블들의 칼럼에 대응되는 tyype을 선언하고  DB에 반영하는 Backend express 이벤트 핸들러를 만들어 줘
 AUTO_INCREMENT 되는 값은 파라미터로 넘어오지 않고 자동채번한 후 
 예제와 같이 AUTO가 빠진 칼럼에 PREFIX + 5자리 숫자 형태로 만들어서 업데이트 해주는 형태로 만들어 줘
-async (req, res) 에서 type은 지정하지 마
 날자는 입력값이 넘어오지 않으면 현재 날짜로 입력되도록 만들어 줘
 프라이머리 키를 리턴해줘 
 이때, withTransaction 함수로 감싸서 트랜잭션이 적용된 형태로 만들어 줘
