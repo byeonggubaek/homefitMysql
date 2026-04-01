@@ -80,62 +80,54 @@ aiRouter.post('/recExercise', async (req, res) => {
       // JSON 문자열이 ```json ... ``` 으로 둘러싸여 있을 수 있으니 깔끔히 정리
       const cleanText = rawText.replace(/```json|```/g, "").trim();
       recommendedExercises = JSON.parse(cleanText);
-      console.log("최종결과", recommendedExercises);    
-      await deleteWorkoutDetails(userProfile.wor_id); // 기존 상세 내역 삭제  
-      console.log("삭제 후 추천 운동", recommendedExercises);       
-      const workoutDetails: T_WORKOUT_DETAIL[] = recommendedExercises.slice(0,3).map((recommend: WorkoutDetail) => ({
-            WOR_ID: userProfile.wor_id,
-            WOO_ID: recommend.WOO_ID,
-            WOD_GUIDE: recommend.WOD_GUIDE,
-            WOD_TARGET_REPS: recommend.WOD_TARGET_REPS,
-            WOD_TARGET_SETS: recommend.WOD_TARGET_SETS,
-            WOD_COUNT: 0,
-            WOD_POINT: 0,
-            WOD_ACCURACY: 0,
-            WOD_TIME: 0
-          }));
+      await deleteWorkoutDetails(userProfile.wor_id); // 기존 운동 상세 내역 삭제 
+      const workoutDetails: T_WORKOUT_DETAIL[] = recommendedExercises.map((workout: any) => ({
+        WOR_ID: userProfile.wor_id,           // FK & PK (운동기록 ID)
+        WOO_ID: workout.WOO_ID,           // FK & PK (운동 ID)
+        WOD_GUIDE: workout.WOD_GUIDE || null, // 운동 가이드
+        WOD_TARGET_REPS: workout.WOD_TARGET_REPS || 0,  // 권장 횟수
+        WOD_TARGET_SETS: workout.WOD_TARGET_SETS || 0,  // 권장 세트수
+        WOD_COUNT: 0,        // 실제 실행 횟수
+        WOD_POINT: 0,        // 획득 포인트
+        WOD_ACCURACY: 0,     // 운동 정확도
+        WOD_TIME: 0,         // 운동시간(분)        
+      }));
       await Promise.all(
-        workoutDetails.map(async (workoutDetail) => {
-          await insertWorkoutDetail(workoutDetail);
-        })
-      );            
+        workoutDetails.map(
+          async (workout) => {
+            await insertWorkoutDetail(workout); // 새로운 운동 상세 내역 삽입
+          }
+        )
+      );
     } catch (parseError) {
       console.warn("AI 응답 파싱 실패, fallback 사용");
-      recommendedExercises = [
-          { WOO_ID: "WOO00001", WOO_NAME: "플랭크", WOO_IMG: "plank.png", WOO_UNIT: "초",  WOD_GUIDE: "30초 동안 자세 유지하기.", WOD_TARGET_REPS: 0, WOD_TARGET_SETS: 1 },
-          { WOO_ID: "WOO00002", WOO_NAME: "스쿼트", WOO_IMG: "squat.png", WOO_UNIT: "회", WOD_GUIDE: "다리를 어깨 너비로 벌리고 앉았다 일어나기", WOD_TARGET_REPS: 0, WOD_TARGET_SETS: 1 },
-          { WOO_ID: "WOO00003", WOO_NAME: "런지", WOO_IMG: "lunge.png", WOO_UNIT: "회", WOD_GUIDE: "좌우 각 권장 횟수만큼 반복하기", WOD_TARGET_REPS: 0, WOD_TARGET_SETS: 1 }
-      ];
+      return res.status(500).json({
+        success: false,
+        error: "AI 응답 파싱 실패, fallback 사용",
+        timestamp: new Date().toISOString()
+        });      
     }
-
-    // 💡 여기서 한 번만 응답
     return res.json({
       success: true,
       data: recommendedExercises,
       timestamp: new Date().toISOString()
     });
-
   } catch (error: any) {
     // 💡 그 외의 실제 에러는 500으로 처리
     console.error("AI 추천 에러:", error);
     if (error.message.includes("429") || error.message.includes("403") || error.message.includes("Quota")) {
-      // fallback: 정상 응답으로 돌려줌
-      return res.json({
-        success: true,
-        data: [
-          { WOO_ID: "WOO00001", WOO_NAME: "플랭크", WOO_IMG: "plank.png", WOO_UNIT: "초",  WOD_GUIDE: "30초 동안 자세 유지하기.", WOD_TARGET_REPS: 0, WOD_TARGET_SETS: 2 },
-          { WOO_ID: "WOO00002", WOO_NAME: "스쿼트", WOO_IMG: "squat.png", WOO_UNIT: "회", WOD_GUIDE: "다리를 어깨 너비로 벌리고 앉았다 일어나기", WOD_TARGET_REPS: 0, WOD_TARGET_SETS: 2 },
-          { WOO_ID: "WOO00003", WOO_NAME: "런지", WOO_IMG: "lunge.png", WOO_UNIT: "회", WOD_GUIDE: "좌우 각 권장 횟수만큼 반복하기", WOD_TARGET_REPS: 0, WOD_TARGET_SETS: 2 }
-        ],
+      return res.status(500).json({
+        success: false,
+        error: "AI 응답 파싱 실패, fallback 사용",
+        timestamp: new Date().toISOString()
+        });           
+    }
+    else
+      return res.status(500).json({
+        success: false,
+        error: error.message,
         timestamp: new Date().toISOString()
       });
-    }
-
-    return res.status(500).json({
-      success: false,
-      error: "AI 모델 연결 실패",
-      message: error.message
-    });
   }
 });
 

@@ -466,6 +466,22 @@ export const login = async (P_MEM_ID_VIEW: string, P_MEM_PASSWORD: string): Prom
     };
   }
 } 
+export const register = async (P_MEM: T_MEMBER): Promise<any> => {
+  try {
+    const result = await insertMember(P_MEM);
+    return {
+      STATUS: "SUCCESS",
+      ERROR: '',
+      DATA: result.MEM_ID,
+    }
+  } catch (error: any) {
+    return {
+      STATUS: "FAIL",
+      ERROR: error.message || '회원가입 중 오류가 발생했습니다.',
+    }
+  }
+}
+
 async function _getBenefits(P_MES_ID: string = ''): Promise<any[]> {
   return select(`
  SELECT B.BEN_ID, 
@@ -704,7 +720,7 @@ export const initWorkoutRecord = async (P_MEM_ID: number, P_WOR_DT: string): Pro
           WOR_ID_VIEW = LAST_WOR.WOR_ID_VIEW;
         }
         else {
-          const [insertResult] = await execute(conn,
+          const [Result] = await execute(conn,
               `
 INSERT INTO T_WORKOUT_RECORD (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC) 
 VALUES (?, ?, ?, ?)
@@ -717,7 +733,7 @@ VALUES (?, ?, ?, ?)
               ] as any[]
           );
           // 생성된 AUTO_INCREMENT ID (PK: WOR_ID) 추출
-          WOR_ID = (insertResult as any).insertId;
+          WOR_ID = (Result as any).insertId;
           // 3. WOR_ID_VIEW 포맷 생성 (PREFIX_ + 5자리 숫자)
           // 지시사항 규칙: WOR + 5자리 패딩 적용 (예: WOR_00001)
           WOR_ID_VIEW = `WOR${String(WOR_ID).padStart(5, '0')}`;
@@ -774,17 +790,18 @@ UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?
 export const deleteWorkoutDetails = async (P_WOR_ID: string): Promise<boolean> => {
     return await withTransaction(async (conn) => {
         // 1. 상세 내역 DELETE
-        const [result] = await execute(conn,
+        const [Result] = await execute(conn,
             `
-            DELETE 
-            FROM T_WORKOUT_DETAIL
+            DELETE FROM T_WORKOUT_DETAIL 
             WHERE WOR_ID = ?
             `,
             [
                 P_WOR_ID
             ] as any[]
-        );        // 3. 복합 프라이머리 키 리턴
-        return result.affectedRows > 0;
+        );
+
+        // 3. 복합 프라이머리 키 리턴
+        return Result.affectedRows > 0;
     });
 };
 

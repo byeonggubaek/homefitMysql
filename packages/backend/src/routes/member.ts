@@ -153,6 +153,7 @@ memberRouter.get('/getMemberships', async (req, res) => {
   }
 });
 memberRouter.post('/signup', async (req, res) => {
+memberRouter.post('/signup', async (req, res) => {
     let apiLogEntry = null;
     try {
         const { 
@@ -166,8 +167,9 @@ memberRouter.post('/signup', async (req, res) => {
                 error: '필수 정보(회원 ID, 이름, 패스워드, 성별, 등급)가 누락되었습니다.'
             });
         }
-        apiLogEntry = await Logger.logApiStart('POST /api/member/signup', [mem_id_view, mem_name]);
-        console.log('회원가입 요청 데이터:', req.body);
+
+        apiLogEntry = await Logger.logApiStart('POST /api/insertMember', [mem_name, mem_email]);
+
         // 서비스 호출을 위한 데이터 구성
         const memberData: T_MEMBER = {
             MEM_ID_VIEW: mem_id_view, // 서비스 내부에서 생성 및 업데이트 예정

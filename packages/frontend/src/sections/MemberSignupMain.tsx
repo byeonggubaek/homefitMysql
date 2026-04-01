@@ -19,7 +19,7 @@ const formSchema = z.object({
   mem_password: z.string().min(4, "4자 이상"),
   mem_pnumber: z.string().regex(/^\d{3}-\d{3,4}-\d{4}$/, "010-0000-0000 형식").optional().or(z.literal("")),
   mem_sex: z.enum(["M", "F"]),
-  mem_age: z.number().int().positive("나이는 양수여야 합니다."),
+  mem_age: z.number().int().nonnegative("나이는 0 이상이어야 합니다."),
   mes_id: z.enum(["1", "2", "3"], { message: "등급을 선택해주세요." }),
 });
 
@@ -58,15 +58,7 @@ const MemberSignupMain = () => {
   const isUpperFieldsFilled = watchId.length >= 10 && watchPassword.length >= 4;
 
   return (
-    <div className="flex w-full gap-4 rounded-2xl bg-slate-50 items-stretch font-sans antialiased">
-      {/* 로고 */}
-      <div className="w-1/2 text-center p-8">
-        <div className="mx-auto rounded-2xl backdrop-blur-sm flex items-center justify-center mb-6">
-          <img src="/menu/member.jpg" alt="로그인" className="rounded-2xl"/>
-        </div>
-        <h2 className="text-3xl font-bold mb-2 text-focus">HomeFit</h2>
-        <p className="text-lg text-primary">홈트레이닝 세계로 들어오세요</p>
-      </div>            
+    <div className="flex w-full gap-4 p-6 bg-slate-50 items-stretch font-sans antialiased">
       {/* 왼쪽: 입력 폼 */}
       <div className="w-1/2 text-center p-8">
         <Card className="h-full shadow-sm border-slate-200">
@@ -148,7 +140,7 @@ const MemberSignupMain = () => {
                       name="mem_pnumber"
                       control={form.control}
                       render={({ field, fieldState }) => (
-                        <div className="flex flex-col items-start group space-y-1.5" data-invalid={fieldState.invalid}>
+                        <div className="group space-y-1.5" data-invalid={fieldState.invalid}>
                           <label className="text-sm font-semibold group-data-[invalid=true]:text-destructive">연락처</label>
                           <Input {...field} placeholder="010-0000-0000" className="group-data-[invalid=true]:border-destructive" />
                           {fieldState.error && <p className="text-xs text-destructive">{fieldState.error.message}</p>}
@@ -162,7 +154,7 @@ const MemberSignupMain = () => {
                     render={({ field, fieldState }) => (
                       <div className="flex flex-col items-start group space-y-1.5" data-invalid={fieldState.invalid}>
                         <label className="text-sm font-semibold group-data-[invalid=true]:text-destructive">나이</label>
-                        <Input type="number" min={0} {...field} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : "")} className="group-data-[invalid=true]:border-destructive" />
+                        <Input type="number" {...field} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : "")} className="group-data-[invalid=true]:border-destructive" />
                       </div>
                     )}
                   />
