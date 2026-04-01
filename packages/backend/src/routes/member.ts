@@ -152,27 +152,25 @@ memberRouter.get('/getMemberships', async (req, res) => {
     res.status(500).json({ success: false, error: err });
   }
 });
-memberRouter.post('/insertMember', async (req, res) => {
+memberRouter.post('/signup', async (req, res) => {
     let apiLogEntry = null;
     try {
         const { 
-            mem_name, mem_nickname, mem_password, mem_img, 
+            mem_id_view, mem_name, mem_nickname, mem_password, mem_img, 
             mem_pnumber, mem_email, mem_sex, mem_age, mes_id 
         } = req.body;
-
         // 필수값 검증
-        if (!mem_name || !mem_password || !mem_sex || !mes_id) {
+        if (!mem_id_view || !mem_name || !mem_password || !mem_sex || !mes_id) {
             return res.status(400).json({
                 success: false,
-                error: '필수 정보(이름, 패스워드, 성별, 등급)가 누락되었습니다.'
+                error: '필수 정보(회원 ID, 이름, 패스워드, 성별, 등급)가 누락되었습니다.'
             });
         }
-
-        apiLogEntry = await Logger.logApiStart('POST /api/insertMember', [mem_name, mem_email]);
-
+        apiLogEntry = await Logger.logApiStart('POST /api/member/signup', [mem_id_view, mem_name]);
+        console.log('회원가입 요청 데이터:', req.body);
         // 서비스 호출을 위한 데이터 구성
         const memberData: T_MEMBER = {
-            MEM_ID_VIEW: '', // 서비스 내부에서 생성 및 업데이트 예정
+            MEM_ID_VIEW: mem_id_view, // 서비스 내부에서 생성 및 업데이트 예정
             MEM_NAME: mem_name,
             MEM_NICKNAME: mem_nickname ?? null,
             MEM_PASSWORD: mem_password,
@@ -184,11 +182,12 @@ memberRouter.post('/insertMember', async (req, res) => {
             MEM_POINT: 0,
             MEM_EXP_POINT: 0,
             MEM_LVL: 0,
+            MEM_STREAK: 0,
             MES_ID: Number(mes_id)
         };
-
+        console.log('회원가입 서비스 호출 전 데이터:', memberData);
         const result = await insertMember(memberData);
-
+        console.log('회원가입 결과:', result);  
         res.json({
             success: true,
             data: result, // { MEM_ID, MEM_ID_VIEW } 리턴
@@ -197,6 +196,7 @@ memberRouter.post('/insertMember', async (req, res) => {
 
         await Logger.logApiSuccess(apiLogEntry);
     } catch (error) {
+        
         if (apiLogEntry) await Logger.logApiError(apiLogEntry, error);
         res.status(500).json({
             success: false,

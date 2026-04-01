@@ -296,39 +296,41 @@ export const getMember = async (P_MEM_ID: string): Promise<Member[]> => {
 }
 export const insertMember = async (P_MEM: T_MEMBER): Promise<{ MEM_ID: number, MEM_ID_VIEW: string }> => {
     return await withTransaction(async (conn: PoolConnection) => {
-        
-        // 1. 회원 정보 최초 INSERT (MEM_ID_VIEW는 임시 빈 값)
-        const [insertResult] = await conn.execute(
-            `INSERT INTO T_MEMBER (
-                MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, 
-                MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, 
-                MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL, MES_ID
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                P_MEM.MEM_ID_VIEW, 
-                P_MEM.MEM_NAME, 
-                P_MEM.MEM_NICKNAME ?? null, 
-                P_MEM.MEM_PASSWORD,
-                P_MEM.MEM_IMG ?? null, 
-                P_MEM.MEM_PNUMBER ?? null, 
-                P_MEM.MEM_EMAIL ?? null, 
-                P_MEM.MEM_SEX,
-                P_MEM.MEM_AGE, 
-                P_MEM.MEM_POINT, 
-                P_MEM.MEM_EXP_POINT, 
-                P_MEM.MEM_LVL, 
-                P_MEM.MES_ID
-            ] as any[] // ExecuteValues 타입 에러 방지용 캐스팅
-        );
-
-        // 생성된 AUTO_INCREMENT ID (PK) 추출
-        const newId = (insertResult as any).insertId;
-
-        // 4. 프라이머리 키(MEM_ID)와 생성된 시각적 ID 리턴
-        return { 
-            MEM_ID: newId, 
-            MEM_ID_VIEW: P_MEM.MEM_ID_VIEW
-        };
+      // 1. 회원 정보 최초 INSERT (MEM_ID_VIEW는 임시 빈 값)
+      const [insertResult] = await execute(conn,
+        `
+        CALL member_signup(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @p_result, @p_new_id)
+        `,
+        [
+            P_MEM.MEM_ID_VIEW, 
+            P_MEM.MEM_NAME, 
+            P_MEM.MEM_NICKNAME ?? null, 
+            P_MEM.MEM_PASSWORD,
+            P_MEM.MEM_IMG ?? null, 
+            P_MEM.MEM_PNUMBER ?? null, 
+            P_MEM.MEM_EMAIL ?? null, 
+            P_MEM.MEM_SEX,
+            P_MEM.MEM_AGE, 
+            P_MEM.MES_ID
+        ] as any[] // ExecuteValues 타입 에러 방지용 캐스팅
+      );
+      console.log('Inserting member result:', insertResult);
+      const [rows] = await execute(
+        conn,
+        `
+        SELECT @p_result AS result, @p_new_id AS newId
+        `, [] as any[]
+      );
+      // 생성된 AUTO_INCREMENT ID (PK) 추출
+      const newId = (rows as any)[0].newId;
+      const result = (rows as any)[0].result;        
+      if (result !== 'SUCCESS') {
+          throw new Error(result === 'DUPLICATE_ID' ? '이미 존재하는 회원 ID입니다.' : '회원가입에 실패했습니다.');
+      }
+      return { 
+          MEM_ID: newId, 
+          MEM_ID_VIEW: P_MEM.MEM_ID_VIEW
+      };
     });
 };
 async function _getWorkoutHistory(P_MEM_ID: string = ''): Promise<any> {
@@ -594,7 +596,6 @@ export const getGoods = async (): Promise<Goods[]> => {
     GOD_IMG: record.GOD_IMG
   }));
 };
-
 async function _getLatestWorkoutId(P_MEM_ID: number, P_WOR_DT: string): Promise<any> {
     return select(`
         SELECT WOR_ID, WOR_ID_VIEW
@@ -625,41 +626,41 @@ export const getLatestWorkoutId = async (
 }
 export const insertWorkoutRecord = async (P_WOR: T_WORKOUT_RECORD): Promise<CurWorkoutRecord> => {
     return await withTransaction(async (conn: PoolConnection) => {
-        // 1. 데이터 삽입 (WOR_ID_VIEW는 우선 빈 값으로 입력)
-        const [insertResult] = await execute(conn,
-            `
-            INSERT INTO T_WORKOUT_RECORD (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS) 
-            VALUES (?, ?, ?, ?, ?)
-            `,
-            [
-                '', 
-                P_WOR.MEM_ID, 
-                P_WOR.WOR_DT, 
-                P_WOR.WOR_DESC, 
-                "N" // 초기 상태는 'N'으로 설정 (예: 'N' = Not completed, 'C' = Completed)
-            ]
-        );
+      // 1. 데이터 삽입 (WOR_ID_VIEW는 우선 빈 값으로 입력)
+      const [insertResult] = await execute(conn,
+          `
+          INSERT INTO T_WORKOUT_RECORD (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS) 
+          VALUES (?, ?, ?, ?, ?)
+          `,
+          [
+              '', 
+              P_WOR.MEM_ID, 
+              P_WOR.WOR_DT, 
+              P_WOR.WOR_DESC, 
+              "N" // 초기 상태는 'N'으로 설정 (예: 'N' = Not completed, 'C' = Completed)
+          ]
+      );
 
-        const WOR_ID = (insertResult as any).insertId;
-        
-        // 2. PREFIX(WOR) + 5자리 숫자 형태로 ID 생성 (예: WOR00005)
-        const WOR_ID_VIEW = `WOR${String(WOR_ID).padStart(5, '0')}`;
+      const WOR_ID = (insertResult as any).insertId;
+      
+      // 2. PREFIX(WOR) + 5자리 숫자 형태로 ID 생성 (예: WOR00005)
+      const WOR_ID_VIEW = `WOR${String(WOR_ID).padStart(5, '0')}`;
 
-        // 3. 생성된 가독성 ID로 테이블 업데이트
-        await execute(conn,
-            `
-            UPDATE T_WORKOUT_RECORD 
-            SET WOR_ID_VIEW = ? 
-            WHERE WOR_ID = ?
-            `,
-            [WOR_ID_VIEW, WOR_ID]
-        );
+      // 3. 생성된 가독성 ID로 테이블 업데이트
+      await execute(conn,
+          `
+          UPDATE T_WORKOUT_RECORD 
+          SET WOR_ID_VIEW = ? 
+          WHERE WOR_ID = ?
+          `,
+          [WOR_ID_VIEW, WOR_ID]
+      );
 
-        // 프라이머리 키(WOR_ID)를 포함하여 결과 리턴
-        return { 
-            WOR_ID: WOR_ID, 
-            WOR_ID_VIEW: WOR_ID_VIEW
-        };
+      // 프라이머리 키(WOR_ID)를 포함하여 결과 리턴
+      return { 
+          WOR_ID: WOR_ID, 
+          WOR_ID_VIEW: WOR_ID_VIEW
+      };
     });
 };
 export const insertWorkoutDetail = async (P_DET: T_WORKOUT_DETAIL): Promise<{ WOR_ID: number, WOO_ID: number }> => {
@@ -728,7 +729,6 @@ UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?
               [WOR_ID_VIEW, WOR_ID] as any[]
           );
           const workouts = await getWorkouts();
-          console.log('Workouts to initialize:', workouts);
           const workoutDetails: T_WORKOUT_DETAIL[] = workouts.slice(0,3).map((record: Workout) => ({
             WOR_ID: WOR_ID,
             WOO_ID: record.WOO_ID,

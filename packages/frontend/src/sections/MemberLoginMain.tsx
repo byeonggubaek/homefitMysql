@@ -48,7 +48,7 @@ export default function MemberLoginMain() {
     });
   };
   return (
-    <div className="w-full relative z-10 flex items-start  justify-start">
+    <div className="flex w-full gap-4 rounded-2xl bg-slate-50 items-stretch font-sans antialiased">
       {/* 로고 */}
       <div className="w-1/2 text-center p-8">
         <div className="mx-auto rounded-2xl backdrop-blur-sm flex items-center justify-center mb-6">
@@ -58,12 +58,12 @@ export default function MemberLoginMain() {
         <p className="text-lg text-primary">홈트레이닝 세계로 들어오세요</p>
       </div>      
       {/* 로그인 폼 */}
-      <div className="w-1/2 text-center p-8">
-        <div className="border rounded-2xl p-8">
+      <div className="w-1/2 text-center p-8 ">
+        <div className="shadow-sm border rounded-2xl p-6 bg-white">
           <form onSubmit={handleSubmit} >
           <FieldGroup>
             <FieldSet className="w-full max-w-xs">
-              <FieldLegend className="text-2xl! text-center mb-8">로그인</FieldLegend>
+              <FieldLegend className="text-left text-2xl! mb-8">로그인</FieldLegend>
               <FieldGroup>
                 <Field>
                   <FieldLabel htmlFor="checkout-id">

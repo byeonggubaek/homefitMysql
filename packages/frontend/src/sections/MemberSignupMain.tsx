@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 const formSchema = z.object({
   mem_id_view: z.string().trim().min(10, "10자 이상").max(50).email("이메일 형식이 아닙니다."),
   mem_name: z.string().min(2, "2자 이상").max(50),
-  mem_nickname: z.string().min(3, "3자 이상").max(50),
+  mem_nickname: z.string().min(2, "2자 이상").max(50),
   mem_password: z.string().min(4, "4자 이상"),
   mem_pnumber: z.string().regex(/^\d{3}-\d{3,4}-\d{4}$/, "010-0000-0000 형식").optional().or(z.literal("")),
   mem_sex: z.enum(["M", "F"]),
@@ -58,13 +58,21 @@ const MemberSignupMain = () => {
   const isUpperFieldsFilled = watchId.length >= 10 && watchPassword.length >= 4;
 
   return (
-    <div className="flex w-full gap-4 p-6 bg-slate-50 items-stretch font-sans antialiased">
+    <div className="flex w-full gap-4 rounded-2xl bg-slate-50 items-stretch font-sans antialiased">
+      {/* 로고 */}
+      <div className="w-1/2 text-center p-8">
+        <div className="mx-auto rounded-2xl backdrop-blur-sm flex items-center justify-center mb-6">
+          <img src="/menu/member.jpg" alt="로그인" className="rounded-2xl"/>
+        </div>
+        <h2 className="text-3xl font-bold mb-2 text-focus">HomeFit</h2>
+        <p className="text-lg text-primary">홈트레이닝 세계로 들어오세요</p>
+      </div>            
       {/* 왼쪽: 입력 폼 */}
-      <div className="w-1/2">
+      <div className="w-1/2 text-center p-8">
         <Card className="h-full shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
             <div>
-              <CardTitle className="text-xl font-bold tracking-tight">회원 가입 정보 입력</CardTitle>
+              <CardTitle className="text-2xl font-bold tracking-tight">회원 가입 정보 입력</CardTitle>
               <CardDescription className="text-slate-500">회원 정보를 입력하세요.</CardDescription>
             </div>
             <CardAction>
@@ -91,7 +99,7 @@ const MemberSignupMain = () => {
                     name={input.name as any}
                     control={form.control}
                     render={({ field, fieldState }) => (
-                      <div className="group space-y-1.5" data-invalid={fieldState.invalid}>
+                      <div className="flex flex-col items-start group space-y-1.5" data-invalid={fieldState.invalid}>
                         <label className="text-sm font-semibold group-data-[invalid=true]:text-destructive transition-colors">
                           {input.label}
                         </label>
@@ -121,7 +129,7 @@ const MemberSignupMain = () => {
                       name={name as any}
                       control={form.control}
                       render={({ field, fieldState }) => (
-                        <div className="group space-y-1.5" data-invalid={fieldState.invalid}>
+                        <div className="flex flex-col items-start group space-y-1.5" data-invalid={fieldState.invalid}>
                           <label className="text-sm font-semibold group-data-[invalid=true]:text-destructive">{name === "mem_name" ? "이름" : "닉네임"}</label>
                           <Input {...field} className="group-data-[invalid=true]:border-destructive" />
                           {fieldState.error && <p className="text-xs text-destructive">{fieldState.error.message}</p>}
@@ -140,7 +148,7 @@ const MemberSignupMain = () => {
                       name="mem_pnumber"
                       control={form.control}
                       render={({ field, fieldState }) => (
-                        <div className="group space-y-1.5" data-invalid={fieldState.invalid}>
+                        <div className="flex flex-col items-start group space-y-1.5" data-invalid={fieldState.invalid}>
                           <label className="text-sm font-semibold group-data-[invalid=true]:text-destructive">연락처</label>
                           <Input {...field} placeholder="010-0000-0000" className="group-data-[invalid=true]:border-destructive" />
                           {fieldState.error && <p className="text-xs text-destructive">{fieldState.error.message}</p>}
@@ -152,9 +160,9 @@ const MemberSignupMain = () => {
                     name="mem_age"
                     control={form.control}
                     render={({ field, fieldState }) => (
-                      <div className="group space-y-1.5" data-invalid={fieldState.invalid}>
+                      <div className="flex flex-col items-start group space-y-1.5" data-invalid={fieldState.invalid}>
                         <label className="text-sm font-semibold group-data-[invalid=true]:text-destructive">나이</label>
-                        <Input type="number" {...field} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : "")} className="group-data-[invalid=true]:border-destructive" />
+                        <Input type="number" min={0} {...field} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : "")} className="group-data-[invalid=true]:border-destructive" />
                       </div>
                     )}
                   />
@@ -168,7 +176,7 @@ const MemberSignupMain = () => {
                     name="mem_sex"
                     control={form.control}
                     render={({ field }) => (
-                      <div className="space-y-2">
+                      <div className="flex flex-col items-start space-y-2">
                         <label className="text-sm font-semibold">성별</label>
                         <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-4 h-10 items-center">
                           <div className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-slate-100 transition-colors cursor-pointer">
@@ -185,7 +193,7 @@ const MemberSignupMain = () => {
                     name="mes_id"
                     control={form.control}
                     render={({ field }) => (
-                      <div className="space-y-2">
+                      <div className="flex flex-col items-start space-y-2">
                         <label className="text-sm font-semibold">멤버십 등급</label>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <SelectTrigger className="shadow-xs"><SelectValue /></SelectTrigger>

@@ -30,7 +30,14 @@ const MemberProfilePremium = () => {
                 <img src="/logo.svg" width="100" height="100" alt="로고" className="shadow-sm mb-4" />
                 <div className="w-full border-2 p-6 mt-6">
                     <p className="font-bold mb-4">{member?.MES_NAME} MemberShip 환영합니다</p>
-                    <p>{member?.MEM_NICKNAME || "회원"}님, 지금 {member?.MES_NAME} 혜택으로 서비스를 이용 중입니다!</p>
+                    <p>
+                        <span style={{ color: "skyblue", fontWeight: "bold" }}>
+                            {member?.MEM_NICKNAME || "회원"}
+                        </span>님, 지금
+                        <span style={{ color: "skyblue", fontWeight: "bold" }}>
+                            {member?.MES_NAME}
+                        </span> 혜택으로 서비스를 이용 중입니다!
+                    </p>
                     <p className="mt-2 text-gray-600">
                         다음 달 결제 예정 금액은
                         <span className="font-bold text-blue-600 ml-1">
@@ -49,7 +56,11 @@ const MemberProfilePremium = () => {
                 <div className="flex flex-wrap justify-center gap-8 w-full max-w-5xl mx-auto">
                     {memberships
                         .map((membership: Membership) => {
-                            const isVip = membership.MES_ID === "MES00002";
+                            if (membership.MES_ID === 1) {
+                                return null;
+                            }
+
+                            const isVip = membership.MES_ID === 3;
 
                             return (
                                 <div
@@ -102,7 +113,7 @@ const MemberProfilePremium = () => {
                                             <button className="w-full py-3 rounded-xl font-bold bg-gray-200 text-gray-500 cursor-default">현재 혜택 유지 중</button>
                                         ) : (
 
-                                            membership.MES_ID > (member?.MES_ID ?? "") && (
+                                            membership.MES_ID > (member?.MES_ID ?? 0) && (
                                                 <>
                                                     <button
                                                         onClick={() => alert("준비중...")}
