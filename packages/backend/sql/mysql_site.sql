@@ -3,7 +3,7 @@
 -- History   : 2026-02-03 - 최초 작성 
 -- Remark    : MySQL 용 SQL
 
-START TRANSACTION;
+-- START TRANSACTION;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 메뉴삭제 
 --------------------------------------------------------------------------------------------------------------------------------
@@ -175,6 +175,7 @@ DROP TABLE IF EXISTS T_WORKOUT_DETAIL;
 DROP TABLE IF EXISTS T_WORKOUT_RECORD;
 DROP TABLE IF EXISTS T_INVOICE;
 DROP TABLE IF EXISTS T_MEMBER_PLAN;
+DROP TABLE IF EXISTS T_MEMBER_ACHIEVEMENT;
 DROP TABLE IF EXISTS T_MEMBER;
 DROP TABLE IF EXISTS T_WORKOUT;
 DROP TABLE IF EXISTS T_ACHIEVEMENT;
@@ -373,6 +374,7 @@ VALUES
  '좌우 각 권장 횟수만큼 반복하기', '회', 20, 2);
 
 SELECT * FROM T_WORKOUT;
+
 --------------------------------------------------------------------------------------------------------------------------------
 -- 운동 계획
 --------------------------------------------------------------------------------------------------------------------------------
@@ -508,32 +510,57 @@ CREATE TABLE T_ACHIEVEMENT
     ACH_NAME	VARCHAR(50)   NOT NULL COMMENT '업적 명',
     ACH_IMG     VARCHAR(256)  NULL COMMENT '업적 이미지 경로',
     ACH_DESC	VARCHAR(512)  NULL COMMENT '업적 설명',
+    ACH_REWARD_POINT INT DEFAULT 100 COMMENT '업적 보상 포인트',
     CONSTRAINT T_ACHIEVEMENT_PK PRIMARY KEY (ACH_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ALTER TABLE T_ACHIEVEMENT ADD INDEX T_ACHIEVEMENT_ACH_ID_VIEW_IX (ACH_ID_VIEW);
 
 INSERT INTO T_ACHIEVEMENT 
-(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC)
+(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC,ACH_REWARD_POINT)
 VALUES
-('ACH00001', '첫 운동 완료', '/achievement/first.jpg','첫번째 운동을 완료.');
+('ACH00001', '첫 운동 완료', '/achievement/first.jpg','첫번째 운동을 완료.', 100);
 INSERT INTO T_ACHIEVEMENT 
-(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC)
+(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC,ACH_REWARD_POINT)
 VALUES
-('ACH00002', '주간 챔피언', '/achievement/weeklychamp.jpg','일주일 동안 5회 운동 완료.');
+('ACH00002', '주간 챔피언', '/achievement/weeklychamp.jpg','일주일 동안 5회 운동 완료.', 300);
 INSERT INTO T_ACHIEVEMENT 
-(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC)
+(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC,ACH_REWARD_POINT)
 VALUES
-('ACH00003', '완벽한 자세', '/achievement/perfectposture.jpg','자세 정확도 95% 이상 달성.');
+('ACH00003', '완벽한 자세', '/achievement/perfectposture.jpg','자세 정확도 95% 이상 달성.', 500);
 INSERT INTO T_ACHIEVEMENT 
-(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC)
+(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC,ACH_REWARD_POINT)
 VALUES
-('ACH00004', '꾸준함의 달인', '/achievement/consistency.jpg','7일 연속 운동 완료.');
+('ACH00004', '꾸준함의 달인', '/achievement/consistency.jpg','7일 연속 운동 완료.', 400);
 INSERT INTO T_ACHIEVEMENT 
-(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC)
+(ACH_ID_VIEW, ACH_NAME, ACH_IMG, ACH_DESC,ACH_REWARD_POINT)
 VALUES
-('ACH00005', '100회 클럽', '/achievement/hundredclub.jpg','100회 운동 완료.');
+('ACH00005', '100회 클럽', '/achievement/hundredclub.jpg','100회 운동 완료.', 1000);
 
 SELECT * FROM T_ACHIEVEMENT;
+--------------------------------------------------------------------------------------------------------------------------------
+-- 보상
+--------------------------------------------------------------------------------------------------------------------------------
+CREATE TABLE T_MEMBER_ACHIEVEMENT (
+    MEM_ID          INT NOT NULL COMMENT '회원 내부 ID',
+    ACH_ID          INT NOT NULL COMMENT '업적 내부 ID',
+    PRG_VAL         INT DEFAULT 0 COMMENT '현재 진행 값',
+    PRG_PCT         INT DEFAULT 0 COMMENT '진행 퍼센트',
+    CMP_YN          CHAR(1) DEFAULT 'N' COMMENT '달성 여부 (Y/N)',
+    CMP_DT          DATETIME NULL COMMENT '달성 일자',
+    PRIMARY KEY (MEM_ID, ACH_ID),
+    FOREIGN KEY (MEM_ID) REFERENCES T_MEMBER(MEM_ID),
+    FOREIGN KEY (ACH_ID) REFERENCES T_ACHIEVEMENT(ACH_ID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- [시연용 데이터 삽입] 3번 유저(sung@naver.com) 기준
+INSERT INTO T_MEMBER_ACHIEVEMENT (MEM_ID, ACH_ID, PRG_VAL, PRG_PCT, CMP_YN, CMP_DT) VALUES
+(3, 1, 1, 100, 'Y', '2026-03-15 10:00:00'), -- 완료
+(3, 3, 1, 100, 'Y', '2026-04-01 14:00:00'), -- 완료
+(3, 2, 3, 60, 'N', NULL),                -- 진행 중
+(3, 4, 2, 28, 'N', NULL);                -- 진행 중
+
+SELECT	*
+FROM	T_MEMBER_ACHIEVEMENT;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 보상
 --------------------------------------------------------------------------------------------------------------------------------

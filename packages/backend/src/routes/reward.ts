@@ -98,7 +98,6 @@ rewardRouter.get('/getPoint', async (req, res) => {
 rewardRouter.get('/get_achievement_list', async (req, res) => {
   try {
     const { mem_id } = req.query as { mem_id: string };
-    console.log('업적 리스트 요청 - mem_id:', mem_id);
     const data = await getAchievementList(mem_id);
     res.json({ success: true, data });
   } catch (error) {
