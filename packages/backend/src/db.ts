@@ -1,5 +1,5 @@
 import mysql, { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import { NavItem, NavSubItem, ColDesc, WorkoutRecord, Member, WorkoutDetail, MemberExists, Workout, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods, ChartData } from 'shared';
+import { NavItem, NavSubItem, ColDesc, WorkoutRecord, Member, WorkoutDetail, MemberExists, Workout, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods, ChartData, PointHistory } from 'shared';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
 
@@ -824,7 +824,7 @@ UPDATE T_WORKOUT_RECORD SET WOR_ID_VIEW = ? WHERE WOR_ID = ?
               [WOR_ID_VIEW, WOR_ID] as any[]
           );
           const workouts = await getWorkouts();
-          const workoutDetails: T_WORKOUT_DETAIL[] = workouts.slice(0,3).map((record: Workout) => ({
+          const workoutDetails: T_WORKOUT_DETAIL[] = workouts.map((record: Workout) => ({
             WOR_ID: WOR_ID,
             WOO_ID: record.WOO_ID,
             WOD_GUIDE: record.WOO_GUIDE,
@@ -883,6 +883,45 @@ export const deleteWorkoutDetails = async (P_WOR_ID: string): Promise<boolean> =
         // 3. 복합 프라이머리 키 리턴
         return Result.affectedRows > 0;
     });
+};
+// 운동 완료 시 데이터 및 포인트 저장 로직 (FastAPI 연동 최종)
+export const completeWorkoutRecord = async (
+  mem_id: number, 
+  wor_id: number, 
+  count: number, 
+  duration: number, 
+  accuracy: number,
+  woo_id: number // 🔥 파라미터 추가!
+): Promise<number> => {
+  return await withTransaction(async (conn) => {
+    const earnedPoint = 50 + (count * 10) + (duration * 1);
+
+    // 💡 1. 디테일 업데이트 (WOR_ID와 WOO_ID를 둘 다 명시!)
+    const updateDetailSql = `
+        UPDATE T_WORKOUT_DETAIL
+        SET WOD_COUNT = ?, WOD_ACCURACY = ?, WOD_POINT = ?
+        WHERE WOR_ID = ? AND WOO_ID = ?
+    `;
+    await execute(conn, updateDetailSql, [count, accuracy, earnedPoint, wor_id, woo_id]);
+
+    // 💡 2. 레코드 상태를 'C'(완료)로 변경
+    const updateRecordSql = `
+        UPDATE T_WORKOUT_RECORD
+        SET WOR_STATUS = 'C'
+        WHERE WOR_ID = ?
+    `;
+    await execute(conn, updateRecordSql, [wor_id]);
+
+    // 💡 3. 회원 포인트 업데이트
+    const updateMemberSql = `
+        UPDATE T_MEMBER
+        SET MEM_POINT = MEM_POINT + ?
+        WHERE MEM_ID = ?
+    `;
+    await execute(conn, updateMemberSql, [earnedPoint, mem_id]);
+
+    return earnedPoint;
+  });
 };
 // =================================================================================================================
 // 4. 운동계획 
@@ -967,8 +1006,112 @@ export const getMonthStatus = async (P_MEM_ID: number, P_MONTH: string): Promise
     GROUP BY MEP_DATE
   `, [P_MEM_ID, `${P_MONTH}%`]); 
 }
+
+
 // =================================================================================================================
-// 5. 쇼핑몰 
+// 5. 포인트 및 업적 
+// =================================================================================================================
+export async function _getPoint(memberId: string, startDate: string, endDate: string): Promise<any[]> {
+  return select(`
+    /* 1. 운동 완료 적립 */
+    (
+      SELECT R.WOR_DT AS WO_DT, W.WOO_IMG AS IMG, D.WOD_ACCURACY AS ACCURACY, 
+             D.WOD_POINT AS POINT, CONCAT(W.WOO_NAME, ' 완료') AS TITLE, 'earned' AS TYPE
+      FROM T_WORKOUT_RECORD R
+      JOIN T_WORKOUT_DETAIL D ON D.WOR_ID = R.WOR_ID
+      JOIN T_WORKOUT W ON W.WOO_ID = D.WOO_ID
+      WHERE R.MEM_ID = ? AND R.WOR_DT BETWEEN ? AND ? AND D.WOD_COUNT > 0
+    )
+    
+    UNION ALL
+
+    /* 2. 업적 달성 보상 적립 섹션 */
+    (
+    SELECT 
+      DATE_FORMAT(B.CMP_DT, '%Y-%m-%d') AS WO_DT, 
+      A.ACH_IMG AS IMG, 
+      0 AS ACCURACY, 
+      A.ACH_REWARD_POINT AS POINT, -- 💡 CASE 문 다 지우고 이 한 줄로 교체!
+      CONCAT(A.ACH_NAME, ' 업적 달성') AS TITLE, 
+      'earned' AS TYPE
+      FROM T_ACHIEVEMENT A
+      JOIN T_MEMBER_ACHIEVEMENT B ON A.ACH_ID = B.ACH_ID
+      WHERE B.MEM_ID = ? AND B.CMP_YN = 'Y' 
+      AND B.CMP_DT BETWEEN STR_TO_DATE(?, '%Y-%m-%d') AND STR_TO_DATE(?, '%Y-%m-%d')
+    )
+
+    UNION ALL
+    
+    /* 3. 회원권 구매 사용 */
+    (
+      SELECT I.INV_DT, '/INVOICE/INVOICE.png', 0, -I.INV_USED_POINT, '회원권 구매', 'used'
+      FROM T_INVOICE I
+      WHERE I.MEM_ID = ? AND I.INV_DT BETWEEN ? AND ? AND I.INV_USED_POINT > 0
+    )
+    
+    ORDER BY WO_DT DESC
+  `, [memberId, startDate, endDate, memberId, startDate, endDate, memberId, startDate, endDate]);
+}
+
+export const getPoint = async (memberId: string, startDate: string, endDate: string): Promise<PointHistory[]> => {
+  const records = await _getPoint(memberId, startDate, endDate);
+  return records.map((rec: any) => ({
+    wo_dt: rec.WO_DT,
+    img: rec.IMG,
+    accuracy: rec.ACCURACY,
+    point: rec.POINT,
+    title: rec.TITLE,
+    type: rec.TYPE
+  }));
+}
+// db.ts (또는 함수가 정의된 파일)
+
+/**
+ * [업적 목록 조회] 
+ * MySQL 환경에 맞춰 T_ACHIEVEMENT와 T_MEMBER_ACHIEVEMENT를 조인합니다.
+ */
+// db.ts 파일 안에 추가
+export async function getAchievementList(memberId: string): Promise<any[]> {
+  const sql = `
+        SELECT 
+            A.ACH_ID_VIEW AS id, 
+            A.ACH_NAME AS title, 
+            A.ACH_IMG AS icon, 
+            A.ACH_DESC AS description,
+            IFNULL(B.PRG_VAL, 0) AS progress,
+            IFNULL(B.PRG_PCT, 0) AS progressPercentage,
+            CASE 
+                WHEN B.CMP_YN = 'Y' THEN 'completed'
+                WHEN B.PRG_VAL > 0 THEN 'inProgress'
+                ELSE 'locked'
+            END AS status,
+            DATE_FORMAT(B.CMP_DT, '%Y-%m-%d') AS completedDate,
+            A.ACH_REWARD_POINT AS points
+        FROM T_ACHIEVEMENT A
+        LEFT JOIN T_MEMBER_ACHIEVEMENT B 
+               ON A.ACH_ID = B.ACH_ID 
+              AND B.MEM_ID = ?
+        ORDER BY FIELD(status, 'completed', 'inProgress', 'locked'), id ASC
+    `;
+  // 💡 [중요] select 함수를 사용하면 initPool()과 로깅이 자동으로 처리되어 안전합니다.
+  return select(sql, [memberId]);
+}
+
+export const completeAchievementTransaction = async (memberId: string, achievementId: string, rewardPoint: number) => {
+  return await withTransaction(async (conn) => {
+    const updatePointSql = `
+      UPDATE T_MEMBER 
+      SET MEM_POINT = MEM_POINT + ?, 
+          MEM_EXP_POINT = MEM_EXP_POINT + ? 
+      WHERE MEM_ID = ?
+    `;
+    // 💡 [중요] execute 공통 함수를 사용하여 쿼리를 실행합니다.
+    await execute(conn, updatePointSql, [rewardPoint, rewardPoint, memberId]);
+  });
+};
+
+// =================================================================================================================
+// 6. 쇼핑몰 
 // =================================================================================================================
 async function _getGoods(): Promise<any[]> {
   return select(`

@@ -1,7 +1,7 @@
 import Logger from '../logger.js'
 import express from 'express';
 import { Request, Response } from 'express';
-import { getWorkoutDetails, getWorkoutHistory, getWorkoutRecords, getWorkoutRecordsByPivot, getWorkouts, initWorkoutRecord } from '../db.js';
+import { completeWorkoutRecord, getWorkoutDetails, getWorkoutHistory, getWorkoutRecords, getWorkoutRecordsByPivot, getWorkouts, initWorkoutRecord } from '../db.js';
 import { Workout, WorkoutDetail } from 'shared';
 
 const workoutRouter = express.Router();
@@ -174,6 +174,43 @@ workoutRouter.get('/getWorkoutRecordsByPivot', async (req: Request, res: Respons
     });
   }
 });
+workoutRouter.post('/complete', async (req, res) => {
+  let apiLogEntry = null;
+  try {
+    // 1. 프론트엔드에서 보낸 데이터 꺼내기 (woo_id 포함!)
+    const { mem_id, wor_id, count, duration, accuracy, woo_id } = req.body;
+    
+    // 로그 기록
+    apiLogEntry = await Logger.logApiStart('POST /api/workout/complete', [mem_id, wor_id, count, duration, accuracy, woo_id]);
+    console.log("🔥 프론트에서 무사히 도착한 데이터:", req.body);
 
+    // 💡 2. [핵심] 아까 만든 DB 함수를 여기서 드디어 실행합니다!!!
+    const earnedPoint = await completeWorkoutRecord(
+        Number(mem_id), 
+        Number(wor_id), 
+        Number(count), 
+        Number(duration), 
+        Number(accuracy),
+        Number(woo_id)
+    );
+
+    // 3. 작업이 끝났으면 프론트엔드에 획득한 포인트와 함께 성공 응답 보내기
+    res.json({
+      success: true,
+      message: `운동 기록 및 포인트 저장 완료! (${earnedPoint}P 획득)`,
+      earnedPoint: earnedPoint,
+      timestamp: new Date().toISOString()
+    });
+
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    console.error("❌ 운동 완료 처리 중 오류 발생:", error);
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
 
 export default workoutRouter;

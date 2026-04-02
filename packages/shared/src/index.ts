@@ -170,6 +170,14 @@ export interface T_WORKOUT_DETAIL {
     WOD_ACCURACY: number;     // 운동 정확도
     WOD_TIME: number;         // 운동시간(분)
 }
+export interface PointHistory {
+  wo_dt: Date | string; // MySQL DATE 타입은 환경에 따라 문자열로 올 수도 있어 유연하게 지정
+  img: string;
+  accuracy: number;
+  point: number;
+  title: string;
+  type: 'earned' | 'used'; // 타입을 명확히 제한하면 개발 시 자동완성 도움을 받기 좋습니다.
+}
 /*=======================================================================================================
   메뉴 관련
 =======================================================================================================*/

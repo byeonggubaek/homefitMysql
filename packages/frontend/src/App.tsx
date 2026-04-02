@@ -18,6 +18,7 @@ import RewardRankingMain from "./sections/RewardRankingMain.tsx";
 import RewardMall from "./pages/RewardMall.tsx";
 import MemberSignup from "./pages/MemberSignup.tsx";
 import SystemGraph from "./pages/SystemGraph.tsx";
+import RewardAchievement from "./pages/RewardAchievement.tsx";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="reward/point" element={<RewardPoint />} />
         <Route path="reward/ranking" element={<RewardRankingMain />} />
         <Route path="reward/mall" element={<RewardMall />} />
+        <Route path="reward/achievement" element={<RewardAchievement />} />
         
         {/* Member */}
         <Route path="member/signup" element={<MemberSignup />} />

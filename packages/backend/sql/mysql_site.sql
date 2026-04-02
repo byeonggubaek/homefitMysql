@@ -323,11 +323,11 @@ VALUES
 INSERT INTO T_MEMBER 
 (MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MEM_STREAK, MES_ID)
 VALUES
-('sung@naver.com', '문성윤', '소', member_hash_password('sung@naver.com', '1234'), '/member/U000003.png','010-5555-5555','ZZ@NAVER.COM','M', 40, 1200, 0, 1, 2, 1);
+('sung@naver.com', '문성윤', '호랑이', member_hash_password('sung@naver.com', '1234'), '/member/U000003.png','010-5555-5555','ZZ@NAVER.COM','M', 40, 1200, 0, 1, 2, 1);
 INSERT INTO T_MEMBER 
 (MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MEM_STREAK, MES_ID)
 VALUES
-('dong@naver.com', '김동건', '호랑이', member_hash_password('dong@naver.com', '1234'), '/member/U000004.webp','010-5555-5555','ZZ@NAVER.COM','M', 4200, 0, 0, 1, 2, 1);
+('dong@naver.com', '김동건', '사자', member_hash_password('dong@naver.com', '1234'), '/member/U000004.webp','010-5555-5555','ZZ@NAVER.COM','M', 4200, 0, 0, 1, 2, 1);
 SELECT * FROM T_MEMBER;
 --------------------------------------------------------------------------------------------------------------------------------
 -- 운동

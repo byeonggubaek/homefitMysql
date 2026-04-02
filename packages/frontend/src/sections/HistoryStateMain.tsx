@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { createWorkoutChartConfig,createWorkoutChartConfigWithPlan } from "@/lib/utils";
+import { createWorkoutChartConfig } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import type { ChartConfig } from "@/components/ui/chart";
