@@ -54,8 +54,8 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00001', 'S0001', '오늘의운동','/menu/dashboard.jpg', '프로그램에 따라 운동을 수행합니다.', 'WorkoutDashboard', '/workout/dashboard');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00002', 'S0001', '운동내역','/menu/state.jpg', '운동 내역을 확인합니다.', 'HistoryState', '/history/state');
-INSERT INTO T_NAV_SUB_ITEM VALUES
-('NAV00002', 'S0002', '콘텐츠제작','/menu/content.jpg', '운동 내역으로 SNS 콘텐츠를 자동 생성합니다.', 'HistoryContent', '/history/content');
+-- INSERT INTO T_NAV_SUB_ITEM VALUES
+-- ('NAV00002', 'S0002', '콘텐츠제작','/menu/content.jpg', '운동 내역으로 SNS 콘텐츠를 자동 생성합니다.', 'HistoryContent', '/history/content');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00003', 'S0001', '포인트','/menu/point.jpg', '운동 포인트를 확인합니다.', 'RewardPoint', '/reward/point');
 INSERT INTO T_NAV_SUB_ITEM VALUES
