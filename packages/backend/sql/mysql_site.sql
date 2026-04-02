@@ -155,15 +155,10 @@ INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 6, 6, 'WOD_COUNT', '실행횟
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 7, 7, 'WOD_POINT', '획득포인트', 'qty', 100, 'sum');
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 8, 8, 'WOR_DESC', '운동내역', 'str', 100, 'sum');
 
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 1, 1, 'WOR_ID', '운동번호', 'key', 80,  NULL);
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 2, 2, 'WOR_DT', '운동일', 'dat', 100, NULL);
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 1, 1, 'WO_DT', '운동번호', 'key', 80,  NULL);
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 3, 3, 'WOO_NAME', '운동명', 'lst', 100, NULL);
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 4, 4, 'WOD_TARGET_REPS', '반복횟수/초', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 5, 5, 'WOD_TARGET_SETS', '세트수', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 6, 6, 'WOD_COUNT_P', '권장횟수/초', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 7, 7, 'WOD_COUNT', '실행횟수/초', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 8, 8, 'WOD_COUNT_S', '잔여횟수/초', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 9, 9, 'WOR_DESC', '운동내역', 'str', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 4, 4, 'PLAN_CNT', '계획', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 5, 5, 'ACT_CNT', '실적', 'qty', 100, 'sum');
 
 SELECT *
 FROM   T_COLUMN_DESC

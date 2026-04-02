@@ -1,7 +1,7 @@
 import Logger from '../logger.js'
 import express from 'express';
 import { Request, Response } from 'express';
-import { completeWorkoutRecord, getWorkoutDetails, getWorkoutHistory, getWorkoutRecords, getWorkoutRecordsByPivot, getWorkouts, initWorkoutRecord } from '../db.js';
+import { completeWorkoutRecord, getPlannedWorkoutRecordsByPivot, getWorkoutDetails, getWorkoutHistory, getWorkoutRecords, getWorkoutRecordsByPivot, getWorkouts, initWorkoutRecord } from '../db.js';
 import { Workout, WorkoutDetail } from 'shared';
 
 const workoutRouter = express.Router();
@@ -174,7 +174,84 @@ workoutRouter.get('/getWorkoutRecordsByPivot', async (req: Request, res: Respons
     });
   }
 });
-workoutRouter.post('/complete', async (req, res) => {
+workoutRouter.get('/getPlannedWorkoutRecords', async (req: Request, res: Response) => {
+    let apiLogEntry = null;
+    try {
+        const { mem_id, from_dt, to_dt } = req.query as { 
+            mem_id: string; 
+            from_dt: string; 
+            to_dt: string; 
+        };
+
+        // 필수 파라미터 체크
+        if (!mem_id || !from_dt || !to_dt) {
+            return res.status(400).json({
+                success: false,
+                error: '회원 ID와 조회 기간(from, to)이 모두 필요합니다.'
+            });
+        }
+
+        apiLogEntry = await Logger.logApiStart('GET /api/workout/getPlannedWorkoutRecords', [mem_id, from_dt, to_dt]);
+
+        const data = await getPlannedWorkoutRecords(Number(mem_id), from_dt, to_dt);
+
+        res.json({
+            success: true,
+            data: data, // 결과는 목록이므로 배열 그대로 리턴
+            timestamp: new Date().toISOString()
+        });
+
+        await Logger.logApiSuccess(apiLogEntry);
+    } catch (error) {
+        if (apiLogEntry) await Logger.logApiError(apiLogEntry, error);
+        res.status(500).json({
+            success: false,
+            error: (error as Error).message
+        });
+    }
+});
+workoutRouter.get('/getPlannedWorkoutRecordsByPivot', async (req: Request, res: Response) => {
+  let apiLogEntry = null;
+  try {
+    const { mem_id } = req.query as { mem_id?: string };
+    const { from } = req.query as { from: string };
+    const { to } = req.query as { to: string };
+    if (!mem_id) {
+      return res.status(400).json({
+        success: false,
+        error: '회원 ID가 필요합니다.'
+      });
+    }
+    if (!from) {
+      return res.status(400).json({
+        success: false,
+        error: '시작일이 필요합니다.'
+      });
+    }
+    if (!to) {
+      return res.status(400).json({
+        success: false,
+        error: '종료일이 필요합니다.'
+      });
+    }        
+    apiLogEntry = await Logger.logApiStart('GET /api/workout/getPlannedWorkoutRecordsByPivot', [mem_id, from, to]);
+    const records = await getPlannedWorkoutRecordsByPivot(Number(mem_id), from, to);
+    res.json({
+      success: true,
+      data: records.DATA,
+      columns: records.COLUMNS,      
+      timestamp: new Date().toISOString()
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+workoutRouter.post('/complete', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     // 1. 프론트엔드에서 보낸 데이터 꺼내기 (woo_id 포함!)

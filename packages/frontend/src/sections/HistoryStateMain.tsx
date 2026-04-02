@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { createWorkoutChartConfig } from "@/lib/utils";
+import { createWorkoutChartConfig, createWorkoutChartConfigWithPlan } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import type { ChartConfig } from "@/components/ui/chart";
@@ -75,14 +75,20 @@ export default function HistoryStateMain() {
         // API 경로 정의
         const gridUrl  = `http://localhost:3001/api/workout/getWorkoutRecords?mem_id=${memId}&start_dt=${startDt}&end_dt=${endDt}`;
         const chartUrl = `http://localhost:3001/api/workout/getWorkoutRecordsByPivot?mem_id=${memId}&from=${startDt}&to=${endDt}`;
+        const achievementUrl = `http://localhost:3001/api/workout/getPlannedWorkoutRecords?mem_id=${memId}&from=${startDt}&to=${endDt}`;
+        const plannedChartUrl = `http://localhost:3001/api/workout/getPlannedWorkoutRecordsByPivot?mem_id=${memId}&from=${startDt}&to=${endDt}`;
 
         // Promise.all로 병렬 호출
-        const [gridRes, chartRes] = await Promise.all([
+        const [gridRes, chartRes, achievementRes, plannedChartRes] = await Promise.all([
           fetch(gridUrl),
-          fetch(chartUrl)
+          fetch(chartUrl),
+          fetch(achievementUrl),
+          fetch(plannedChartUrl)
         ]);
         const gridJson = await gridRes.json();
         const chartJson = await chartRes.json();
+        const achievementJson = await achievementRes.json();
+        const plannedChartJson = await plannedChartRes.json();
         // 그리드 데이터 업데이트
         if (gridJson.success) {
           setRecords(gridJson.data);
@@ -93,6 +99,17 @@ export default function HistoryStateMain() {
           const config = createWorkoutChartConfig(chartJson.columns, colors);
           setChartConfigRecord(config);
         }
+        if (achievementJson.success) {
+          setChartDataAchievement(achievementJson.data);
+          const config = createWorkoutChartConfigWithPlan(achievementJson.columns, colors);
+          setChartConfigAchievement(config);
+        }        
+        // 계획 대비 실적 차트 데이터 및 설정 업데이트
+        if (plannedChartJson.success) {
+          setChartDataAchievement(plannedChartJson.data);
+          const config = createWorkoutChartConfigWithPlan(plannedChartJson.columns, colors);
+          setChartConfigAchievement(config);
+        }
       } catch (error) {
         console.error("Data fetching failed:", error);
       }
@@ -100,31 +117,6 @@ export default function HistoryStateMain() {
 
     fetchData();
   }, [member?.MEM_ID, dateRange.from, dateRange.to]);  
-  // useEffect(() => {
-  //   // 그리드 데이터 
-  //   fetch(`http://localhost:3001/api/workout/getWorkoutRecords?mem_id=${member?.MEM_ID?? ''}&start_dt=${format(dateRange.from!, 'yyyy-MM-dd')}&end_dt=${format(dateRange.to!, 'yyyy-MM-dd')}`)
-  //     .then(res => res.json())
-  //     .then(data => {
-  //       setRecords(data.data);  
-  //   });    
-  //   // 차트 데이터 
-  //   fetch(`http://localhost:3001/api/workout/getWorkoutRecordsByPivot?mem_id=${member?.MEM_ID?? ''}&from=${format(dateRange.from!, 'yyyy-MM-dd')}&to=${format(dateRange.to!, 'yyyy-MM-dd')}`)
-  //     .then(res => res.json())
-  //     .then(data => {
-  //       setChartDataRecord(data.data);
-  //       const config = createWorkoutChartConfig(data.columns, colors); 
-  //       setChartConfigRecord(config);
-
-  //   //   });
-  //   // // 차트 데이터 (성취 : 계획 대비 실적)  
-  //   // fetch(`http://localhost:3001/api/get_workout_pivot_with_plan?memberId=${member?.MEM_ID?? ''}&from=${format(dateRange.from!, 'yyyy-MM-dd')}&to=${format(dateRange.to!, 'yyyy-MM-dd')}`)
-  //   //   .then(res => res.json())
-  //   //   .then(data => {
-  //   //     setChartDataAchievement(data.data);
-  //   //     const config = createWorkoutChartConfigWithPlan(data.columns, colors); 
-  //   //     setChartConfigAchievement(config);
-  //   //   });      
-  // }, [member?.MEM_ID, dateRange.from, dateRange.to]);    
   //================================================================================================================
   // 월별 데이터
   //================================================================================================================
@@ -158,7 +150,7 @@ export default function HistoryStateMain() {
         // Promise.all로 병렬 호출
         const [gridRes, chartRes] = await Promise.all([
           fetch(gridUrl),
-          fetch(chartUrl)
+          fetch(chartUrl),
         ]);
         const gridJson = await gridRes.json();
         const chartJson = await chartRes.json();
@@ -180,22 +172,6 @@ export default function HistoryStateMain() {
     };
 
     fetchData();    
-    // // 그리드 데이터 
-    // fetch(`http://localhost:3001/api/workout/getWorkoutRecords?mem_id=${member?.MEM_ID?? ''}&start_dt=${format(dateRangeMonthly.from!, 'yyyy-MM-dd')}&end_dt=${format(dateRangeMonthly.to!, 'yyyy-MM-dd')}`)
-    //   .then(res => res.json())
-    //   .then(data => {
-    //     setRecordsMonthly(data.data); 
-    // });    
-    // // 차트 데이터 
-    // fetch(`http://localhost:3001/api/get_workout_pivot?memberId=${member?.MEM_ID?? ''}&from=${format(dateRangeMonthly.from!, 'yyyy-MM-dd')}&to=${format(dateRangeMonthly.to!, 'yyyy-MM-dd')}`)
-    //   .then(res => res.json())
-    //   .then(data => {
-    //     const mothlyData = data.data.map((item: any) => {
-    //       const { wo_dt, ...rest } = item;  // wo_dt 제외하고 나머지 복사
-    //       return rest;
-    //     });
-    //     setChartDataRecordMonthly(mothlyData);
-    //   });
   }, [member?.MEM_ID, dateRangeMonthly.from, dateRangeMonthly.to]);   
   //================================================================================================================
   // 탭 이벤트 

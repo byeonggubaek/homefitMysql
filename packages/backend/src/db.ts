@@ -1,5 +1,5 @@
 import mysql, { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import { NavItem, NavSubItem, ColDesc, WorkoutRecord, Member, WorkoutDetail, MemberExists, Workout, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods, ChartData, PointHistory } from 'shared';
+import { NavItem, NavSubItem, ColDesc, WorkoutRecord, Member, WorkoutDetail, MemberExists, Workout, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods, ChartData, PointHistory, PlannedWorkoutRecord } from 'shared';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
 
@@ -660,6 +660,85 @@ export const getWorkoutRecordsByPivot = async (mem_id: number, start_dt: string,
     COLUMNS: resultRow?.COLUMNS ? JSON.parse(resultRow.COLUMNS) : []
   };
 };
+// 3.5. 운동 기록 조회 - 계획정보 포함 그래프에서 사용한다 
+async function _getPlannedWorkoutRecordsByPivot(mem_id: number, start_dt: string, end_dt: string): Promise<any[]> {
+  return select(`
+    CALL getPlannedWorkoutRecordsByPivot(?, ?, ?, @vsql, @data, @columns);
+    SELECT @vsql AS VSQL, @data AS DATA, @columns AS COLUMNS;
+  `, [mem_id, start_dt, end_dt]);
+}
+export const getPlannedWorkoutRecordsByPivot = async (mem_id: number, start_dt: string, end_dt: string): Promise<ChartData> => {
+  const records = await _getPlannedWorkoutRecordsByPivot(mem_id, start_dt, end_dt);
+  const resultRow = (records && records[1] && records[1][0]) ? records[1][0] : null;
+  return {
+    VSQL: resultRow ? resultRow.VSQL : null,
+    DATA: resultRow?.DATA ? JSON.parse(resultRow.DATA) : [],
+    COLUMNS: resultRow?.COLUMNS ? JSON.parse(resultRow.COLUMNS) : []
+  };
+};
+// 3.6. 계획대비 실적 조회 - 회원 ID와 날짜 범위로 해당 기간의 계획된 운동과 실제 운동 기록을 함께 조회 (운동 기록 조회 페이지에서 계획 대비 실적 그래프용 데이터)
+async function _getPlannedWorkoutRecords(
+    P_MEM_ID: number, 
+    P_FROM_DT: string, 
+    P_TO_DT: string
+): Promise<any[]> {
+    const query = `
+        SELECT  MEP_DATE AS WO_DT, 
+                WOO_ID, 
+                WOO_NAME, 
+                SUM(PLAN_CNT) AS PLAN_CNT, 
+                SUM(ACT_CNT) AS ACT_CNT 
+        FROM (
+            SELECT  A.MEP_DATE,
+                    B.WOO_ID, 
+                    B.WOO_NAME, 
+                    SUM(A.MEP_TARGET) AS PLAN_CNT, 
+                    0 AS ACT_CNT 
+            FROM    T_MEMBER_PLAN A
+            JOIN    T_WORKOUT B ON B.WOO_ID = A.WOO_ID
+            WHERE   A.MEM_ID = ?
+            AND     A.MEP_DATE >= ?
+            AND     A.MEP_DATE <= ?
+            GROUP BY A.MEP_DATE, B.WOO_ID, B.WOO_NAME
+
+            UNION ALL 
+                    
+            SELECT  A.WOR_DT, 
+                    C.WOO_ID,
+                    C.WOO_NAME, 
+                    0 AS PLAN_CNT,
+                    SUM(B.WOD_COUNT) AS ACT_CNT  
+            FROM    T_WORKOUT_RECORD A 
+            JOIN    T_WORKOUT_DETAIL B ON B.WOR_ID = A.WOR_ID 
+            JOIN    T_WORKOUT C ON C.WOO_ID = B.WOO_ID
+            WHERE   A.WOR_STATUS = 'C'
+            AND     A.MEM_ID = ?
+            AND     A.WOR_DT >= ?
+            AND     A.WOR_DT <= ?
+            GROUP BY A.WOR_DT, C.WOO_ID, C.WOO_NAME
+        ) A 
+        GROUP BY MEP_DATE, WOO_ID, WOO_NAME
+        ORDER BY WO_DT ASC, WOO_NAME ASC
+    `;
+
+    // 파라미터 순서: [PLAN용(ID, FROM, TO), ACT용(ID, FROM, TO)]
+    return select(query, [P_MEM_ID, P_FROM_DT, P_TO_DT, P_MEM_ID, P_FROM_DT, P_TO_DT]);
+}
+export const getPlannedWorkoutRecords = async (
+    P_MEM_ID: number, 
+    P_FROM_DT: string, 
+    P_TO_DT: string
+): Promise<PlannedWorkoutRecord[]> => {
+    const records = await _getPlannedWorkoutRecords(P_MEM_ID, P_FROM_DT, P_TO_DT);
+    
+    return records.map(record => ({
+        WO_DT: record.WO_DT,
+        WOO_ID: record.WOO_ID,
+        WOO_NAME: record.WOO_NAME,
+        PLAN_CNT: Number(record.PLAN_CNT),
+        ACT_CNT: Number(record.ACT_CNT)
+    }));
+}
 // 3.5. 운동 기록 조회 - 오늘의 운동 운동 스탬프 조회 (최근 7일간의 운동 기록 여부 조회, 오늘의 운동에서 사용) - 날짜 범위 대신 최근 7일간의 기록 여부만 조회하여 간단한 결과 반환 (예: 날짜별로 'G' 또는 'B' 상태 반환)
 async function _getWorkoutHistory(P_MEM_ID: string = ''): Promise<any> {
   return select(`
