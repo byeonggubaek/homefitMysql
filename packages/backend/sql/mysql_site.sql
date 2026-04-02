@@ -156,9 +156,9 @@ INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 7, 7, 'WOD_POINT', '획득포
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 8, 8, 'WOR_DESC', '운동내역', 'str', 100, 'sum');
 
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 1, 1, 'WO_DT', '운동번호', 'key', 80,  NULL);
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 3, 3, 'WOO_NAME', '운동명', 'lst', 100, NULL);
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 4, 4, 'PLAN_CNT', '계획', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 5, 5, 'ACT_CNT', '실적', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 2, 2, 'WOO_NAME', '운동명', 'lst', 100, NULL);
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 3, 3, 'PLAN_CNT', '계획', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 4, 4, 'ACT_CNT', '실적', 'qty', 100, 'sum');
 
 SELECT *
 FROM   T_COLUMN_DESC
