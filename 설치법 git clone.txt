@@ -1,5 +1,5 @@
 #1. remote 레포지토리 local로 복사
-git clone -b init --single-branch https://github.com/byeonggubaek/shardcn.git 당신의_새로운_레포지토리
+git clone -b master --single-branch https://github.com/byeonggubaek/homefitMysql.git
 
 #2. 새로 생성된 레포지토리의 기존 레포지토리와의 관계를 단절한다. 
 cd 당신의_새로운_레포지토리
