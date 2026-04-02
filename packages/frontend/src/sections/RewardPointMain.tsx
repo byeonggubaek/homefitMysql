@@ -127,7 +127,7 @@ export default function RewardPointMain() {
 
                     <div className="flex flex-col items-center py-1.5">
                         <div className="relative ">
-                            <img src="/member/U000003.png" alt="profile" className="w-14 h-14 rounded-full border-2 border-gray-50 shadow-md" />
+                            <img src={member?.MEM_IMG} alt="profile" className="w-14 h-14 rounded-full border-2 border-gray-50 shadow-md" />
                             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                         </div>
                         <div className="text-center">
