@@ -68,8 +68,7 @@ export default function RewardPointMain() {
         if (!member?.MEM_ID) return;      
         const mem_id = member.MEM_ID; 
 
-        const today = new Date();        
-        const fromDate = format(startOfMonth(today), 'yyyy-MM-dd');
+        const fromDate = "2026-03-01";
         const toDate = format(monthEnd, 'yyyy-MM-dd');
 
         // 1. 포인트 내역 가져오기

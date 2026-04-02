@@ -1037,7 +1037,7 @@ export async function _getPoint(memberId: string, startDate: string, endDate: st
       FROM T_ACHIEVEMENT A
       JOIN T_MEMBER_ACHIEVEMENT B ON A.ACH_ID = B.ACH_ID
       WHERE B.MEM_ID = ? AND B.CMP_YN = 'Y' 
-      AND B.CMP_DT BETWEEN STR_TO_DATE(?, '%Y-%m-%d') AND STR_TO_DATE(?, '%Y-%m-%d')
+      AND B.CMP_DT BETWEEN ? AND ?
     )
 
     UNION ALL

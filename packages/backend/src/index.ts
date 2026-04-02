@@ -8,7 +8,8 @@ import {
   closePool, 
   getMenus,  
   getMenuPos,
-  getColDesc} from './db.js';
+  getColDesc,
+  searchMenus} from './db.js';
 import aiRouter from './routes/ai.js';
 import workoutRouter from './routes/workout.js';
 import systemRouter from './routes/system.js';

@@ -97,9 +97,9 @@ rewardRouter.get('/getPoint', async (req, res) => {
 // "업적 리스트 좀 줘봐" 라고 하면 호출되는 주소
 rewardRouter.get('/get_achievement_list', async (req, res) => {
   try {
-    const { memberId } = req.query as { memberId: string };
-    console.log('업적 리스트 요청 - memberId:', memberId);
-    const data = await getAchievementList(memberId);
+    const { mem_id } = req.query as { mem_id: string };
+    console.log('업적 리스트 요청 - mem_id:', mem_id);
+    const data = await getAchievementList(mem_id);
     res.json({ success: true, data });
   } catch (error) {
     res.status(500).json({ success: false, error: (error as Error).message });

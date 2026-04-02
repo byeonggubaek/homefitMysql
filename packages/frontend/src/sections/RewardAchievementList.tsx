@@ -5,19 +5,10 @@
   import { Badge } from "../components/ui/badge";
   import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { useUser } from "@/hooks/UserContext";
+import type { Achievement } from "shared";
 
   // [핵심 1] DB에서 넘어올 데이터 모양 정의
-  interface Achievement {
-    id: string;
-    title: string;
-    icon: string;
-    description: string;
-    progress: number;
-    progressPercentage: number;
-    status: 'completed' | 'inProgress' | 'locked';
-    completedDate: string | null;
-    points: number;
-  }
+
 
   export default function RewardAchievementList() {
     const {member} = useUser();    

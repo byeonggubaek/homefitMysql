@@ -178,6 +178,17 @@ export interface PointHistory {
   title: string;
   type: 'earned' | 'used'; // 타입을 명확히 제한하면 개발 시 자동완성 도움을 받기 좋습니다.
 }
+export  interface Achievement {
+    id: string;
+    title: string;
+    icon: string;
+    description: string;
+    progress: number;
+    progressPercentage: number;
+    status: 'completed' | 'inProgress' | 'locked';
+    completedDate: string | null;
+    points: number;
+  }
 /*=======================================================================================================
   메뉴 관련
 =======================================================================================================*/
