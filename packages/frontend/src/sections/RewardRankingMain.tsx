@@ -133,7 +133,7 @@ const RewardRankingMain = () => {
                     이번 달의 챔피언은 <span className="font-bold text-[#02899B]">{rankingData[0]?.MEM_NAME || "아직 결정되지 않음"}</span>님입니다!
                   </div>
                 </div>
-                <img src="/member/ranking.jpg" alt="랭킹 이미지" />
+                <img src="/member/rank.png" alt="랭킹 이미지" />
               </CardContent>
           </Card>
         </div>

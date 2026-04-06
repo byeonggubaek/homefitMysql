@@ -548,7 +548,8 @@ DATA부분은 DATA로
 COLUMNS 부분은 COLUMNS로 
 동적쿼리는 VSQL로 리턴해줘  이때, 꼭 대문자로 
 node.js 로 호출하는 함수도 같이 만들어줘 
-집계 컬럼이 2개인 경우는 PLAN은 _P 붙여 보여줘 
+집계 컬럼이 2개인 경우는 PLAN은 _P 붙여 보여줘 PLAN은 IF PLAN_CNT > ACT_CNT 이면 0, 아니면 PLAN_CNT - ACT_CNT로 보여줘 
+즉 PLAN은 계획대비 실적이 부족한 부분만 보여주는 형태로 만들어줘
 [결과]
 1. 집계 컬럼이 1개인 경우 
 {
@@ -705,16 +706,24 @@ BEGIN
         '    SELECT DATE_ADD(DT, INTERVAL 1 DAY) FROM DATE_RANGE WHERE DT < ? ',
         '), ',
         'BASE_DATA AS ( ',
-        '    SELECT MEP_DATE AS WO_DT, WOO_ID, SUM(MEP_TARGET) AS PLAN_CNT, 0 AS ACT_CNT ',
-        '    FROM T_MEMBER_PLAN WHERE MEM_ID = ? AND MEP_DATE BETWEEN ? AND ? ',
-        '    GROUP BY MEP_DATE, WOO_ID ',
-        '    UNION ALL ',
-        '    SELECT A.WOR_DT, C.WOO_ID, 0 AS PLAN_CNT, SUM(B.WOD_COUNT) AS ACT_CNT ',
-        '    FROM T_WORKOUT_RECORD A ',
-        '    JOIN T_WORKOUT_DETAIL B ON B.WOR_ID = A.WOR_ID ',
-        '    JOIN T_WORKOUT C ON C.WOO_ID = B.WOO_ID ',
-        '    WHERE A.MEM_ID = ? AND A.WOR_STATUS = "C" AND A.WOR_DT BETWEEN ? AND ? ',
-        '    GROUP BY A.WOR_DT, C.WOO_ID ',
+        '   SELECT	WO_DT, ',
+        '           WOO_ID, ',
+        '           CASE WHEN SUM(PLAN_CNT) > SUM(ACT_CNT) THEN SUM(PLAN_CNT) - SUM(ACT_CNT) END  AS PLAN_CNT, ',
+        '           SUM(ACT_CNT) AS ACT_CNT ',
+        '   FROM	(',        
+        '       SELECT  MEP_DATE AS WO_DT, WOO_ID, SUM(MEP_TARGET) AS PLAN_CNT, 0 AS ACT_CNT ',
+        '       FROM    T_MEMBER_PLAN ',
+        '       WHERE   MEM_ID = ? AND MEP_DATE BETWEEN ? AND ? ',
+        '       GROUP BY MEP_DATE, WOO_ID ',
+        '       UNION ALL ',
+        '       SELECT  A.WOR_DT, C.WOO_ID, 0 AS PLAN_CNT, SUM(B.WOD_COUNT) AS ACT_CNT ',
+        '       FROM    T_WORKOUT_RECORD A ',
+        '       JOIN    T_WORKOUT_DETAIL B ON B.WOR_ID = A.WOR_ID ',
+        '       JOIN    T_WORKOUT C ON C.WOO_ID = B.WOO_ID ',
+        '       WHERE   A.MEM_ID = ? AND A.WOR_STATUS = "C" AND A.WOR_DT BETWEEN ? AND ? ',
+        '       GROUP BY A.WOR_DT, C.WOO_ID ',
+	      '   ) A',
+        '   GROUP BY WO_DT, WOO_ID',       
         ') ',
         'SELECT JSON_ARRAYAGG(JSON_OBJECT("wo_dt", WO_DT, ', v_json_expr, ')) ',
         'INTO @DATA_TMP FROM ( ',

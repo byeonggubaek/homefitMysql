@@ -68,8 +68,8 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0001', '프로필','/menu/profile.jpg', '개인 정보를 관리합니다.', 'MemberProfile', '/member/profile/profile');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0002', '운동목표','/menu/plan.jpg', '운동 목표를 설정하고 관리합니다.', 'MemberPlan', '/member/plan');
-INSERT INTO T_NAV_SUB_ITEM VALUES
-('NAV00004', 'S0003', '회원등록','/menu/register.png', '개인 정보를 등록합니다.', 'MemberSignup', '/member/signup');
+-- INSERT INTO T_NAV_SUB_ITEM VALUES
+-- ('NAV00004', 'S0003', '회원등록','/menu/register.png', '개인 정보를 등록합니다.', 'MemberSignup', '/member/signup');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00005', 'S0001', '조회','/menu/select.jpg', 'Backend 조회 service를 자동생성합니다.', 'SystemSelect', '/system/select');
 INSERT INTO T_NAV_SUB_ITEM VALUES
@@ -146,7 +146,7 @@ CREATE TABLE T_COLUMN_DESC
     CONSTRAINT T_COLUMN_DESC_PK PRIMARY KEY (COL_TBL_NAME, COL_SEQ)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 1, 1, 'WOR_ID', '운동번호', 'key', 80,  NULL);
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 1, 1, 'WOR_ID_VIEW', '운동번호', 'key', 80,  NULL);
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 2, 2, 'WOR_DT', '운동일', 'dat', 100, NULL);
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 3, 3, 'WOO_NAME', '운동명', 'lst', 100, NULL);
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 4, 4, 'WOD_TARGET_REPS', '반복횟수/초', 'qty', 100, 'sum');
@@ -155,10 +155,11 @@ INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 6, 6, 'WOD_COUNT', '실행횟
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 7, 7, 'WOD_POINT', '획득포인트', 'qty', 100, 'sum');
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutRecord', 8, 8, 'WOR_DESC', '운동내역', 'str', 100, 'sum');
 
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 1, 1, 'WO_DT', '운동번호', 'key', 80,  NULL);
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 1, 1, 'WO_DT', '운동일', 'dat', 80,  NULL);
 INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 2, 2, 'WOO_NAME', '운동명', 'lst', 100, NULL);
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 3, 3, 'PLAN_CNT', '계획', 'qty', 100, 'sum');
-INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 4, 4, 'ACT_CNT', '실적', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 3, 3, 'PLAN_CNT', '계획횟수/초', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 4, 4, 'ACT_CNT', '실행횟수/초', 'qty', 100, 'sum');
+INSERT INTO T_COLUMN_DESC VALUES ('WorkoutAchievement', 5, 5, 'LEFT_CNT', '남은횟수/초', 'qty', 100, 'sum');
 
 SELECT *
 FROM   T_COLUMN_DESC
@@ -400,7 +401,7 @@ INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
 VALUES (1, 1, '2026-03-31', 30, '초');
 
 INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
-VALUES (1, 1, '2026-04-01', 30, '초');
+VALUES (1, 1, '2026-04-01', 60, '초');
 INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
 VALUES (1, 2, '2026-04-03', 20, '회');
 

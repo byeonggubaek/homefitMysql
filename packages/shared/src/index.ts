@@ -132,12 +132,14 @@ export interface Goods
   GOD_DCRATE  : number;   // int
   GOD_IMG     : string | null;  // varchar(256), nullable
 }
-export interface PlannedWorkoutRecord {
+export interface WorkoutRecordWithPlan {
     WO_DT: string;      // 계획/운동 날짜 (YYYY-MM-DD)
     WOO_ID: number;     // 운동 내부 ID
     WOO_NAME: string;   // 운동 이름
+    WOO_NAME_COLOR: string;    
     PLAN_CNT: number;   // 목표 수치 합계
     ACT_CNT: number;    // 실제 수행 수치 합계
+    LEFT_CNT: number;   // 남은 수치 (계획 - 실제, 단 0 미만은 0으로 처리)
 }
 /*=======================================================================================================
   등록 관련

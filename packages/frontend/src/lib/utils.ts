@@ -66,6 +66,7 @@ export const createWorkoutChartConfigWithPlan = (
 ): ChartConfig => {
   return columns.reduce((config, col, index) => {
     const baseColor = colors?.[index % colors.length] || `--chart-${(index % 5) + 1}`;
+    console.log(`Configuring column: ${col.id}, baseColor: ${baseColor}`);
     // 실제값
     config[col.id] = {
       label: col.name,
@@ -74,12 +75,12 @@ export const createWorkoutChartConfigWithPlan = (
     
     // 계획값 (_P)
     config[col.id + '_P'] = {
-      //label: `${col.name}(잔여횟수)`,
-      label: `잔여횟수`,
-      //color: `var(${baseColor.replace('bg-table', '--warning')})`
-      color: `var(--unreached)`
+      label: `${col.name}(남은횟수)`,
+      color: `var(${baseColor.replace('bg-table', '--plan')})`
+      //color: `var(--unreached)`
     };
-    
+    console.log(`Added config for ${col.id}:`, config[col.id]);
+    console.log(`Added config for ${col.id}_P:`, config[col.id + '_P']);
     return config;
   }, {} as ChartConfig);
 };

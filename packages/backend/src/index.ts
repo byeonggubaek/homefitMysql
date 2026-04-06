@@ -1,5 +1,5 @@
 import express from 'express';
-import memberRouter from "./routes/member.js";
+import { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import session from 'express-session';
@@ -11,6 +11,7 @@ import {
   getColDesc,
   searchMenus} from './db.js';
 import aiRouter from './routes/ai.js';
+import memberRouter from "./routes/member.js";
 import workoutRouter from './routes/workout.js';
 import systemRouter from './routes/system.js';
 import rewardRouter from './routes/reward.js';
@@ -103,7 +104,7 @@ async function gracefulShutdown(signal: string) {
 //================================================================================================
 //  시스템 API (로그, 모니터링 등) - 포팅 후
 //================================================================================================
-app.get('/api/getMenus', async (req, res) => {
+app.get('/api/getMenus', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     apiLogEntry = await Logger.logApiStart('GET /api/getMenus', []);
@@ -124,7 +125,7 @@ app.get('/api/getMenus', async (req, res) => {
     });
   }
 });
-app.get('/api/getMenuPos', async (req, res) => {
+app.get('/api/getMenuPos', async (req: Request, res: Response) => {
   let apiLogEntry = null;  
   try {
     const { page } = req.query as { page?: string };  
@@ -144,7 +145,7 @@ app.get('/api/getMenuPos', async (req, res) => {
     });
   }
 });
-app.get('/api/searchMenus', async (req, res) => {
+app.get('/api/searchMenus', async (req: Request, res: Response) => {
   let apiLogEntry = null;  
   try {
     const { key } = req.query as { key: string };  
@@ -171,14 +172,14 @@ app.get('/api/searchMenus', async (req, res) => {
     });
   }
 });
-app.get('/api/getColDesc', async (req, res) => {
+app.get('/api/getColDesc', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
-    // API 시작 로그 기록
-    apiLogEntry = await Logger.logApiStart('GET /api/getColDesc', ['WorkoutRecord']);
-
     // 데이터 조회 (WorkoutRecord 고정 조회 혹은 필요 시 query parameter 사용 가능)
-    const data = await getColDesc();
+    const { table } = req.query as { table: string };      
+    // API 시작 로그 기록
+    apiLogEntry = await Logger.logApiStart('GET /api/getColDesc', [table]);
+    const data = await getColDesc(table);
 
     res.json({
       success: true,
@@ -203,7 +204,7 @@ app.get('/api/getColDesc', async (req, res) => {
 // API: 우편번호 검색 (한국우편사업진흥원)
 // GET /api/get_postcodes?zipcode=우편번호
 // PARAMETER : zipcode (필수) - 검색할 우편번호 (5자리)
-app.get('/api/get_postcodes', async (req, res) => {
+app.get('/api/get_postcodes', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { zipcode } = req.query;

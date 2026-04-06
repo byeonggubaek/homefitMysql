@@ -1,7 +1,7 @@
 import Logger from '../logger.js'
 import express from 'express';
 import { Request, Response } from 'express';
-import { completeWorkoutRecord, getPlannedWorkoutRecordsByPivot, getWorkoutDetails, getWorkoutHistory, getWorkoutRecords, getWorkoutRecordsByPivot, getWorkouts, initWorkoutRecord } from '../db.js';
+import { completeWorkoutRecord, getWorkoutDetails, getWorkoutHistory, getWorkoutRecords, getWorkoutRecordsByPivot, getWorkoutRecordsWithPlan, getWorkoutRecordsWithPlanByPivot, getWorkouts, initWorkoutRecord } from '../db.js';
 import { Workout, WorkoutDetail } from 'shared';
 
 const workoutRouter = express.Router();
@@ -109,15 +109,15 @@ workoutRouter.get('/getWorkouts', async (req: Request, res: Response) => {
 workoutRouter.get('/getWorkoutRecords', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
-    const { mem_id, start_dt, end_dt } = req.query as { mem_id?: string; start_dt: string; end_dt: string };
+    const { mem_id, from_dt, to_dt } = req.query as { mem_id?: string; from_dt: string; to_dt: string };
     if(!mem_id || mem_id === "") {
       return res.status(400).json({ success: false, error: '회원정보 파라미터가 누락되었습니다.' });
     }
-    if (!start_dt || !end_dt) {
+    if (!from_dt || !to_dt) {
       return res.status(400).json({ success: false, error: '날짜 정보가 누락되었습니다.' });
     }
-    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutRecords', [mem_id, start_dt, end_dt]);
-    const data = await getWorkoutRecords(Number(mem_id), start_dt, end_dt);
+    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutRecords', [mem_id, from_dt, to_dt]);
+    const data = await getWorkoutRecords(Number(mem_id), from_dt, to_dt);
     res.json({
       success: true,
       data: data,
@@ -137,28 +137,28 @@ workoutRouter.get('/getWorkoutRecordsByPivot', async (req: Request, res: Respons
   let apiLogEntry = null;
   try {
     const { mem_id } = req.query as { mem_id?: string };
-    const { from } = req.query as { from: string };
-    const { to } = req.query as { to: string };
+    const { from_dt } = req.query as { from_dt: string };
+    const { to_dt } = req.query as { to_dt: string };
     if (!mem_id) {
       return res.status(400).json({
         success: false,
         error: '회원 ID가 필요합니다.'
       });
     }
-    if (!from) {
+    if (!from_dt) {
       return res.status(400).json({
         success: false,
         error: '시작일이 필요합니다.'
       });
     }
-    if (!to) {
+    if (!to_dt) {
       return res.status(400).json({
         success: false,
         error: '종료일이 필요합니다.'
       });
     }        
-    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutRecordsByPivot', [mem_id, from, to]);
-    const records = await getWorkoutRecordsByPivot(Number(mem_id), from, to);
+    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutRecordsByPivot', [mem_id, from_dt, to_dt]);
+    const records = await getWorkoutRecordsByPivot(Number(mem_id), from_dt, to_dt);
     res.json({
       success: true,
       data: records.DATA,
@@ -174,7 +174,7 @@ workoutRouter.get('/getWorkoutRecordsByPivot', async (req: Request, res: Respons
     });
   }
 });
-workoutRouter.get('/getPlannedWorkoutRecords', async (req: Request, res: Response) => {
+workoutRouter.get('/getWorkoutRecordsWithPlan', async (req: Request, res: Response) => {
     let apiLogEntry = null;
     try {
         const { mem_id, from_dt, to_dt } = req.query as { 
@@ -182,7 +182,6 @@ workoutRouter.get('/getPlannedWorkoutRecords', async (req: Request, res: Respons
             from_dt: string; 
             to_dt: string; 
         };
-
         // 필수 파라미터 체크
         if (!mem_id || !from_dt || !to_dt) {
             return res.status(400).json({
@@ -190,10 +189,9 @@ workoutRouter.get('/getPlannedWorkoutRecords', async (req: Request, res: Respons
                 error: '회원 ID와 조회 기간(from, to)이 모두 필요합니다.'
             });
         }
+        apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutRecordsWithPlan', [mem_id, from_dt, to_dt]);
 
-        apiLogEntry = await Logger.logApiStart('GET /api/workout/getPlannedWorkoutRecords', [mem_id, from_dt, to_dt]);
-
-        const data = await getPlannedWorkoutRecords(Number(mem_id), from_dt, to_dt);
+        const data = await getWorkoutRecordsWithPlan(Number(mem_id), from_dt, to_dt);
 
         res.json({
             success: true,
@@ -210,32 +208,32 @@ workoutRouter.get('/getPlannedWorkoutRecords', async (req: Request, res: Respons
         });
     }
 });
-workoutRouter.get('/getPlannedWorkoutRecordsByPivot', async (req: Request, res: Response) => {
+workoutRouter.get('/getWorkoutRecordsWithPlanByPivot', async (req: Request, res: Response) => {
   let apiLogEntry = null;
   try {
     const { mem_id } = req.query as { mem_id?: string };
-    const { from } = req.query as { from: string };
-    const { to } = req.query as { to: string };
+    const { from_dt } = req.query as { from_dt: string };
+    const { to_dt } = req.query as { to_dt: string };
     if (!mem_id) {
       return res.status(400).json({
         success: false,
         error: '회원 ID가 필요합니다.'
       });
     }
-    if (!from) {
+    if (!from_dt) {
       return res.status(400).json({
         success: false,
         error: '시작일이 필요합니다.'
       });
     }
-    if (!to) {
+    if (!to_dt) {
       return res.status(400).json({
         success: false,
         error: '종료일이 필요합니다.'
       });
     }        
-    apiLogEntry = await Logger.logApiStart('GET /api/workout/getPlannedWorkoutRecordsByPivot', [mem_id, from, to]);
-    const records = await getPlannedWorkoutRecordsByPivot(Number(mem_id), from, to);
+    apiLogEntry = await Logger.logApiStart('GET /api/workout/getWorkoutRecordsWithPlanByPivot', [mem_id, from_dt, to_dt]);
+    const records = await getWorkoutRecordsWithPlanByPivot(Number(mem_id), from_dt, to_dt);
     res.json({
       success: true,
       data: records.DATA,

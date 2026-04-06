@@ -1,5 +1,5 @@
 import mysql, { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import { NavItem, NavSubItem, ColDesc, WorkoutRecord, Member, WorkoutDetail, MemberExists, Workout, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods, ChartData, PointHistory, PlannedWorkoutRecord } from 'shared';
+import { NavItem, NavSubItem, ColDesc, WorkoutRecord, Member, WorkoutDetail, MemberExists, Workout, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods, ChartData, PointHistory, WorkoutRecordWithPlan } from 'shared';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
 
@@ -154,7 +154,7 @@ export const getScripts = async (tableNames: string[]): Promise<string> => {
     .join('\n\n');
 };
 // 0.1. 컬럼 스키마 조회 
-async function _getColDesc(): Promise<any[]> {
+async function _getColDesc(table: string): Promise<any[]> {
   const query = `
     SELECT COL_ID,       
            COL_NAME,
@@ -162,13 +162,13 @@ async function _getColDesc(): Promise<any[]> {
            COL_WIDTH,
            COL_SUM
     FROM T_COLUMN_DESC
-    WHERE COL_TBL_NAME = 'WorkoutRecord'
+    WHERE COL_TBL_NAME = ?
     ORDER BY COL_SEQ
   `;
-  return select(query, []);
+  return select(query, [table]);
 }
-export const getColDesc = async (): Promise<ColDesc[]> => {
-  const records = await _getColDesc();
+export const getColDesc = async (table : string): Promise<ColDesc[]> => {
+  const records = await _getColDesc(table);
   // 데이터가 없을 경우 빈 배열 반환, 있을 경우 매핑하여 반환
   return records.map((record: any) => ({
     COL_ID: record.COL_ID,
@@ -661,14 +661,14 @@ export const getWorkoutRecordsByPivot = async (mem_id: number, start_dt: string,
   };
 };
 // 3.5. 운동 기록 조회 - 계획정보 포함 그래프에서 사용한다 
-async function _getPlannedWorkoutRecordsByPivot(mem_id: number, start_dt: string, end_dt: string): Promise<any[]> {
+async function _getWorkoutRecordsWithPlanByPivot(mem_id: number, start_dt: string, end_dt: string): Promise<any[]> {
   return select(`
-    CALL getPlannedWorkoutRecordsByPivot(?, ?, ?, @vsql, @data, @columns);
+    CALL getWorkoutRecordsWithPlanByPivot(?, ?, ?, @vsql, @data, @columns);
     SELECT @vsql AS VSQL, @data AS DATA, @columns AS COLUMNS;
   `, [mem_id, start_dt, end_dt]);
 }
-export const getPlannedWorkoutRecordsByPivot = async (mem_id: number, start_dt: string, end_dt: string): Promise<ChartData> => {
-  const records = await _getPlannedWorkoutRecordsByPivot(mem_id, start_dt, end_dt);
+export const getWorkoutRecordsWithPlanByPivot = async (mem_id: number, start_dt: string, end_dt: string): Promise<ChartData> => {
+  const records = await _getWorkoutRecordsWithPlanByPivot(mem_id, start_dt, end_dt);
   const resultRow = (records && records[1] && records[1][0]) ? records[1][0] : null;
   return {
     VSQL: resultRow ? resultRow.VSQL : null,
@@ -677,7 +677,7 @@ export const getPlannedWorkoutRecordsByPivot = async (mem_id: number, start_dt: 
   };
 };
 // 3.6. 계획대비 실적 조회 - 회원 ID와 날짜 범위로 해당 기간의 계획된 운동과 실제 운동 기록을 함께 조회 (운동 기록 조회 페이지에서 계획 대비 실적 그래프용 데이터)
-async function _getPlannedWorkoutRecords(
+async function _getWorkoutRecordsWithPlan(
     P_MEM_ID: number, 
     P_FROM_DT: string, 
     P_TO_DT: string
@@ -686,8 +686,10 @@ async function _getPlannedWorkoutRecords(
         SELECT  MEP_DATE AS WO_DT, 
                 WOO_ID, 
                 WOO_NAME, 
+                MOD(WOO_ID - 1, 5) AS WOO_NAME_COLOR,                 
                 SUM(PLAN_CNT) AS PLAN_CNT, 
-                SUM(ACT_CNT) AS ACT_CNT 
+                SUM(ACT_CNT) AS ACT_CNT,
+                CASE WHEN SUM(PLAN_CNT) > SUM(ACT_CNT) THEN SUM(PLAN_CNT) - SUM(ACT_CNT) ELSE 0 END AS LEFT_CNT
         FROM (
             SELECT  A.MEP_DATE,
                     B.WOO_ID, 
@@ -718,25 +720,27 @@ async function _getPlannedWorkoutRecords(
             GROUP BY A.WOR_DT, C.WOO_ID, C.WOO_NAME
         ) A 
         GROUP BY MEP_DATE, WOO_ID, WOO_NAME
-        ORDER BY WO_DT ASC, WOO_NAME ASC
+        ORDER BY WO_DT ASC, WOO_ID ASC
     `;
 
     // 파라미터 순서: [PLAN용(ID, FROM, TO), ACT용(ID, FROM, TO)]
-    return select(query, [P_MEM_ID, P_FROM_DT, P_TO_DT, P_MEM_ID, P_FROM_DT, P_TO_DT]);
+    return select(query, [P_MEM_ID, P_FROM_DT, P_TO_DT, P_MEM_ID, P_FROM_DT, P_TO_DT]);``
 }
-export const getPlannedWorkoutRecords = async (
+export const getWorkoutRecordsWithPlan = async (
     P_MEM_ID: number, 
     P_FROM_DT: string, 
     P_TO_DT: string
-): Promise<PlannedWorkoutRecord[]> => {
-    const records = await _getPlannedWorkoutRecords(P_MEM_ID, P_FROM_DT, P_TO_DT);
+): Promise<WorkoutRecordWithPlan[]> => {
+    const records = await _getWorkoutRecordsWithPlan(P_MEM_ID, P_FROM_DT, P_TO_DT);
     
     return records.map(record => ({
         WO_DT: record.WO_DT,
         WOO_ID: record.WOO_ID,
         WOO_NAME: record.WOO_NAME,
+        WOO_NAME_COLOR: record.WOO_NAME_COLOR,
         PLAN_CNT: Number(record.PLAN_CNT),
-        ACT_CNT: Number(record.ACT_CNT)
+        ACT_CNT: Number(record.ACT_CNT),
+        LEFT_CNT: Number(record.LEFT_CNT)
     }));
 }
 // 3.5. 운동 기록 조회 - 오늘의 운동 운동 스탬프 조회 (최근 7일간의 운동 기록 여부 조회, 오늘의 운동에서 사용) - 날짜 범위 대신 최근 7일간의 기록 여부만 조회하여 간단한 결과 반환 (예: 날짜별로 'G' 또는 'B' 상태 반환)
