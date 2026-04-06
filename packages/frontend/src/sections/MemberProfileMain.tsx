@@ -17,7 +17,7 @@ const MemberProfileMain = () => {
           </div>
           <div className="flex items-center gap-1 text-orange-500 bg-orange-50 px-2 py-1 rounded-full">
             <Flame size={14} />
-{/*             <span className="text-xs font-bold">{member?.MEM_STREAK}일 연속</span> */}
+            <span className="text-xs font-bold">{member?.MEM_STREAK}일 연속</span>
           </div>
         </div>
 
@@ -68,7 +68,7 @@ const MemberProfileMain = () => {
         {/* 하단 액션 버튼 */}
         <div className="mt-4 flex justify-end pt-4 border-t border-gray-50">
           <button
-            onClick={() => alert('회원 정보 수정 페이지로 이동')}
+            onClick={() => window.location.href = '/member/pwcheck'} 
             className="px-5 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-all active:scale-95 shadow-sm"
           >
             내 정보 수정

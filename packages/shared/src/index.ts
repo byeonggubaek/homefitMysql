@@ -70,12 +70,23 @@ export interface Membership {
   MES_FEE: number;
   MES_BENEFITS: Benefit[];
 }
+
+export interface MemberPlan {
+  MEP_ID: number;           
+  MEM_ID: number;           
+  WOO_ID: number;           
+  MEP_DATE: string;         
+  MEP_TARGET_REPS: number;  
+  MEP_UNIT: string;         
+  MEP_ACHIEVED: 'Y' | 'N';  
+  MEP_DT: string;          
+}
+
 /*=======================================================================================================
   홈 트레이닝 관련
 =======================================================================================================*/
 export interface WorkoutRecord {
   WOR_ID: number;
-  WOR_ID_VIEW: string;
   WOR_DT: Date;
   WOO_ID: number;
   WOO_NAME: string;
@@ -100,6 +111,10 @@ export interface WorkoutDetail {
   WOD_GUIDE: string;
   WOD_TARGET_REPS: number;
   WOD_TARGET_SETS: number;
+  WOD_POINT: number;    // 획득 포인트
+  WOD_ACCURACY: number; // 운동 정확도 (%)
+  WOD_TIME: number;     // 운동 시간 (분)s
+  WOO_TYPE: string;
 }
 export interface CurWorkoutRecord 
 {
@@ -131,13 +146,6 @@ export interface Goods
   GOD_PRICE   : number;   // int
   GOD_DCRATE  : number;   // int
   GOD_IMG     : string | null;  // varchar(256), nullable
-}
-export interface PlannedWorkoutRecord {
-    WO_DT: string;      // 계획/운동 날짜 (YYYY-MM-DD)
-    WOO_ID: number;     // 운동 내부 ID
-    WOO_NAME: string;   // 운동 이름
-    PLAN_CNT: number;   // 목표 수치 합계
-    ACT_CNT: number;    // 실제 수행 수치 합계
 }
 /*=======================================================================================================
   등록 관련
@@ -177,32 +185,13 @@ export interface T_WORKOUT_DETAIL {
     WOD_ACCURACY: number;     // 운동 정확도
     WOD_TIME: number;         // 운동시간(분)
 }
-export interface PointHistory {
-  wo_dt: Date | string; // MySQL DATE 타입은 환경에 따라 문자열로 올 수도 있어 유연하게 지정
-  img: string;
-  accuracy: number;
-  point: number;
-  title: string;
-  type: 'earned' | 'used'; // 타입을 명확히 제한하면 개발 시 자동완성 도움을 받기 좋습니다.
-}
-export  interface Achievement {
-    id: string;
-    title: string;
-    icon: string;
-    description: string;
-    progress: number;
-    progressPercentage: number;
-    status: 'completed' | 'inProgress' | 'locked';
-    completedDate: string | null;
-    points: number;
-  }
 /*=======================================================================================================
   메뉴 관련
 =======================================================================================================*/
+
 export interface ChartData {
-  VSQL: string | null;
-  DATA: any;
-  COLUMNS: any;
+  COLUMNS: Record<string, any>;
+  DATA: Record<string, any>;
 }
 /*=======================================================================================================
   우편번호 
