@@ -3,7 +3,7 @@ import { TrendingUp, BarChart3, Trophy, Flame, Timer, Dumbbell, Ticket, Gift, Cl
 import { Card } from "../components/ui/card";
 import { Progress } from "../components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { format, addDays, startOfMonth, endOfMonth } from 'date-fns';
+import { format, endOfMonth } from 'date-fns';
 import type { PointHistory } from "shared";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/hooks/UserContext";
@@ -112,15 +112,15 @@ export default function RewardPointMain() {
     const usedData = historyData.filter(item => item.type === "used");
 
     return (
-        <div className="flex w-full gap-5 h-[calc(100vh-230px)] min-h-[500px] overflow-hidden bg-transparent font-sans">
+        <div className="flex w-full gap-5 h-[calc(100vh-230px)] min-h-125 overflow-hidden bg-transparent font-sans">
             {/* 왼쪽 사이드바 */}
-            <div className="w-[30%] min-w-[260px] max-w-[340px] flex flex-col h-full shrink-0 overflow-hidden pb-4">
+            <div className="w-[30%] min-w-65 max-w-85 flex flex-col h-full shrink-0 overflow-hidden pb-4">
                 
                 {/* 1. 유저 프로필 카드 */}
                 <Card className="bg-white p-4 rounded-[22px] shadow-sm shrink-0 border border-gray-100">
                     <div className="flex justify-between items-center mb-0.5">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">내 프로필</span>
-                        <span className="text-[9px] font-bold text-black bg-gray-50 px-2 py-0.5 rounded-full border border-blue-100/50">
+                        <span className="font-bold uppercase tracking-widest">내 프로필</span>
+                        <span className="font-bold text-black bg-gray-50 px-2 py-0.5 rounded-full border border-blue-100/50">
                             {currentLevel.name} Lv.{currentLevel.level}
                         </span>
                     </div>
@@ -131,25 +131,22 @@ export default function RewardPointMain() {
                             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                         </div>
                         <div className="text-center">
-                            <p className="text-gray-400 text-[9px] font-bold">현재 보유 포인트</p>
+                            <p className="font-bold">현재 보유 포인트</p>
                             <div className="flex items-baseline justify-center gap-0.5">
-                                <h2 className="text-3xl font-black text-gray-900 tracking-tighter">
+                                <h2 className="text-3xl font-black tracking-tighter">
                                     <CountUp end={displayPoints} />
                                 </h2>
-                                <span className="text-gray-400 font-bold text-[13px]">P</span>
+                                <span className="text-gray-400 font-bold ">P</span>
                             </div>
                         </div>
                     </div>
 
                     {/* 레벨 진행 바 */}
                     {nextLevel && (
-                        <div className=" bg-gray-50/50 p-2 rounded-xl border border-gray-100">
-                            <div className="flex justify-between items-center ">
-                                <span className="text-[9px] font-bold text-gray-500 leading-none">레벨업까지</span>
-                                <span className="text-[9px] font-black text-black leading-none">{Math.round(levelProgress)}%</span>
-                            </div>
-                            <Progress value={levelProgress} className="h-1 bg-white" />
-                            <p className="text-[8px] text-gray-400 text-right font-medium ">
+                        <div className="flex flex-col gap-2  bg-gray-50/50 p-2 rounded-xl border border-gray-100">
+                            <div className=" font-boldleading-none">레벨업까지</div>
+                            <Progress value={levelProgress}  />
+                            <p className="text-right">
                                 {nextLevel.minPoints - displayPoints}P 남음
                             </p>
                         </div>
@@ -157,16 +154,16 @@ export default function RewardPointMain() {
 
                     {/* 업적 현황 섹션 */}
                     <div className="px-1.5  flex justify-between items-end">
-                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">전체 업적 달성</span>
+                        <span className="font-bold uppercase tracking-tight">전체 업적 달성</span>
                         <div className="flex items-baseline gap-0.5">
-                            <span className="text-[14px] font-black text-black leading-none">{completedCount}</span>
-                            <span className="text-[10px] font-bold text-gray-300">/ {totalCount}</span>
+                            <span className="font-black leading-none">{completedCount}</span>
+                            <span className=" font-bold">/ {totalCount}</span>
                         </div>
                     </div>
 
                     <button
                         onClick={() => navigate("/reward/achievement")}
-                        className="w-full bg-black hover:bg-gray-800 text-white font-bold py-2 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 text-[11px] shadow-sm"
+                        className="w-full bg-black hover:bg-gray-800 text-white font-bold py-2 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm"
                     >
                         <Trophy className="w-3 h-3 text-amber-400" /> <span>내 업적 확인하기</span>
                     </button>
@@ -178,16 +175,16 @@ export default function RewardPointMain() {
                         <div className="p-1 bg-orange-50 rounded-lg">
                             <BarChart3 className="w-3 h-3 text-orange-500" />
                         </div>
-                        <h3 className="text-[11px] font-black text-gray-800">이달의 목표</h3>
+                        <h3 className="font-black">이달의 목표</h3>
                     </div>
                     <div className="space-y-2">
                         <div className="flex justify-between items-end">
-                            <span className="text-[9px] text-gray-400 font-bold">{monthlyGoal.toLocaleString()}P 목표</span>
-                            <span className="text-[16px] font-black text-gray-900 leading-none">{Math.round(monthlyProgressPercentage)}%</span>
+                            <span className=" font-bold">{monthlyGoal.toLocaleString()}P 목표</span>
+                            <span className="font-black leading-none">{Math.round(monthlyProgressPercentage)}%</span>
                         </div>
                         <Progress value={monthlyProgressPercentage} className="h-2 bg-gray-50" />
                         <div className="p-2 bg-blue-50/50 rounded-xl border border-blue-50 text-center">
-                            <p className="text-[10px] text-black font-bold leading-tight">
+                            <p className=" text-black font-bold leading-tight">
                                 {displayPoints >= monthlyGoal ? "🎉 목표 달성 완료!" : `보상 획득까지 ${monthlyGoal - displayPoints}P 남음`}
                             </p>
                         </div>
@@ -198,10 +195,10 @@ export default function RewardPointMain() {
             {/* 오른쪽 탭 리스트 영역 */}
             <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden">
                 <Tabs defaultValue="all" className="w-full flex flex-col h-full min-h-0">
-                    <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm mb-3 shrink-0 rounded-[16px] p-1.5 border-0">
-                        <TabsTrigger value="all" className="rounded-xl font-bold text-[13px] py-1.5">전체</TabsTrigger>
-                        <TabsTrigger value="earned" className="rounded-xl font-bold text-[13px] py-1.5">적립 내역</TabsTrigger>
-                        <TabsTrigger value="used" className="rounded-xl font-bold text-[13px] py-1.5">사용 내역</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm mb-3 shrink-0 rounded-3xl p-1.5 border-0">
+                        <TabsTrigger value="all" className="rounded-xl font-bold  py-1.5">전체</TabsTrigger>
+                        <TabsTrigger value="earned" className="rounded-xl font-bold  py-1.5">적립 내역</TabsTrigger>
+                        <TabsTrigger value="used" className="rounded-xl font-bold  py-1.5">사용 내역</TabsTrigger>
                     </TabsList>
 
                     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-transparent">
@@ -222,6 +219,7 @@ export default function RewardPointMain() {
 }
 
 const renderHistoryList = (data: PointHistory[], showGuide: boolean = true) => {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
     return (
         <div className="flex flex-col h-full min-h-0 w-full">
             <div className="flex-1 overflow-y-auto scrollbar-hide pb-2 px-1 pt-1">
@@ -229,27 +227,27 @@ const renderHistoryList = (data: PointHistory[], showGuide: boolean = true) => {
                 {data.length > 0 ? (
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 content-start">
                         {data.map((item, idx) => (
-                            <Card key={idx} className="bg-white border border-gray-100 rounded-[14px] p-3 flex flex-col hover:shadow-sm transition-all shadow-sm">
+                            <Card key={idx} className={`${format(new Date(item.wo_dt), 'yyyy-MM-dd') === todayStr ? "bg-secondary border-blue-100" : "bg-white border border-gray-100"} rounded-[14px] p-3 flex flex-col hover:shadow-sm transition-all shadow-sm`}>
                                 <div className="flex items-center justify-between mb-1.5">
                                     <div className="flex items-center gap-2.5">
                                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${item.type === 'earned' ? 'bg-amber-50' : 'bg-gray-50'}`}>
                                             {getHistoryIcon(item.img)}
                                         </div>
                                         <div className="flex flex-col text-left">
-                                            <h4 className="font-bold text-[13px] text-gray-900 mb-0 leading-none">{item.title}</h4>
-                                            <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium mt-1">
+                                            <h4 className="font-bold  text-gray-900 mb-0 leading-none">{item.title}</h4>
+                                            <div className="flex items-center gap-1  text-primary text-sm mt-1">
                                                 <Clock className="size-3" /> <span>{format(new Date(item.wo_dt), 'yyyy-MM-dd')}</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="flex flex-col items-end text-right gap-1">
-                                        <p className={`font-black text-[14px] leading-none ${item.type === 'earned' ? 'text-black' : 'text-black'}`}>
+                                        <p className={`font-black leading-none ${item.type === 'earned' ? 'text-black' : 'text-black'}`}>
                                             {item.type === 'earned' ? `+${Number(item.point).toLocaleString()}` : `${Number(item.point).toLocaleString()}`}P
                                         </p>
                                         {item.accuracy > 0 && (
-                                            <div className="flex items-center bg-gray-50 px-1.5 py-0.5 rounded mt-1">
-                                                <span className="text-[9px] font-bold text-gray-500 leading-none">정확도 {item.accuracy}%</span>
+                                            <div className="flex items-center px-1.5 py-0.5 rounded mt-1 text-sm">
+                                                <span className=" font-bold text-primary leading-none">정확도 {item.accuracy}%</span>
                                             </div>
                                         )}
                                     </div>
@@ -258,9 +256,9 @@ const renderHistoryList = (data: PointHistory[], showGuide: boolean = true) => {
                         ))}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 min-h-[150px]">
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 min-h-37.5">
                         <HistoryIcon className="w-8 h-8 mb-2 opacity-20" />
-                        <p className="text-[12px] font-medium">내역이 없습니다.</p>
+                        <p className="font-medium">내역이 없습니다.</p>
                     </div>
                 )}
             </div>
@@ -269,17 +267,17 @@ const renderHistoryList = (data: PointHistory[], showGuide: boolean = true) => {
                 <Card className="shrink-0 mt-2 mx-1 p-2.5 border border-gray-100 bg-gray-50/50 rounded-[14px] shadow-sm">
                     <div className="flex items-center gap-1.5 mb-1.5 text-gray-900 font-black px-1">
                         <Trophy className="w-4 h-4 text-amber-500" />
-                        <h3 className="text-[11px] uppercase tracking-[0.1em]">포인트 획득 방법</h3>
+                        <h3 className="uppercase tracking-widest">포인트 획득 방법</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                         {pointEarningMethods.map((method) => (
                             <div key={method.id} className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-white border border-gray-100 shadow-sm">
-                                <div className="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center shrink-0 font-black text-blue-600 text-[10px]">
+                                <div className="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center shrink-0 font-black text-blue-600 ">
                                     {method.id}
                                 </div>
                                 <div className="flex flex-col justify-center">
-                                    <h4 className="text-[10.5px] font-bold text-gray-900 leading-none mb-0.5">{method.title}</h4>
-                                    <p className="text-[8.5px] text-gray-500 leading-tight">{method.description}</p>
+                                    <h4 className=" font-bold text-gray-900 leading-none mb-0.5">{method.title}</h4>
+                                    <p className=" text-gray-500 leading-tight text-sm">{method.description}</p>
                                 </div>
                             </div>
                         ))}

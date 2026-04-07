@@ -11,10 +11,10 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { Play } from "lucide-react"
 import { useEffect, useState } from "react"
-import type { WorkoutDetail } from "shared"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useUser } from "@/hooks/UserContext"
 import { useNavigate } from "react-router-dom"
+import type { WorkoutDetail } from "shared"
 import WdogWorkout from "@/components/WdogWorkout"
 
 const WorkoutDashboardAct = () => {
@@ -25,6 +25,7 @@ const WorkoutDashboardAct = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [intensity, setIntensity] = useState<"low" | "medium" | "high" | undefined>("medium");   
   const [wor_id, setWorId] = useState(0); // 예시 운동 기록 ID
+  const [wor_id_view, setWorIdView] = useState(""); // 예시 운동 기록 ID
   useEffect(() => {
     // 운동정보 조회 
     fetch(`http://localhost:3001/api/workout/getWorkoutDetails?mem_id=${member?.MEM_ID?? ''}&wor_id=${wor_id}`)
@@ -32,7 +33,7 @@ const WorkoutDashboardAct = () => {
       .then(data => {
         setWorkouts(data.data); 
         setWorId(data.wor_id); // 첫 번째 운동 기록 ID 저장 (예시)
-        console.log("운동 상세 정보:", data.data); // 💡 운동 상세 정보 로그
+        setWorIdView(data.wor_id_view); // 첫 번째 운동 기록 ID 뷰 저장 (예시)
     });    
   }, [member?.MEM_ID]);   
   const handleAIRecommend = async () => {
@@ -73,13 +74,12 @@ const WorkoutDashboardAct = () => {
     }
   };
   const handleWorkoutStart = () => {
-    // navigation to workout session page or start workout logic
-    navigate('/workout/start/' + wor_id); // 예시: 운동 시작 페이지로 이동
+    navigate('/workout/start/' + wor_id + '/' + wor_id_view); // 예시: 운동 시작 페이지로 이동
   }
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-3xl">운동 시작하기 #{wor_id}</CardTitle>
+        <CardTitle className="text-3xl">운동 시작하기 : {wor_id_view}</CardTitle>
         <CardDescription className="text-sm text-primary">
           AI가 실시간으로 자세를 분석하고 피드백을 제공합니다
         </CardDescription>

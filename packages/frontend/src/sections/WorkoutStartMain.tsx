@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import Webcam from 'react-webcam';
 import {
   PoseLandmarker,
@@ -18,8 +18,10 @@ import {
 } from "@/components/ui/card"
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/UserContext';
+import { set } from 'date-fns';
 
-const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
+const WorkoutStartMain = () => {
+  const { wor_id, wor_id_view } = useParams<{ wor_id: string, wor_id_view: string }>();
   const navigate = useNavigate();
   const { member } = useUser();
   const webcamRef = useRef<Webcam>(null);
@@ -35,14 +37,14 @@ const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
 
   // 화면 표시용 상태 관리 (State)
   const [isDetecting, setIsDetecting] = useState(false);
+  const [viewExercise, setViewExercise] = useState(""); // DB 저장용 카운트
+  const [viewProbability, setViewProbability] = useState(0); // DB 저장용 카운트
   const [currentExercise, setCurrentExercise] = useState<string>("대기 중...");
   const [probability, setProbability] = useState<number>(0);
   const [count, setCount] = useState(0);
   const [plankTime, setPlankTime] = useState(0);
   const [status, setStatus] = useState<'up' | 'down'>('up'); // 화면 UI용
   const [isPlankActive, setIsPlankActive] = useState(false);
-  // 🌟 [추가할 코드] 바로 여기에 이 한 줄을 넣어주세요!
-  const [realWorId, setRealWorId] = useState<string | null>(wor_id);
   const [isFinished, setIsFinished] = useState(false); // 🌟 운동 완료 여부
   const [earnedPoint, setEarnedPoint] = useState(0);   // 🌟 방금 획득한 포인트
   // const [accList, setAccList] = useState<number[]>([]);
@@ -160,7 +162,12 @@ const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
     } else if (angle > upLimit && statusRef.current === 'down') {
       statusRef.current = 'up';
       setStatus('up');
-      setCount(prev => prev + 1); // 🔥 여기서 카운트 증가!
+      if(probability > 50){
+        setCount(prev => prev + 1); // 🔥 여기서 카운트 증가!
+        setViewExercise(currentExercise.toUpperCase()); // DB 저장용 카운트 업데이트
+        setViewProbability(probability); // DB 저장용 카운트 업데이트
+        console.log(`카운트 증가! 현재 카운트: ${count + 1}, 운동: ${currentExercise}, 정확도: ${probability}%`);
+      }
     }
   };
 
@@ -178,6 +185,8 @@ const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
   const startDetection = () => {
     setIsDetecting(true);
     setCount(0);
+    setViewExercise("");
+    setViewProbability(0);
     setPlankTime(0);
     statusRef.current = 'up'; // 주머니 초기화
     setStatus('up');
@@ -228,10 +237,6 @@ const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
       .then(res => res.json())
       .then(data => {
         setWorkout(data.data);
-        // 🌟 [추가할 코드] setWorkout 바로 밑에 이 세 줄을 넣어주세요!
-        if (data.wor_id) {
-          setRealWorId(data.wor_id.toString());
-        }
       });
   }, [wor_id, member?.MEM_ID]);
 
@@ -250,7 +255,7 @@ const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
     // 💡 2. payload에 woo_id 추가해서 포장!
     const payload = {
       mem_id: member?.MEM_ID,
-      wor_id: realWorId,
+      wor_id: wor_id,
       woo_id: targetWooId, // 🔥 추가된 핵심 데이터! (몇 번 운동인지)
       count: count,
       duration: plankTime,
@@ -276,7 +281,6 @@ const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
       console.error("저장 중 에러 발생:", error);
     }
   };
-
   return (
     <div className="w-full flex items-start gap-6 bg-slate-50">
       <div className="w-1/2 max-w-2xl">
@@ -285,12 +289,7 @@ const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
             <div className="flex justify-between items-end">
               <div>
                 <CardTitle className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                  {isDetecting ? (
-                    <>
-                      {currentExercise.toUpperCase()}
-                      {probability > 0 && <span className="text-sm text-blue-500 bg-blue-50 px-2 py-1 rounded-full">{probability}%</span>}
-                    </>
-                  ) : `운동 시작 #${wor_id ?? ''}`}
+                  운동 시작 : {wor_id_view ?? ''}
                 </CardTitle>
                 <CardDescription className="text-sm">실시간 AI 자세 분석 중</CardDescription>
               </div>
@@ -306,6 +305,14 @@ const WorkoutStartMain: React.FC<{ wor_id: string | null }> = ({ wor_id }) => {
               </div>
             </div>
             <div className="flex gap-2 w-full justify-end mt-4">
+              <div className="w-full text-left">
+                {isDetecting ? (
+                  <>
+                    {currentExercise.toUpperCase()}
+                    {probability > 0 && <span className="text-sm text-blue-500 bg-blue-50 px-2 py-1 rounded-full">{probability}%</span>}
+                  </>
+                ) : ""}
+              </div>
               <Button size="sm" className="w-20 h-8 text-xs font-bold" onClick={startDetection} disabled={isDetecting}>시작</Button>
               <Button size="sm" variant="destructive" className="w-20 h-8 text-xs font-bold" onClick={stopDetection} disabled={!isDetecting}>중지</Button>
               <Button size="sm" className="w-28 h-8 text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-md" onClick={saveWorkout}

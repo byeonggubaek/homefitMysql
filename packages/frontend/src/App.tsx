@@ -14,11 +14,14 @@ import WorkoutDashboard from "./pages/WorkoutDashboard.tsx";
 import SystemSelect from "./pages/SystemSelect.tsx";
 import SystemInsert from "./pages/SystemInsert.tsx";
 import SystemUpdate from "./pages/SystemUpdate.tsx";
-import RewardRankingMain from "./sections/RewardRankingMain.tsx";
 import RewardMall from "./pages/RewardMall.tsx";
 import MemberSignup from "./pages/MemberSignup.tsx";
 import SystemGraph from "./pages/SystemGraph.tsx";
 import RewardAchievement from "./pages/RewardAchievement.tsx";
+import MemberProfileEdit from "./sections/MemberProfileEdit.tsx";
+import MemberProfilePwCheck from "./sections/MemberProfilePwCheck.tsx";
+import MemberWorkReport from "./pages/MemberWorkReport.tsx";
+import RewardRanking from "./pages/RewardRanking.tsx";
 
 function App() {
   return (
@@ -29,7 +32,7 @@ function App() {
         
         {/* Workout */}
         <Route path="workout/dashboard" element={<WorkoutDashboard />} />
-        <Route path="workout/start/:wor_id" element={<WorkoutStart />} />
+        <Route path="workout/start/:wor_id/:wor_id_view" element={<WorkoutStart />} />
         
         {/* History */}
         <Route path="history/state" element={<HistoryState />} />
@@ -38,7 +41,7 @@ function App() {
         {/* Reward */}
         <Route path="reward/exchange" element={<RewardExchange />} />
         <Route path="reward/point" element={<RewardPoint />} />
-        <Route path="reward/ranking" element={<RewardRankingMain />} />
+        <Route path="reward/ranking" element={<RewardRanking />} />
         <Route path="reward/mall" element={<RewardMall />} />
         <Route path="reward/achievement" element={<RewardAchievement />} />
         
@@ -48,7 +51,10 @@ function App() {
         <Route path="member/plan" element={<MemberPlan />} />
         <Route path="member/login" element={<MemberLogin />} />
         <Route path="member/logout" element={<MemberLogout />} />
-        
+        <Route path="member/workreport" element={<MemberWorkReport />} />
+        <Route path="member/pwcheck" element={<MemberProfilePwCheck />} />
+        <Route path="member/edit" element={<MemberProfileEdit />} />
+
         {/* System */}
         <Route path="system/select" element={<SystemSelect />} />
         <Route path="system/insert" element={<SystemInsert />} />

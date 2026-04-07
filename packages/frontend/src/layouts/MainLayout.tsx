@@ -7,18 +7,22 @@ import WdogNavi from '@/components/WdogNavi'
 import WdogAutoInput from '@/components/WdogAutoInput'
 import WdogAvatar from '@/components/WdogAvatar';
 import { useUser } from '@/hooks/UserContext';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 export default function MainLayout() {
   const {member} = useUser(); // 정보도 가져오기
   const isDarkMode = useDarkMode(); // 훅 호출
-  const [navItems, setNavItems] = useState<NavItem[]>([]);
-  useEffect(() => {
-    fetch('http://localhost:3001/api/getMenus?mem_id=' + (member?.MEM_ID ?? ""))  // 👈 memberId 쿼리 추가
-      .then(res => res.json())
-      .then(data => {
-        setNavItems(data.data);  // 👈 바로 사용!
-      });
-  }, [member?.MEM_ID]);  // 👈 memberId가 변경될 때마다 다시 호출
+  const { data: navItems } = useQuery({
+    queryKey: ['menus', member?.MEM_ID],
+    queryFn: () => fetch(`http://localhost:3001/api/getMenus`)
+                    .then(res => res.json())
+                    .then(data => {
+                        return data.data;
+                    }),  // 👈 바로 사용!
+    enabled: !!member?.MEM_ID,
+    placeholderData: keepPreviousData, // 👈 이전 메뉴 데이터를 그대로 보여주어 깜빡임 방지
+    staleTime: 1000 * 60 * 5, // 5분 동안은 '신선함' 유지 (불필요한 재요청 방지)
+  });
   return (
     <div className="flex flex-col w-screen min-h-screen ">  
       {/* Header */}
@@ -28,7 +32,7 @@ export default function MainLayout() {
             <img src={isDarkMode ? "/logo_dark.svg" : "/logo.svg"} alt="Logo" className="h-10 w-auto hover:cursor-pointer" />
           </Link> 
           <div className='w-4/6'>
-            <WdogNavi navItems={navItems} /> 
+            {member && navItems && <WdogNavi navItems={navItems} />}
           </div>
           {member &&
             <div className="w-1/6">

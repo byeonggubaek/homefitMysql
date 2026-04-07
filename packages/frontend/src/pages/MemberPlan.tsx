@@ -1,8 +1,6 @@
 import WdogBreadClum from "@/components/WdogBreadClum";
 import MemberPlans from "@/sections/MemberPlans";
 
-
-
 export default function MemberPlan() {
 
   return (

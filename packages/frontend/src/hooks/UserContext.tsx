@@ -2,6 +2,7 @@
 import { createContext, useContext, type ReactNode } from 'react';  
 import { useUserSession } from '@/hooks/useUserSession';
 import type { Member } from 'shared';
+import React from 'react';
 
 interface UserContextType {
   member: Member | null;
@@ -14,8 +15,13 @@ const UserContext = createContext<UserContextType | null>(null);
 export const UserProvider = ({ children }: { children: ReactNode }) => {  
   const { member, loading, refetch } = useUserSession();
   
+  const value = React.useMemo(() => ({ 
+    member, 
+    loading, 
+    refetch 
+  }), [member, loading, refetch]);
   return (
-    <UserContext.Provider value={{ member, loading, refetch }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );

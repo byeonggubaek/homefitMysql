@@ -28,7 +28,9 @@ const MemberPlansCalendar = () => {
 
   // 모달 입력 상태
   const [selectedWooId, setSelectedWooId] = useState(''); // 선택된 운동 ID
-  const [target, setTarget] = useState('');               // 목표 수치
+
+  const [targetReps, setTargetReps] = useState(''); // 목표 반복 수
+  const [targetSets, setTargetSets] = useState(''); // 목표 세트 수
 
   // =========================================================================
   // 2. 날짜 헬퍼 함수
@@ -76,6 +78,7 @@ const MemberPlansCalendar = () => {
         params: { memberId: member.MEM_ID, date: formatDate(selectedDate) }
       });
       if (res.data.success) {
+        console.log("로드된 계획들:", res.data.data);
         setPlans(res.data.data);
       }
     } catch (err) {
@@ -95,7 +98,7 @@ const MemberPlansCalendar = () => {
       alert("로그인 정보가 없습니다.");
       return;
     }
-    if (!target) {
+    if (!targetReps || !targetSets) {
       alert("목표 수치를 입력해주세요.");
       return;
     }
@@ -114,14 +117,16 @@ const MemberPlansCalendar = () => {
         MEM_ID: member.MEM_ID,
         WOO_ID: Number(selectedWooId),
         MEP_DATE: formatDate(selectedDate),
-        MEP_TARGET: Number(target),
+        MEP_TARGET_REPS: Number(targetReps),
+        MEP_TARGET_SETS: Number(targetSets),
         MEP_UNIT: selectedWorkoutObj.WOO_UNIT
       };
 
       const res = await axios.post('http://localhost:3001/api/member/insertMemberPlan', newPlan);
       if (res.data.success) {
         setIsModalOpen(false);
-        setTarget('');
+        setTargetReps('');
+        setTargetSets('');
         loadPlans();
       }
     } catch (err) {
@@ -136,7 +141,7 @@ const MemberPlansCalendar = () => {
   // 현재 선택된 운동의 단위 표시용
   const currentUnit = workoutList.find(w => w.WOO_ID === Number(selectedWooId))?.WOO_UNIT || '회';
 
-// [4] 운동 계획 삭제하기
+  // [4] 운동 계획 삭제하기
   const handleDelete = async (MEP_ID: number) => {
     // 실수로 지우는 걸 방지하기 위해 한 번 물어봅니다.
     if (!window.confirm("이 운동 계획을 삭제하시겠습니까?")) return;
@@ -144,7 +149,7 @@ const MemberPlansCalendar = () => {
     try {
       // 🚨 백엔드 index.ts 에서 설정한 경로 /api/member/deleteMemberPlan/:goalId 로 요청을 보냅니다.
       const res = await axios.delete(`http://localhost:3001/api/member/deleteMemberPlan?goalId=${MEP_ID}`);
-      
+
       if (res.data.success) {
         // ✅ 삭제 성공 시 화면을 새로고침합니다.
         loadPlans();        // 우측 리스트 새로고침
@@ -155,16 +160,16 @@ const MemberPlansCalendar = () => {
       alert("삭제 중 오류가 발생했습니다.");
     }
   };
-   const loadMonthStatus = useCallback(async () => {
+  const loadMonthStatus = useCallback(async () => {
     if (!member?.MEM_ID) return;
     try {
       // "2026-03" 형태로 잘라서 보냅니다.
-      const yearMonth = formatDate(viewDate).substring(0, 7); 
-      
+      const yearMonth = formatDate(viewDate).substring(0, 7);
+
       const res = await axios.get(`http://localhost:3001/api/member/getMonthlyMemberPlan`, {
         params: { memberId: member.MEM_ID, month: yearMonth }
       });
-      
+
       if (res.data.success) {
         setMonthStatus(res.data.data);
       }
@@ -208,58 +213,58 @@ const MemberPlansCalendar = () => {
           ))}
           {Array.from({ length: startDay }).map((_, i) => <div key={`empty-${i}`} />)}
           {Array.from({ length: lastDate }).map((_, i) => {
-  const dateNum = i + 1;
-  const cellDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), dateNum);
-  const isSelected = formatDate(selectedDate) === formatDate(cellDate);
-  const isToday = formatDate(new Date()) === formatDate(cellDate);
-  const dateStr = formatDate(cellDate); // "2026-03-30"
+            const dateNum = i + 1;
+            const cellDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), dateNum);
+            const isSelected = formatDate(selectedDate) === formatDate(cellDate);
+            const isToday = formatDate(new Date()) === formatDate(cellDate);
+            const dateStr = formatDate(cellDate); // "2026-03-30"
 
-  // 💡 DB에서 온 날짜 문자열 앞 10자리만 잘라서 정확히 비교!
-  const status = monthStatus.find(s => {
-    if (!s.MEP_DATE) return false;
-    
-    // 단순 문자열 자르기가 아니라, Date 객체로 만든 뒤 기존 formatDate 함수를 태웁니다.
-    const dbDate = formatDate(new Date(s.MEP_DATE)); 
-    return dbDate === dateStr;
-  });
+            // 💡 DB에서 온 날짜 문자열 앞 10자리만 잘라서 정확히 비교!
+            const status = monthStatus.find(s => {
+              if (!s.MEP_DATE) return false;
 
-  // 💡 DB에서 온 COUNT 값들이 문자형일 수 있으므로 Number()로 확실하게 숫자로 바꿈!
-  const total = Number(status?.TOTAL_COUNT || 0);
-  const done = Number(status?.DONE_COUNT || 0);
+              // 단순 문자열 자르기가 아니라, Date 객체로 만든 뒤 기존 formatDate 함수를 태웁니다.
+              const dbDate = formatDate(new Date(s.MEP_DATE));
+              return dbDate === dateStr;
+            });
 
-  const hasPlan = total > 0;
-  const isAllDone = hasPlan && total === done;
-  const isPending = hasPlan && total > done;
+            // 💡 DB에서 온 COUNT 값들이 문자형일 수 있으므로 Number()로 확실하게 숫자로 바꿈!
+            const total = Number(status?.TOTAL_COUNT || 0);
+            const done = Number(status?.DONE_COUNT || 0);
 
-  return (
-    <div 
-      key={dateNum} 
-      onClick={() => setSelectedDate(cellDate)}
-      className={`
+            const hasPlan = total > 0;
+            const isAllDone = hasPlan && total === done;
+            const isPending = hasPlan && total > done;
+
+            return (
+              <div
+                key={dateNum}
+                onClick={() => setSelectedDate(cellDate)}
+                className={`
         relative aspect-square flex flex-col items-center justify-center rounded-2xl text-base font-bold cursor-pointer transition-all duration-200
         ${isSelected ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' : 'hover:bg-slate-50 text-slate-700'}
         ${isToday && !isSelected ? 'text-indigo-600 border-2 border-indigo-100' : ''}
       `}
-    >
-      <span>{dateNum}</span>
+              >
+                <span>{dateNum}</span>
 
-      {/* 📍 상태 표시 동그라미 */}
-      <div className="absolute bottom-2 flex gap-1">
-        {isAllDone && (
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500" title="완료" />
-        )}
-        {isPending && (
-          <div className="w-1.5 h-1.5 rounded-full bg-red-500" title="진행중" />
-        )}
-      </div>
-    </div>
-  );
-})}
+                {/* 📍 상태 표시 동그라미 */}
+                <div className="absolute bottom-2 flex gap-1">
+                  {isAllDone && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" title="완료" />
+                  )}
+                  {isPending && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500" title="진행중" />
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* ---------------- [ 우측: 일별 계획 영역 ] ---------------- */}
-      <div className="bg-slate-50 rounded-[32px] p-8 flex flex-col h-full min-h-125">
+      <div className="bg-slate-50 rounded-[32px] p-8 flex flex-col h-full min-h-[500px]">
         <div className="mb-6">
           <p className="text-indigo-500 text-sm font-bold mb-1 tracking-tight">DAILY PLAN</p>
           <h2 className="text-2xl font-black text-slate-800">
@@ -302,7 +307,7 @@ const MemberPlansCalendar = () => {
                   <div>
                     <div className="text-base font-black text-slate-800">{plan.WOO_NAME}</div>
                     <div className="text-sm text-slate-500 font-bold mt-0.5">
-                      목표: {plan.MEP_TARGET} {plan.MEP_UNIT}
+                      목표: {plan.MEP_TARGET_SETS} 세트 {plan.MEP_TARGET_REPS} {plan.MEP_UNIT}
                     </div>
                   </div>
                 </div>
@@ -352,23 +357,56 @@ const MemberPlansCalendar = () => {
                   </select>
                 </div>
 
-                {/* 2. 목표 수치 입력 (단위 자동 연동) */}
+                    {/* 날짜 선택 */}
                 <div>
-                  <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wider">목표 수치</label>
+                  <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wider">날짜 </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={formatDate(selectedDate)}
+                      onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                    />
+                  </div>
+
+                </div>
+
+                {/* 세트 수 */}
+                <div>
+                  <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wider">세트 </label>
                   <div className="relative">
                     <input
                       type="number"
-                      value={target}
-                      min={0}
-                      onChange={(e) => setTarget(e.target.value)}
-                      placeholder="얼마나 할까요?"
+                      min="0"
+                      value={targetSets}
+                      onChange={(e) => setTargetSets(e.target.value)}
+                      placeholder="몇 세트 하실건가요?"
                       className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
                     />
-                    <span className="absolute right-10 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                    <span className="absolute right-10 top-1/2 -translate-y-1/2 text-slate-400 font-bold ">
+                      세트
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. 목표 수치 입력 (단위 자동 연동) */}
+                <div>
+                  <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wider">횟수</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      value={targetReps}
+                      onChange={(e) => setTargetReps(e.target.value)}
+                      placeholder="몇 회 하실건가요?"
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                    />
+                    <span className="absolute right-10 top-1/2 -translate-y-1/2 text-slate-400 font-bold ">
                       {currentUnit}
                     </span>
                   </div>
                 </div>
+
 
                 <button onClick={handleSave} className="w-full py-4 mt-4 bg-indigo-600 text-white rounded-2xl font-black text-base hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all">
                   저장 완료
@@ -376,10 +414,11 @@ const MemberPlansCalendar = () => {
               </div>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+        )
+        }
+      </AnimatePresence >
 
-    </div>
+    </div >
   );
 };
 

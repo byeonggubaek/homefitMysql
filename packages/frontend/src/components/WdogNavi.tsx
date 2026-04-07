@@ -9,12 +9,21 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import type { NavItem } from 'shared';
+import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface WdogNaviProps {
   navItems: NavItem[];
 }
 
 export default function WdogNavi({ navItems }: WdogNaviProps) {
+// 1. 여기서 단 한 번만 선언합니다.
+  const navigate = useNavigate();
+
+  // 2. 이동을 담당할 공통 핸들러 (선택 사항)
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };  
   return (
     <div className="flex justify-center self-start pt-6 w-full">
       <NavigationMenu>
@@ -45,7 +54,12 @@ export default function WdogNavi({ navItems }: WdogNaviProps) {
                     </NavigationMenuLink>
                   </li>
                   {nav.NAV_SUB_MENUS.map(sub => (
-                    <ListItem href={sub.NAS_HREF} key={sub.NAS_ID} title={sub.NAS_NAME}>
+                    <ListItem 
+                      key={sub.NAS_ID} 
+                      title={sub.NAS_NAME} 
+                      // 3. 부모에서 정의한 navigate 로직을 props로 전달하거나 경로만 전달합니다.
+                      onClick={() => handleNavigate(sub.NAS_HREF)}
+                    >
                       {sub.NAS_DESC}
                     </ListItem>
                   ))}
@@ -59,23 +73,35 @@ export default function WdogNavi({ navItems }: WdogNaviProps) {
   )
 }
 
-const ListItem = React.forwardRef<React.ElementRef<"a">, React.ComponentPropsWithoutRef<"a">>(
-  ({ href, title, children, ...props }, ref) => {
+const ListItem = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & { title: string }>(
+  ({ className, title, children, ...props }, ref) => {
     return (
       <li>
         <NavigationMenuLink asChild>
-          <a 
-            href={href}
-            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          <div
             ref={ref}
-            {...props}
+            role="button"
+            tabIndex={0}
+            className={cn(
+              "block cursor-pointer select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+              className
+            )}
+            {...props} // 부모로부터 받은 onClick이 여기로 주입됩니다.
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                props.onClick?.(e as any);
+              }
+            }}
           >
-            <div className="text-lg leading-none">{title}</div>
-            <p className="line-clamp-2 text-sm leading-snug text-primary">{children}</p>
-          </a>
+            <div className="text-sm font-medium leading-none">{title}</div>
+            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+              {children}
+            </p>
+          </div>
         </NavigationMenuLink>
       </li>
     )
-  },
+  }
 )
 ListItem.displayName = "ListItem"

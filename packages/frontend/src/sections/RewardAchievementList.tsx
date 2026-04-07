@@ -51,10 +51,10 @@ import type { Achievement } from "shared";
       <div className="flex flex-1 w-full gap-4 p-4 bg-gray-50/50 font-sans overflow-hidden h-full">
 
         {/* ---------------- 왼쪽 영역 (통계 카드) ---------------- */}
-        <div className="w-[30%] min-w-[320px] max-w-[400px] flex flex-col gap-4">
+        <div className="w-[30%] min-w-[320px] max-w-100 flex flex-col gap-4">
           <Card className="bg-gray-50 text-black border-0 shadow-lg relative overflow-hidden shrink-0 p-6 rounded-2xl">
             <div className="relative z-10">
-              <p className="text-black-400 text-sm mb-1">업적 달성률</p>
+              <p className="text-black-400 mb-1">업적 달성률</p>
               <div className="flex items-center gap-3 mb-6">
                 <Trophy className="w-8 h-8 text-black-400" />
                 <h2 className="font-bold text-4xl">{completedCount}/{totalCount}</h2>
@@ -63,35 +63,36 @@ import type { Achievement } from "shared";
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-gray-200/10 backdrop-blur-sm rounded-xl p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Star className="w-3 h-3 text-gray-400" />
-                    <p className="text-[10px] text-black-400">획득 포인트</p>
+                    <Star className="w-3 h-3" />
+                    <p className="text-black-400">획득 포인트</p>
                   </div>
                   <p className="font-bold text-xl">+{totalEarnedPoints}</p>
                 </div>
                 <div className="bg-gray-200/10 backdrop-blur-sm rounded-xl p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Target className="w-3 h-3 text-gray-400" />
-                    <p className="text-[10px] text-black-400">완료율</p>
+                    <Target className="w-3 h-3" />
+                    <p className="text-black-400">완료율</p>
                   </div>
                   <p className="font-bold text-xl">{completionRate}%</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between">
                   <span className="text-black-400">전체 진행도</span>
                   <span className="font-semibold">{completedCount}개 완료</span>
                 </div>
-                <Progress value={completionRate} className="h-2 bg-white/20" />
+                <Progress value={completionRate} className="h-2" />
               </div>
             </div>
           </Card>
 
           <Card className="bg-white border-0 mt-auto shrink-0 p-4 text-center shadow-sm rounded-2xl">
             <Dumbbell className="w-8 h-8 mx-auto mb-2 text-black-400" />
-            <h3 className="font-bold text-sm mb-1 text-gray-800">도전을 멈추지 마세요!</h3>
-            <p className="text-black-500 text-[11px] leading-tight">
-              꾸준한 운동 기록이 모여 당신만의 특별한 업적이 됩니다.
+            <h3 className="font-bold mb-1 text-gray-800">도전을 멈추지 마세요!</h3>
+            <p className="text-black-500 leading-tight">
+              꾸준한 운동 기록이 모여 <br />
+              당신만의 특별한 업적이 됩니다.
             </p>
           </Card>
         </div>
@@ -100,9 +101,9 @@ import type { Achievement } from "shared";
         <div className="flex-1 flex flex-col overflow-hidden">
           <Tabs defaultValue="inProgress" className="w-full flex flex-col h-full">
             <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm mb-4 shrink-0 rounded-xl p-1 border-0">
-              <TabsTrigger value="inProgress" className="rounded-lg font-bold text-xs">진행 중</TabsTrigger>
-              <TabsTrigger value="completed" className="rounded-lg font-bold text-xs">완료</TabsTrigger>
-              <TabsTrigger value="locked" className="rounded-lg font-bold text-xs">잠김</TabsTrigger>
+              <TabsTrigger value="inProgress" className="rounded-lg font-bold">진행 중</TabsTrigger>
+              <TabsTrigger value="completed" className="rounded-lg font-bold">완료</TabsTrigger>
+              <TabsTrigger value="locked" className="rounded-lg font-bold">잠김</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 flex flex-col overflow-hidden bg-transparent">
@@ -177,31 +178,31 @@ import type { Achievement } from "shared";
             {/* 텍스트 영역 */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-1">
-                <h4 className="font-bold text-[15px] text-gray-900 truncate">{achievement.title}</h4>
-                <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-[10px] shrink-0 border-0">
+                <h4 className="font-bold truncate">{achievement.title}</h4>
+                <Badge variant="secondary" className="bg-gray-100 text-gray-600 shrink-0 border-0">
                   +{achievement.points}P
                 </Badge>
               </div>
-              <p className="text-[11px] text-gray-500 line-clamp-1 mb-3">{achievement.description}</p>
+              <p className="text-sm line-clamp-1 mb-3 text-primary">{achievement.description}</p>
 
               {!isLocked && !isCompleted && (
                 <div className="space-y-1.5">
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-gray-400 font-medium">{achievement.progress}회 진행</span>
+                  <div className="flex justify-between">
+                    <span className="">{achievement.progress}회 진행</span>
                     <span className="text-black-600 font-bold">{Math.round(achievement.progressPercentage)}%</span>
                   </div>
-                  <Progress value={achievement.progressPercentage} className="h-1.5" />
+                  <Progress value={achievement.progressPercentage} />
                 </div>
               )}
 
               {isCompleted && (
-                <p className="text-[10px] text-emerald-600 font-medium italic">
+                <p className="text-emerald-600 font-medium italic">
                   {achievement.completedDate} 달성 완료
                 </p>
               )}
 
               {isLocked && (
-                <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                <p className="text-gray-400 flex items-center gap-1">
                   <Lock className="w-3 h-3" /> 도전 조건 미충족
                 </p>
               )}
