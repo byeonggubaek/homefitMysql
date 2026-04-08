@@ -20,12 +20,10 @@ import type { Achievement } from "shared";
     useEffect(() => {
       if (!member?.MEM_ID) return;      
       const mem_id = member.MEM_ID; 
-      console.log('업적 리스트 컴포넌트 마운트 - mem_id:', mem_id);
       fetch(`http://localhost:3001/api/reward/get_achievement_list?mem_id=${mem_id}`)
         .then(res => res.json())
         .then(result => {
           if (result.success) {
-            console.log('업적 리스트 응답 데이터:', result.data);
             setAchievements(result.data);
           }
           setLoading(false);

@@ -128,6 +128,7 @@ export default function HistoryStateMain() {
         if (gridWithPlanJson.success) {
           setRecordsWithPlan(gridWithPlanJson.data);
         }        
+        console.log("chartWithPlanJson:", chartWithPlanJson);
         // 계획 대비 실적 차트 데이터 및 설정 업데이트 2번 탭
         if (chartWithPlanJson.success) {
           setChartDataWithPlan(chartWithPlanJson.data);

@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/card"
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/UserContext';
-import { set } from 'date-fns';
 
 const WorkoutStartMain = () => {
   const { wor_id, wor_id_view } = useParams<{ wor_id: string, wor_id_view: string }>();
@@ -162,7 +161,7 @@ const WorkoutStartMain = () => {
     } else if (angle > upLimit && statusRef.current === 'down') {
       statusRef.current = 'up';
       setStatus('up');
-      if(probability > 50){
+      if(probability > 30){
         setCount(prev => prev + 1); // 🔥 여기서 카운트 증가!
         setViewExercise(currentExercise.toUpperCase()); // DB 저장용 카운트 업데이트
         setViewProbability(probability); // DB 저장용 카운트 업데이트

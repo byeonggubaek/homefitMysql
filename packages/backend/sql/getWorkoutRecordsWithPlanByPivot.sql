@@ -52,7 +52,7 @@ BEGIN
         '           CASE WHEN SUM(PLAN_CNT) > SUM(ACT_CNT) THEN SUM(PLAN_CNT) - SUM(ACT_CNT) END  AS PLAN_CNT, ',
         '           SUM(ACT_CNT) AS ACT_CNT ',
         '   FROM	(',        
-        '       SELECT  MEP_DATE AS WO_DT, WOO_ID, SUM(MEP_TARGET) AS PLAN_CNT, 0 AS ACT_CNT ',
+        '       SELECT  MEP_DATE AS WO_DT, WOO_ID, SUM(MEP_TARGET_REPS * MEP_TARGET_SETS) AS PLAN_CNT, 0 AS ACT_CNT ',
         '       FROM    T_MEMBER_PLAN ',
         '       WHERE   MEM_ID = ? AND MEP_DATE BETWEEN ? AND ? ',
         '       GROUP BY MEP_DATE, WOO_ID ',

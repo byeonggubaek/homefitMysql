@@ -725,7 +725,7 @@ async function _getWorkoutRecordsWithPlan(
             SELECT  A.MEP_DATE,
                     B.WOO_ID, 
                     B.WOO_NAME, 
-                    SUM(A.MEP_TARGET) AS PLAN_CNT, 
+                    SUM(A.MEP_TARGET_REPS * A.MEP_TARGET_SETS) AS PLAN_CNT, 
                     0 AS ACT_CNT 
             FROM    T_MEMBER_PLAN A
             JOIN    T_WORKOUT B ON B.WOO_ID = A.WOO_ID

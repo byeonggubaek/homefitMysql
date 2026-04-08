@@ -29,8 +29,8 @@ INSERT INTO T_NAV_ITEM VALUES
 ('NAV00003', '보상', '/menu/reward.jpg','포인트, 업적, 순위를 확인하며 쇼핑몰에서 운동용품을 구입할 수 있습니다.');
 INSERT INTO T_NAV_ITEM VALUES
 ('NAV00004', '내정보', '/menu/member.jpg','개인 정보를 관리합니다.');
-INSERT INTO T_NAV_ITEM VALUES
-('NAV00005', '관리자', '/menu/system.png','사이트를 관리합니다.');
+-- INSERT INTO T_NAV_ITEM VALUES
+-- ('NAV00005', '관리자', '/menu/system.png','사이트를 관리합니다.');
 
 SELECT * FROM T_NAV_ITEM;
 --------------------------------------------------------------------------------------------------------------------------------
