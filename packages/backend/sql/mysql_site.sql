@@ -68,8 +68,8 @@ INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0001', '프로필','/menu/profile.jpg', '개인 정보를 관리합니다.', 'MemberProfile', '/member/profile/profile');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00004', 'S0002', '운동목표','/menu/plan.jpg', '운동 목표를 설정하고 관리합니다.', 'MemberPlan', '/member/plan');
--- INSERT INTO T_NAV_SUB_ITEM VALUES
--- ('NAV00004', 'S0003', '회원등록','/menu/register.png', '개인 정보를 등록합니다.', 'MemberSignup', '/member/signup');
+INSERT INTO T_NAV_SUB_ITEM VALUES
+('NAV00004', 'S0003', '운동보고서','/menu/workreport.jpg', '운동 보고서를 확인합니다.', 'MemberWorkReport', '/member/workreport');
 INSERT INTO T_NAV_SUB_ITEM VALUES
 ('NAV00005', 'S0001', '조회','/menu/select.jpg', 'Backend 조회 service를 자동생성합니다.', 'SystemSelect', '/system/select');
 INSERT INTO T_NAV_SUB_ITEM VALUES
@@ -167,6 +167,7 @@ WHERE  COL_TBL_NAME = 'WorkoutRecord';
 --------------------------------------------------------------------------------------------------------------------------------
 -- 홈트 테이블 삭제   
 --------------------------------------------------------------------------------------------------------------------------------
+DROP TABLE IF EXISTS T_AI_REPORT;
 DROP TABLE IF EXISTS T_WORKOUT_DETAIL;
 DROP TABLE IF EXISTS T_WORKOUT_RECORD;
 DROP TABLE IF EXISTS T_INVOICE;
@@ -316,7 +317,7 @@ VALUES
 INSERT INTO T_MEMBER 
 (MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MEM_STREAK, MES_ID)
 VALUES
-('moon@naver.com', '문정인', '고양이', member_hash_password('moon@naver.com', '1234'), '/member/U000002.jpg','010-5555-5555','ZZ@NAVER.COM','F', 24, 350, 0, 1, 2, 2);
+('moon@naver.com', '문정인', '고양이', member_hash_password('moon@naver.com', '1234'), '/member/U000002.jpg','010-5555-5555','ZZ@NAVER.COM','F', 24, 10000, 10000, 1, 2, 2);
 INSERT INTO T_MEMBER 
 (MEM_ID_VIEW, MEM_NAME, MEM_NICKNAME, MEM_PASSWORD, MEM_IMG, MEM_PNUMBER, MEM_EMAIL, MEM_SEX, MEM_AGE, MEM_POINT, MEM_EXP_POINT, MEM_LVL,  MEM_STREAK, MES_ID)
 VALUES
@@ -340,34 +341,35 @@ CREATE TABLE T_WORKOUT
     WOO_UNIT		VARCHAR(10)     NOT NULL COMMENT '권장 단위',
     WOO_TARGET_REPS	INT        		NOT NULL DEFAULT 0 COMMENT '권장 수 기본값',
     WOO_TARGET_SETS	INT        		NOT NULL DEFAULT 0 COMMENT '권장 세트수 기본값',    
+    WOO_TYPE 		VARCHAR(20)		NOT NULL COMMENT '',
     CONSTRAINT T_WORKOUT_PK PRIMARY KEY (WOO_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ALTER TABLE T_WORKOUT ADD INDEX T_WORKOUT_WOO_ID_VIEW_IX (WOO_ID_VIEW);
 
 INSERT INTO T_WORKOUT 
-(WOO_ID_VIEW, WOO_NAME, WOO_IMG, WOO_DESC, WOO_GUIDE, WOO_UNIT, WOO_TARGET_REPS, WOO_TARGET_SETS)
+(WOO_ID_VIEW, WOO_NAME, WOO_IMG, WOO_DESC, WOO_GUIDE, WOO_UNIT, WOO_TARGET_REPS, WOO_TARGET_SETS, WOO_TYPE)
 VALUES
 ('WOO00001', '프랭크', '/workout/plank.png',
  '코어 근육(복근, 허리, 등)을 강화하는 운동으로, 몸을 널빤지처럼 일직선으로 유지하는 동작입니다.',
- '30초 동안 자세 유지하기', '초', 30, 2);
+ '30초 동안 자세 유지하기', '초', 30, 2, '코어');
 INSERT INTO T_WORKOUT 
-(WOO_ID_VIEW, WOO_NAME, WOO_IMG, WOO_DESC, WOO_GUIDE, WOO_UNIT, WOO_TARGET_REPS, WOO_TARGET_SETS)
+(WOO_ID_VIEW, WOO_NAME, WOO_IMG, WOO_DESC, WOO_GUIDE, WOO_UNIT, WOO_TARGET_REPS, WOO_TARGET_SETS, WOO_TYPE)
 VALUES
 ('WOO00002', '스쿼트', '/workout/squat.png',
  '하체 근육(허벅지, 엉덩이)을 강화하는 운동으로, 무릎과 엉덩이를 굽히고 펴는 동작입니다.',
- '다리를 어깨 너비로 벌리고 앉았다 일어나기', '회', 20, 2);
+ '다리를 어깨 너비로 벌리고 앉았다 일어나기', '회', 20, 2, '하체');
 INSERT INTO T_WORKOUT 
-(WOO_ID_VIEW, WOO_NAME, WOO_IMG, WOO_DESC, WOO_GUIDE, WOO_UNIT, WOO_TARGET_REPS, WOO_TARGET_SETS)
+(WOO_ID_VIEW, WOO_NAME, WOO_IMG, WOO_DESC, WOO_GUIDE, WOO_UNIT, WOO_TARGET_REPS, WOO_TARGET_SETS, WOO_TYPE)
 VALUES
 ('WOO00003', '푸시업', '/workout/pushup.png',
  '상체 근육(가슴, 어깨, 삼두근)을 강화하는 운동으로, 팔을 굽히고 펴는 동작입니다.',
- '손은 어깨너비보다 약간 넓게, 손가락은 앞쪽으로 향하게 위치', '회', 15, 3);
+ '손은 어깨너비보다 약간 넓게, 손가락은 앞쪽으로 향하게 위치', '회', 15, 3, '상체');
 INSERT INTO T_WORKOUT 
-(WOO_ID_VIEW, WOO_NAME, WOO_IMG, WOO_DESC, WOO_GUIDE, WOO_UNIT, WOO_TARGET_REPS, WOO_TARGET_SETS)
+(WOO_ID_VIEW, WOO_NAME, WOO_IMG, WOO_DESC, WOO_GUIDE, WOO_UNIT, WOO_TARGET_REPS, WOO_TARGET_SETS, WOO_TYPE)
 VALUES
 ('WOO00004', '런지', '/workout/lunge.png',
  '하체 근육(허벅지, 엉덩이)을 강화하는 운동으로, 한쪽 다리를 앞으로 내딛고 무릎을 굽히는 동작입니다.',
- '좌우 각 권장 횟수만큼 반복하기', '회', 20, 2);
+ '좌우 각 권장 횟수만큼 반복하기', '회', 20, 2, '하체');
 
 SELECT * FROM T_WORKOUT;
 
@@ -379,31 +381,31 @@ CREATE TABLE T_MEMBER_PLAN (
     MEM_ID          INT NOT NULL COMMENT '회원 내부 ID',
     WOO_ID          INT NOT NULL COMMENT '운동 ID (T_WORKOUT 참조)',
     MEP_DATE        DATE NOT NULL COMMENT '계획된 날짜',
-    MEP_TARGET      INT NOT NULL DEFAULT 0 COMMENT '목표 수치',
+    MEP_TARGET_REPS INT NOT NULL DEFAULT 0 COMMENT '목표 횟수',
+    MEP_TARGET_SETS INT NOT NULL DEFAULT 0 COMMENT '목표 세트수',
     MEP_UNIT        VARCHAR(10) NOT NULL COMMENT '단위 (회, 초, 세트 등)',
     MEP_ACHIEVED    CHAR(1) DEFAULT 'N' COMMENT '달성 여부 (Y/N)',
     MEP_DT          DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
-    
     CONSTRAINT T_MEMBER_PLAN_PK PRIMARY KEY (MEP_ID),
     CONSTRAINT T_MEMBER_PLAN_MEM_FK FOREIGN KEY (MEM_ID) REFERENCES T_MEMBER(MEM_ID),
     CONSTRAINT T_MEMBER_PLAN_WOO_FK FOREIGN KEY (WOO_ID) REFERENCES T_WORKOUT(WOO_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 테스트 데이터
-INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
-VALUES (2, 1, '2026-03-31', 30, '초');
-INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
-VALUES (2, 2, '2026-04-01', 20, '회');
-INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
-VALUES (2, 3, '2026-04-02', 10, '회');
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET_REPS, MEP_TARGET_SETS, MEP_UNIT, MEP_ACHIEVED, MEP_DT)
+VALUES (2, 1, '2026-04-03', 30, 3, '초', 'C', sysdate());
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET_REPS, MEP_TARGET_SETS, MEP_UNIT, MEP_ACHIEVED, MEP_DT)
+VALUES (2, 2, '2026-04-03', 20, 2, '회', 'C', sysdate());
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET_REPS, MEP_TARGET_SETS, MEP_UNIT, MEP_ACHIEVED, MEP_DT)
+VALUES (2, 3, '2026-04-03', 10, 3, '회', 'C', sysdate());
 
-INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
-VALUES (2, 1, '2026-03-31', 30, '초');
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET_REPS, MEP_TARGET_SETS, MEP_UNIT, MEP_ACHIEVED, MEP_DT)
+VALUES (2, 1, '2026-04-05', 30, 3, '회', 'C', sysdate());
 
-INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
-VALUES (2, 1, '2026-04-01', 60, '초');
-INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
-VALUES (2, 2, '2026-04-03', 20, '회');
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET_REPS, MEP_TARGET_SETS, MEP_UNIT, MEP_ACHIEVED, MEP_DT)
+VALUES (2, 1, '2026-04-07', 60, 2, '회', 'C', sysdate());
+INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET_REPS, MEP_TARGET_SETS, MEP_UNIT, MEP_ACHIEVED, MEP_DT)
+VALUES (2, 2, '2026-04-07', 20, 3, '회', 'C', sysdate());
 
 SELECT	*
 FROM	T_MEMBER_PLAN;
@@ -426,27 +428,27 @@ ALTER TABLE T_WORKOUT_RECORD ADD INDEX T_WORKOUT_RECORD_WOR_ID_VIEW_IX (WOR_ID_V
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00001', 1, '2026-04-01', '첫번째 운동', 'C');
+('WOR00001', 1, '2026-04-03', '첫번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00002', 1, '2026-04-02', '두번째 운동', 'C');
+('WOR00002', 1, '2026-04-07', '두번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00003', 2, '2026-04-01', '첫번째 운동', 'C');
+('WOR00003', 2, '2026-04-05', '첫번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00004', 2, '2026-04-02', '두번째 운동', 'C');
+('WOR00004', 2, '2026-04-06', '두번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00005', 3, '2026-04-01', '첫번째 운동', 'C');
+('WOR00005', 3, '2026-04-03', '첫번째 운동', 'C');
 INSERT INTO T_WORKOUT_RECORD 
 (WOR_ID_VIEW, MEM_ID, WOR_DT, WOR_DESC, WOR_STATUS)
 VALUES
-('WOR00006', 4, '2026-04-02', '첫번째 운동', 'C');
+('WOR00006', 4, '2026-04-05', '첫번째 운동', 'C');
 
 SELECT * FROM T_WORKOUT_RECORD;
 --------------------------------------------------------------------------------------------------------------------------------
@@ -482,8 +484,14 @@ INSERT INTO T_WORKOUT_DETAIL VALUES
 (3, 1, '', 15, 3, 45, 0, 0, 0);
 INSERT INTO T_WORKOUT_DETAIL VALUES
 (3, 2, '', 30, 2, 60, 0, 0, 0);
+
 INSERT INTO T_WORKOUT_DETAIL VALUES
 (4, 1, '', 15, 3, 45, 450, 95, 10);
+INSERT INTO T_WORKOUT_DETAIL VALUES
+(4, 2, '', 30, 2, 60, 600, 92, 20);
+INSERT INTO T_WORKOUT_DETAIL VALUES
+(4, 3, '', 20, 3, 55, 400, 80, 30);
+
 
 INSERT INTO T_WORKOUT_DETAIL VALUES
 (5, 1, '', 30, 3, 45, 450, 95, 20);
@@ -552,8 +560,8 @@ CREATE TABLE T_MEMBER_ACHIEVEMENT (
 
 -- [시연용 데이터 삽입] 3번 유저(sung@naver.com) 기준
 INSERT INTO T_MEMBER_ACHIEVEMENT (MEM_ID, ACH_ID, PRG_VAL, PRG_PCT, CMP_YN, CMP_DT) VALUES
-(2, 1, 1, 100, 'Y', '2026-03-15 10:00:00'), -- 완료
-(2, 3, 1, 100, 'Y', '2026-04-01 14:00:00'), -- 완료
+(2, 1, 1, 100, 'Y', '2026-04-05 10:00:00'), -- 완료
+(2, 3, 1, 100, 'Y', '2026-04-07 14:00:00'), -- 완료
 (2, 2, 3, 60, 'N', NULL),                -- 진행 중
 (2, 4, 2, 28, 'N', NULL);                -- 진행 중
 
@@ -613,15 +621,15 @@ ALTER TABLE T_INVOICE ADD INDEX T_INVOICE_INV_ID_VIEW_IX (INV_ID_VIEW);
 INSERT INTO T_INVOICE 
 (INV_ID_VIEW, INV_DT, MEM_ID, INV_TOT_AMT, INV_USED_POINT)
 VALUES
-('INV00001', '2026-03-20', 1,12000,1000);
+('INV00001', '2026-04-05', 1,12000,1000);
 INSERT INTO T_INVOICE 
 (INV_ID_VIEW, INV_DT, MEM_ID, INV_TOT_AMT, INV_USED_POINT)
 VALUES
-('INV00002', '2026-03-19', 1,14000,0);
+('INV00002', '2026-04-06', 1,14000,0);
 INSERT INTO T_INVOICE 
 (INV_ID_VIEW, INV_DT, MEM_ID, INV_TOT_AMT, INV_USED_POINT)
 VALUES
-('INV00003', '2026-03-20', 2,13000,1000);
+('INV00003', '2026-04-07', 2,13000,1000);
 
 SELECT  *
 FROM    T_INVOICE;
@@ -696,5 +704,25 @@ VALUES
 
 SELECT  *
 FROM    T_GOODS;
+
+-------------------------------------------------------------------------------------------------------------------------------
+-- AI REPORT (수정 및 통합)
+--------------------------------------------------------------------------------------------------------------------------------
+CREATE TABLE T_AI_REPORT (
+  AIR_ID int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  WOR_ID int NOT NULL,
+  AI_SUMMARY text DEFAULT NULL,
+  AI_RECOMMENDATIONS json DEFAULT NULL,
+  AI_NEXT_INTENSITY VARCHAR(50) DEFAULT NULL,
+  AI_RANK_PERCENT int DEFAULT NULL,
+  REG_DT datetime DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT T_AI_REPORT_WOR_ID_FK FOREIGN KEY (WOR_ID) REFERENCES T_WORKOUT_RECORD (WOR_ID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO T_AI_REPORT (WOR_ID, AI_SUMMARY, AI_RECOMMENDATIONS, AI_NEXT_INTENSITY, AI_RANK_PERCENT)
+VALUES (1, '전반적으로 안정적인 자세를 유지하셨습니다. 특히 프랭크에서 보여준 코어 통제력이 훌륭합니다. 다만 하체 운동의 비중을 높이면 더 균형 잡힌 신체를 만들 수 있습니다.', '["스쿼트 시 호흡을 들이마시며 내려가고 내뱉으며 올라오세요.", "운동 후 5분간 정적 스트레칭으로 근육을 이완시키세요."]', '보통', 12);
+
+SELECT  *
+FROM    T_AI_REPORT;
 
 COMMIT;

@@ -1,5 +1,5 @@
 import mysql, { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import { NavItem, NavSubItem, ColDesc, WorkoutRecord, Member, WorkoutDetail, MemberExists, Workout, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods, ChartData, PointHistory, WorkoutRecordWithPlan } from 'shared';
+import { NavItem, NavSubItem, ColDesc, WorkoutRecord, Member, WorkoutDetail, MemberExists, Workout, Membership, Benefit, T_WORKOUT_RECORD, T_MEMBER, T_WORKOUT_DETAIL, RankingItem, CurWorkoutRecord, Goods, ChartData, PointHistory, WorkoutRecordWithPlan, MemberPlan, T_AI_REPORT } from 'shared';
 import dotenv from 'dotenv';
 import Logger from './logger.js'
 
@@ -205,29 +205,17 @@ export const getSubMenus = async (P_NAV_ID: string = ''): Promise<NavSubItem[]> 
     NAS_DESC: record.NAS_DESC || ''
   }));
 }
-async function _getMenus(mem_id: string): Promise<any[]> {
-  if(!mem_id){
-    return select(`
-      SELECT  NAV_ID, 
-              NAV_NAME, 
-              NAV_IMG, 
-              NAV_DESC 
-      FROM    T_NAV_ITEM
-      WHERE   NAV_ID = 'NAV09999'      
-      `);
-  }
-  else{
-    return select(`
-      SELECT  NAV_ID, 
-              NAV_NAME, 
-              NAV_IMG, 
-              NAV_DESC 
-      FROM    T_NAV_ITEM
-      `);
-  }
+async function _getMenus(): Promise<any[]> {
+  return select(`
+    SELECT  NAV_ID, 
+            NAV_NAME, 
+            NAV_IMG, 
+            NAV_DESC 
+    FROM    T_NAV_ITEM
+    `);
 }
-export const getMenus = async (mem_id: string): Promise<NavItem[]> => {
-  const records = await _getMenus(mem_id);
+export const getMenus = async (): Promise<NavItem[]> => {
+  const records = await _getMenus();
   // 1단계: NavItem[]로 변환 (map 사용!)
   let menus: NavItem[] = records.map((record: any) => ({
     NAV_ID: record.NAV_ID,
@@ -539,6 +527,37 @@ export const getRanking = async (from_dt: string = '', to_dt: string = ''): Prom
     WORKOUT_TIME: sub.WORKOUT_TIME
   }));
 }
+async function _getAiReportByWorId(wor_id: number | string): Promise<any[]> {
+  return select(`
+SELECT  * 
+FROM    T_AI_REPORT 
+WHERE   WOR_ID = ?
+`, [wor_id]);
+}
+export const getAiReportByWorId = async (wor_id: number | string) => {
+  const results = await _getAiReportByWorId(wor_id);
+  return results.length > 0 ? results[0] : null;
+};
+export const updateMemberInfo = async (memId: number, nickname: string, pnumber: string): Promise<boolean> => {
+  return await withTransaction(async (conn) => {
+    const [result] = await execute(conn,
+      `
+      UPDATE T_MEMBER 
+      SET MEM_NICKNAME = ?, 
+          MEM_PNUMBER = ? 
+      WHERE MEM_ID = ?
+      `,
+      [nickname, pnumber, memId]
+    );
+
+
+    return result.affectedRows > 0;
+  });
+};
+export const checkPwMatch = async (memIdView: string, password: string): Promise<boolean> => {
+  const records = await _checkMember(memIdView, password);
+  return records && records.length > 0;
+};
 // =================================================================================================================
 // 3. 운동
 // =================================================================================================================
@@ -553,7 +572,8 @@ SELECT  WOO_ID,
         WOO_GUIDE,
         WOO_UNIT,
         WOO_TARGET_REPS,
-        WOO_TARGET_SETS
+        WOO_TARGET_SETS, 
+        WOO_TYPE
 FROM T_WORKOUT
 `, []);
 }
@@ -566,7 +586,8 @@ export const getWorkouts = async (): Promise<Workout[]> => {
     WOO_IMG : record.WOO_IMG,
     WOO_UNIT : record.WOO_UNIT,
     WOO_TARGET_REPS : record.WOO_TARGET_REPS,
-    WOO_TARGET_SETS : record.WOO_TARGET_SETS
+    WOO_TARGET_SETS : record.WOO_TARGET_SETS,
+    WOO_TYPE : record.WOO_TYPE
   }));
 }
 // 3.2. 운동 상세 정보 조회 - 오늘의운동에서 사용. 
@@ -574,11 +595,16 @@ async function _getWorkoutDetails(P_WOR_ID: number): Promise<any[]> {
   return select(`
     SELECT  B.WOO_ID, 
             B.WOO_NAME, 
+            B.WOO_TYPE,
             B.WOO_IMG, 
             B.WOO_UNIT,
             COALESCE(NULLIF(A.WOD_GUIDE, ''), B.WOO_GUIDE) AS WOD_GUIDE,
             A.WOD_TARGET_REPS,
-            A.WOD_TARGET_SETS
+            A.WOD_TARGET_SETS,
+            A.WOD_ACCURACY, -- 💡 매핑을 위해 필요
+            A.WOD_COUNT,    -- 💡 매핑을 위해 필요
+            A.WOD_POINT,    -- 💡 매핑을 위해 필요
+            A.WOD_TIME      -- 💡 매핑을 위해 필요
     FROM    T_WORKOUT_DETAIL A
     JOIN    T_WORKOUT B ON B.WOO_ID = A.WOO_ID
     WHERE   A.WOR_ID = ?
@@ -587,13 +613,18 @@ async function _getWorkoutDetails(P_WOR_ID: number): Promise<any[]> {
 export const getWorkoutDetails = async (P_WOR_ID: number): Promise<WorkoutDetail[]> => {
   const records = await _getWorkoutDetails(P_WOR_ID);
   return records.map((record: any) => ({
-    WOO_ID : record.WOO_ID,
-    WOO_NAME : record.WOO_NAME,
-    WOO_IMG : record.WOO_IMG,
-    WOO_UNIT : record.WOO_UNIT,
-    WOD_GUIDE : record.WOD_GUIDE,
-    WOD_TARGET_REPS : record.WOD_TARGET_REPS,
-    WOD_TARGET_SETS : record.WOD_TARGET_SETS
+    WOO_ID: record.WOO_ID,
+    WOO_NAME: record.WOO_NAME,
+    WOO_TYPE: record.WOO_TYPE,
+    WOO_IMG: record.WOO_IMG,
+    WOO_UNIT: record.WOO_UNIT,
+    WOD_GUIDE: record.WOD_GUIDE,
+    WOD_COUNT: record.WOD_COUNT,
+    WOD_TARGET_REPS: record.WOD_TARGET_REPS,
+    WOD_TARGET_SETS: record.WOD_TARGET_SETS,
+    WOD_POINT: record.WOD_POINT,
+    WOD_ACCURACY: record.WOD_ACCURACY,
+    WOD_TIME: record.WOD_TIME
   }));
 }
 // 3.3. 운동 기록 조회 - 회원 ID와 날짜 범위로 해당 기간의 운동 기록 조회 (운동 기록 조회 페이지에서 사용)
@@ -785,13 +816,13 @@ async function _getLatestWorkoutId(P_MEM_ID: number, P_WOR_DT: string): Promise<
 }
 export const getLatestWorkoutId = async (
     P_MEM_ID: number, 
-    P_WOR_DT: string 
+    P_WOR_DT: string
 ): Promise<CurWorkoutRecord> => {
     const records = await _getLatestWorkoutId(P_MEM_ID, P_WOR_DT);
     
     // 결과가 없거나 WOR_ID가 null인 경우 처리
     if (records.length === 0 || records[0].WOR_ID === null) {
-        return {} as CurWorkoutRecord; // 빈 객체 반환 (필요에 따라 null로 변경 가능)}; 
+        return {} as CurWorkoutRecord; // 빈 객체 반환 (필요에 따라 null로 변경 가능)
     }
     return {
         WOR_ID: records[0].WOR_ID,
@@ -1006,10 +1037,60 @@ export const completeWorkoutRecord = async (
     return earnedPoint;
   });
 };
+// 3.8 운동 기록 상세 추가 - 
+export const insertAiReport = async (P_AI_REPORT: T_AI_REPORT): Promise<Boolean> => {
+    return await withTransaction(async (conn) => {
+        // 1. 상세 내역 INSERT
+        const [result] = await execute(conn,
+            `
+            INSERT INTO T_AI_REPORT 
+            (WOR_ID, AI_SUMMARY, AI_RECOMMENDATIONS, AI_NEXT_INTENSITY, AI_RANK_PERCENT)
+            VALUES (?, ?, ?, ?, ?)
+            `,
+            [
+                P_AI_REPORT.WOR_ID, 
+                P_AI_REPORT.AI_SUMMARY ?? null,
+                P_AI_REPORT.AI_RECOMMENDATIONS ?? null,
+                P_AI_REPORT.AI_NEXT_INTENSITY ?? null,
+                P_AI_REPORT.AI_RANK_PERCENT ?? null
+            ] as any[]
+        );
+
+        // 3. 복합 프라이머리 키 리턴
+        return result.affectedRows > 0;
+    });
+};
+// 3.6. 최신 운동 기록 ID 조회 - 회원 ID와 날짜로 해당 날짜의 최신 운동 기록 ID 조회 (운동 기록 추가/수정 시, 기존 기록이 있는지 확인용)
+async function _getLatestFinishedWorkoutId(P_MEM_ID: number): Promise<any> {
+    return select(`
+        SELECT WOR_ID, WOR_ID_VIEW
+        FROM  T_WORKOUT_RECORD
+        WHERE WOR_ID = (
+          SELECT MAX(WOR_ID)
+          FROM   T_WORKOUT_RECORD
+          WHERE  MEM_ID = ?
+          AND    WOR_STATUS = 'C'
+      )  
+    `, [P_MEM_ID]);
+}
+export const getLatestFinishedWorkoutId = async (
+    P_MEM_ID: number
+): Promise<CurWorkoutRecord> => {
+    const records = await _getLatestFinishedWorkoutId(P_MEM_ID);
+    
+    // 결과가 없거나 WOR_ID가 null인 경우 처리
+    if (records.length === 0 || records[0].WOR_ID === null) {
+        return {} as CurWorkoutRecord; // 빈 객체 반환 (필요에 따라 null로 변경 가능)
+    }
+    return {
+        WOR_ID: records[0].WOR_ID,
+        WOR_ID_VIEW: records[0].WOR_ID_VIEW
+    };
+}
 // =================================================================================================================
 // 4. 운동계획 
 // =================================================================================================================
-// 4.1. 특정 날짜의 운동 계획 조회 (운동 정보 JOIN)
+// 1. 특정 날짜의 운동 계획 조회 (운동 정보 JOIN)
 async function _MemberPlans(P_MEM_ID: number, P_DATE: string): Promise<any[]> {
   return select(`
     SELECT  A.MEP_ID,
@@ -1017,9 +1098,11 @@ async function _MemberPlans(P_MEM_ID: number, P_DATE: string): Promise<any[]> {
             A.WOO_ID,
             B.WOO_NAME,
             B.WOO_IMG,
-            A.MEP_TARGET,
+            A.MEP_TARGET_REPS,
+            A.MEP_TARGET_SETS,
             A.MEP_UNIT,
-            A.MEP_ACHIEVED
+            A.MEP_ACHIEVED,
+            A.MEP_DT
     FROM    T_MEMBER_PLAN A
     JOIN    T_WORKOUT B ON B.WOO_ID = A.WOO_ID
     WHERE   A.MEM_ID = ? 
@@ -1027,7 +1110,8 @@ async function _MemberPlans(P_MEM_ID: number, P_DATE: string): Promise<any[]> {
     ORDER BY A.MEP_ID ASC
   `, [P_MEM_ID, P_DATE]);
 }
-export const MemberPlans = async (P_MEM_ID: number, P_DATE: string): Promise<any[]> => {
+
+export const MemberPlans = async (P_MEM_ID: number, P_DATE: string): Promise<MemberPlan[]> => {
   const records = await _MemberPlans(P_MEM_ID, P_DATE);
   return records.map((record: any) => ({
     MEP_ID: record.MEP_ID,
@@ -1035,49 +1119,57 @@ export const MemberPlans = async (P_MEM_ID: number, P_DATE: string): Promise<any
     WOO_ID: record.WOO_ID,
     WOO_NAME: record.WOO_NAME,
     WOO_IMG: record.WOO_IMG,
-    MEP_TARGET: record.MEP_TARGET,
+    MEP_DATE: record.MEP_DATE,
+    MEP_TARGET_REPS: record.MEP_TARGET_REPS,
+    MEP_TARGET_SETS: record.MEP_TARGET_SETS,
     MEP_UNIT: record.MEP_UNIT,
-    MEP_ACHIEVED: record.MEP_ACHIEVED
+    MEP_ACHIEVED: record.MEP_ACHIEVED,
+    MEP_DT: record.MEP_DT
   }));
 }
-// 4.2. 새로운 운동 계획 추가
+
+// 2. 새로운 운동 계획 추가
 export const addMemberPlan = async (plan: {
   MEM_ID: number;
   WOO_ID: string;
   MEP_DATE: string;
-  MEP_TARGET: number;
+  MEP_TARGET_REPS: number;
+  MEP_TARGET_SETS: number;
   MEP_UNIT: string;
 }): Promise<void> => {
   await withTransaction(async (conn) => {
     const [result] = await execute(conn,
-        `
-      INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET, MEP_UNIT)
-      VALUES (?, ?, ?, ?, ?)
+      `
+      INSERT INTO T_MEMBER_PLAN (MEM_ID, WOO_ID, MEP_DATE, MEP_TARGET_REPS, MEP_TARGET_SETS, MEP_UNIT)
+      VALUES (?, ?, ?, ?, ?, ?)
         `,
-        [
-            plan.MEM_ID,
-            plan.WOO_ID,
-            plan.MEP_DATE,
-            plan.MEP_TARGET,
-            plan.MEP_UNIT
-        ] as any[]
+      [
+        plan.MEM_ID,
+        plan.WOO_ID,
+        plan.MEP_DATE,
+        plan.MEP_TARGET_REPS,
+        plan.MEP_TARGET_SETS,
+        plan.MEP_UNIT
+      ] as any[]
     );        // 3. 복합 프라이머리 키 리턴
   });
 }
-// 4.3. 운동 계획 삭제
+
+// 3. 운동 계획 삭제
 export const deleteMemberPlan = async (P_MEP_ID: number): Promise<void> => {
   await withTransaction(async (conn) => {
-      const [result] = await execute(conn,
-        `
+    const [result] = await execute(conn,
+      `
       DELETE FROM T_MEMBER_PLAN WHERE MEP_ID = ?
         `,
-        [
-           P_MEP_ID
-        ] as any[]
-    );        
+      [
+        P_MEP_ID
+      ] as any[]
+    );        // 3. 복합 프라이머리 키 리턴
   });
 }
-// 4.4. 월간 운동 요약 정보 조회
+
+// 월간 운동 요약 정보 조회
 export const getMonthStatus = async (P_MEM_ID: number, P_MONTH: string): Promise<any[]> => {
   return select(`
     SELECT 
@@ -1087,8 +1179,33 @@ export const getMonthStatus = async (P_MEM_ID: number, P_MONTH: string): Promise
     FROM T_MEMBER_PLAN
     WHERE MEM_ID = ? AND MEP_DATE LIKE ?
     GROUP BY MEP_DATE
-  `, [P_MEM_ID, `${P_MONTH}%`]); 
+  `, [P_MEM_ID, `${P_MONTH}%`]);
 }
+
+
+// 운동 보고서 AI 데이터 조회 (db.ts 파일 하단)
+export const getRecentWorkoutRecords = async (mem_id: number | string): Promise<any[]> => {
+  const query = `
+    SELECT 
+        B.WOR_DT, 
+        C.WOO_NAME, 
+        C.WOO_TYPE,
+        C.WOO_UNIT, 
+        A.WOD_TARGET_REPS, 
+        A.WOD_TARGET_SETS, 
+        A.WOD_COUNT, 
+        A.WOD_ACCURACY, 
+        A.WOD_TIME, 
+        A.WOD_POINT 
+    FROM T_WORKOUT_DETAIL A
+    JOIN T_WORKOUT_RECORD B ON A.WOR_ID = B.WOR_ID
+    JOIN T_WORKOUT C ON A.WOO_ID = C.WOO_ID
+    WHERE B.MEM_ID = ? 
+      AND B.WOR_DT = CURDATE()
+  `
+
+  return await select(query, [mem_id]);
+};
 
 
 // =================================================================================================================

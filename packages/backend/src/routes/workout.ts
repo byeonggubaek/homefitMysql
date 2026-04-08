@@ -1,10 +1,34 @@
 import Logger from '../logger.js'
 import express from 'express';
 import { Request, Response } from 'express';
-import { completeWorkoutRecord, getWorkoutDetails, getWorkoutHistory, getWorkoutRecords, getWorkoutRecordsByPivot, getWorkoutRecordsWithPlan, getWorkoutRecordsWithPlanByPivot, getWorkouts, initWorkoutRecord } from '../db.js';
+import { completeWorkoutRecord, getLatestFinishedWorkoutId, getLatestWorkoutId, getWorkoutDetails, getWorkoutHistory, getWorkoutRecords, getWorkoutRecordsByPivot, getWorkoutRecordsWithPlan, getWorkoutRecordsWithPlanByPivot, getWorkouts, initWorkoutRecord } from '../db.js';
 import { Workout, WorkoutDetail } from 'shared';
 
 const workoutRouter = express.Router();
+
+workoutRouter.get('/getLatestFinishedWorkoutId', async (req: Request, res: Response) => {
+  let apiLogEntry = null;  
+  try {
+    const { mem_id } = req.query as { mem_id?: string };
+    if(!mem_id || mem_id === "") {
+      return res.status(400).json({ success: false, error: '회원정보 파라미터가 누락되었습니다.' });
+    }
+    apiLogEntry = await Logger.logApiStart('GET /api/workout/getLatestFinishedWorkoutId', [mem_id]);
+    const result = await getLatestFinishedWorkoutId(Number(mem_id));
+    res.json({
+      success: true,
+      data: result,
+      timestamp: new Date().toISOString()
+    });
+    await Logger.logApiSuccess(apiLogEntry);
+  } catch (error) {
+    await Logger.logApiError(apiLogEntry, error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
 
 workoutRouter.get('/getWorkoutDetails', async (req: Request, res: Response) => {
   let apiLogEntry = null;
@@ -18,23 +42,31 @@ workoutRouter.get('/getWorkoutDetails', async (req: Request, res: Response) => {
         WOO_NAME: record.WOO_NAME,
         WOO_IMG: record.WOO_IMG,
         WOO_UNIT: record.WOO_UNIT,
+        WOO_TYPE: record.WOO_TYPE,
         WOD_GUIDE: record.WOO_GUIDE,
-        WOD_TARGET_REPS: record.WOO_TARGET_REPS,
+        WOD_TARGET_REPS: record.WOO_TARGET_REPS,  
         WOD_TARGET_SETS: record.WOO_TARGET_SETS,
+        WOD_COUNT: 0,   // 로그인 안한 상태에서는 운동 횟수 정보가 없으므로 0으로 설정
+        WOD_POINT: 0,    // 로그인 안한 상태에서는 포인트 정보가 없으므로 0으로 설정
+        WOD_ACCURACY: 0, // 로그인 안한 상태에서는 정확도 정보가 없으므로 0으로 설정
+        WOD_TIME: 0      // 로그인 안한 상태에서는 운동 시간 정보가 없으므로 0으로 설정
       }));
       return res.json({
         success: true,
         data: workoutDetails.slice(0, 3),
         wor_id: 0,        
+        wor_id_view: "",
         timestamp: new Date().toISOString()
       });
     }    
+    let wor_id_view : string= "";
     let data = await getWorkoutDetails(Number(wor_id));
     if (data.length === 0) {
       // 데이터 오브젝트 구성
       const result = await initWorkoutRecord(Number(mem_id), new Date().toISOString().split('T')[0]);
       if (result) {
         wor_id = result.WOR_ID.toString();
+        wor_id_view = result.WOR_ID_VIEW; // 예시로 WOR_ID_VIEW를 사용, 실제로는 적절한 값을 설정해야 함
       }
       else {
         res.status(500).json({
@@ -49,6 +81,7 @@ workoutRouter.get('/getWorkoutDetails', async (req: Request, res: Response) => {
       success: true,
       data: data,
       wor_id: wor_id,
+      wor_id_view: wor_id_view, // 예시 운동 기록 ID 뷰 추가
       count: data.length,
       timestamp: new Date().toISOString()
     });

@@ -70,6 +70,16 @@ export interface Membership {
   MES_FEE: number;
   MES_BENEFITS: Benefit[];
 }
+export interface MemberPlan {
+  MEP_ID: number;           
+  MEM_ID: number;           
+  WOO_ID: number;           
+  MEP_DATE: string;         
+  MEP_TARGET_REPS: number;  
+  MEP_UNIT: string;         
+  MEP_ACHIEVED: 'Y' | 'N';  
+  MEP_DT: string;          
+}
 /*=======================================================================================================
   홈 트레이닝 관련
 =======================================================================================================*/
@@ -100,6 +110,11 @@ export interface WorkoutDetail {
   WOD_GUIDE: string;
   WOD_TARGET_REPS: number;
   WOD_TARGET_SETS: number;
+  WOD_COUNT: number;   // 실제 수행 횟수
+  WOD_POINT: number;    // 획득 포인트
+  WOD_ACCURACY: number; // 운동 정확도 (%)
+  WOD_TIME: number;     // 운동 시간 (분)s
+  WOO_TYPE: string;
 }
 export interface CurWorkoutRecord 
 {
@@ -114,6 +129,7 @@ export interface Workout {
   WOO_GUIDE: string;
   WOO_TARGET_REPS: number;
   WOO_TARGET_SETS: number;
+  WOO_TYPE: string;
 }
 export interface RankingItem {
   RANK: number;
@@ -144,6 +160,16 @@ export interface WorkoutRecordWithPlan {
 /*=======================================================================================================
   등록 관련
 =======================================================================================================*/
+export interface T_AI_REPORT {
+    AIR_ID?: number;                // AUTO_INCREMENT (PK)
+    AIR_ID_VIEW?: string;           // AI 보고서 고유 ID (예: AIR00001)
+    WOR_ID: number;                 // 운동 기록 ID (FK)
+    AI_SUMMARY?: string | null;     // AI 요약
+    AI_RECOMMENDATIONS?: any | null; // AI 추천 (JSON)
+    AI_NEXT_INTENSITY?: string | null; // 차기 강도
+    AI_RANK_PERCENT?: number | null;   // 상위 퍼센트
+    REG_DT?: Date | string;         // 등록일
+}
 export interface T_MEMBER {
     MEM_ID?: number;          // PK (AUTO_INCREMENT)
     MEM_ID_VIEW: string;      // 회원 시각적 ID (예: MEM_00001)
