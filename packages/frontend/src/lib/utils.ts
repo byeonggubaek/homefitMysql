@@ -66,7 +66,6 @@ export const createWorkoutChartConfigWithPlan = (
 ): ChartConfig => {
   return columns.reduce((config, col, index) => {
     const baseColor = colors?.[index % colors.length] || `--chart-${(index % 5) + 1}`;
-    console.log(`Configuring column: ${col.id}, baseColor: ${baseColor}`);
     // 실제값
     config[col.id] = {
       label: col.name,

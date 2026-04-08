@@ -209,7 +209,6 @@ memberRouter.get('/getMemberPlan', async (req, res) => {
   let apiLogEntry = null;
   try {
     const { memberId, date } = req.query as { memberId: string; date: string };
-    console.log("요청된 memberId:", memberId, "요청된 date:", date);
     if (!memberId || !date) return res.status(400).json({ success: false, error: '회원 ID와 날짜가 필요합니다.' });
     apiLogEntry = await Logger.logApiStart('GET /getMemberPlan', [memberId, date]);
     const data = await MemberPlans(Number(memberId), date);
@@ -386,7 +385,7 @@ memberRouter.post('/analyzeWorkout', async (req, res) => {
     const responseText = result.response.text();
     const analysisResult = JSON.parse(responseText);
 
-    console.log("🔥 제미나이 답변 도착!!! :", analysisResult); // 👈 이거 터미널에 나오나요?
+    // console.log("🔥 제미나이 답변 도착!!! :", analysisResult); // 👈 이거 터미널에 나오나요?
 
     // 2. [핵심] 데이터가 대문자인지 소문자인지 상관없이 안전하게 꺼내기
     const finalSummary = analysisResult.SUMMARY || analysisResult.summary || "분석 결과가 없습니다.";
@@ -408,7 +407,7 @@ memberRouter.post('/analyzeWorkout', async (req, res) => {
     });
     // 6. [응답] 프론트엔드에 분석 결과 전달
    if (resultAi) {
-      console.log("DB 저장 성공:", { WOR_ID: FINAL_WOR_ID, SUMMARY: finalSummary });
+      // console.log("DB 저장 성공:", { WOR_ID: FINAL_WOR_ID, SUMMARY: finalSummary });
       return res.json({ success: true, data: analysisResult });
     }
     else {      

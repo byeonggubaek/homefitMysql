@@ -290,7 +290,6 @@ workoutRouter.post('/complete', async (req: Request, res: Response) => {
     
     // 로그 기록
     apiLogEntry = await Logger.logApiStart('POST /api/workout/complete', [mem_id, wor_id, count, duration, accuracy, woo_id]);
-    console.log("🔥 프론트에서 무사히 도착한 데이터:", req.body);
 
     // 💡 2. [핵심] 아까 만든 DB 함수를 여기서 드디어 실행합니다!!!
     const earnedPoint = await completeWorkoutRecord(

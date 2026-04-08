@@ -19,10 +19,37 @@ import {
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/UserContext';
 
+
+interface Landmark {
+  x: number;
+  y: number;
+  z: number;
+  visibility: number;
+}
+
+interface PoseLandmarkerResult {
+  landmarks: Landmark[][];
+}
+
+interface PoseValidationResult {
+  valid: boolean;
+  missing: number[] | null;
+  lowVisibility: number[] | null;
+  confidence: string;
+  head?: boolean;
+  shoulders?: boolean;
+  arms?: boolean;
+  hips?: boolean;
+  legs?: boolean;
+  ankles?: boolean;
+  readyForExercise?: boolean;
+  feedback?: string;
+}
+
 const WorkoutStartMain = () => {
   const { wor_id, wor_id_view } = useParams<{ wor_id: string, wor_id_view: string }>();
-  const navigate = useNavigate();
   const { member } = useUser();
+  const navigate = useNavigate();
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
@@ -46,7 +73,7 @@ const WorkoutStartMain = () => {
   const [isPlankActive, setIsPlankActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false); // 🌟 운동 완료 여부
   const [earnedPoint, setEarnedPoint] = useState(0);   // 🌟 방금 획득한 포인트
-  // const [accList, setAccList] = useState<number[]>([]);
+
 
   // 1. Pose Landmarker 초기화
   const initializePoseLandmarker = async () => {
@@ -71,6 +98,41 @@ const WorkoutStartMain = () => {
     return angle;
   };
 
+  const checkKeyLandmarks = (results: PoseLandmarkerResult): PoseValidationResult => {
+
+    console.log ("🔍 랜드마크 검증 중...", results.landmarks);
+    if (!results.landmarks || !results.landmarks[0]) {
+      return { 
+        valid: false, 
+        missing: null, 
+        lowVisibility: null,
+        confidence: 'No landmarks detected' 
+      };
+    }
+    
+    const landmarks: Landmark[] = results.landmarks[0];
+    const requiredIndices: number[] = [11,12,13,14,23,24,25,26,27,28];
+    const missing: number[] = [];
+    const lowVisibility: number[] = [];
+    
+    requiredIndices.forEach((index: number) => {
+      const landmark: Landmark | undefined = landmarks[index];
+      if (!landmark) {
+        missing.push(index);
+      } else if (landmark.visibility < 0.5) {
+        lowVisibility.push(index);
+      }
+    });
+    
+    const valid: boolean = missing.length === 0 && lowVisibility.length === 0;
+    
+    return {
+      valid,
+      missing: missing.length > 0 ? missing : null,
+      lowVisibility: lowVisibility.length > 0 ? lowVisibility : null,
+      confidence: valid ? '전신 완벽!' : '일부 가려짐'
+    };
+  };
   // 3. 실시간 프레임 분석 루프
   const predictWebcam = useCallback(() => {
     const video = webcamRef.current?.video;
@@ -94,6 +156,17 @@ const WorkoutStartMain = () => {
     isApiProcessing.current = true;
 
     try {
+      // 0:  NOSE (코)
+      // 11: LEFT_SHOULDER (왼쪽 어깨)
+      // 12: RIGHT_SHOULDER (오른쪽 어깨)
+      // 13: LEFT_ELBOW (왼쪽 팔꿈치)
+      // 14: RIGHT_ELBOW (오른쪽 팔꿈치)
+      // 23: LEFT_HIP (왼쪽 엉덩이)
+      // 24: RIGHT_HIP (오른쪽 엉덩이)
+      // 25: LEFT_KNEE (왼쪽 무릎)
+      // 26: RIGHT_KNEE (오른쪽 무릎)
+      // 27: LEFT_ANKLE (왼쪽 발목)
+      // 28: RIGHT_ANKLE (오른쪽 발목)
       const targetIndices = [0, 11, 12, 13, 14, 23, 24, 25, 26, 27, 28];
       const inputRow: number[] = [];
 
@@ -110,6 +183,7 @@ const WorkoutStartMain = () => {
       const data = await res.json();
 
       if (data.success) {
+        // console.log(`AI 예측 결과: ${data.exercise} (${data.probability}%)`);
         setCurrentExercise(data.exercise);
         setProbability(data.probability);
 
@@ -132,10 +206,16 @@ const WorkoutStartMain = () => {
       setIsPlankActive(false);
       return;
     }
-
+    checkKeyLandmarks(results); // 💡 AI 서버에 보내기 전에 필수 랜드마크 체크 (결과는 로그용)
     const lm = results.landmarks[0];
     callAiServer(lm);
 
+    //12: 오른쪽 어깨 (right shoulder)
+    //14: 오른쪽 팔꿈치 (right elbow)
+    //16: 오른쪽 손목 (right wrist)
+    //24: 오른쪽 엉덩이 (right hip)
+    //26: 오른쪽 무릎 (right knee)
+    //28: 오른쪽 발목 (right ankle)
     const shoulder = lm[12], elbow = lm[14], wrist = lm[16];
     const hip = lm[24], knee = lm[26], ankle = lm[28];
     const armAngle = calculateAngle(shoulder, elbow, wrist);
@@ -165,7 +245,7 @@ const WorkoutStartMain = () => {
         setCount(prev => prev + 1); // 🔥 여기서 카운트 증가!
         setViewExercise(currentExercise.toUpperCase()); // DB 저장용 카운트 업데이트
         setViewProbability(probability); // DB 저장용 카운트 업데이트
-        console.log(`카운트 증가! 현재 카운트: ${count + 1}, 운동: ${currentExercise}, 정확도: ${probability}%`);
+        // console.log(`카운트 증가! 현재 카운트: ${count + 1}, 운동: ${currentExercise}, 정확도: ${probability}%`);
       }
     }
   };
@@ -359,12 +439,14 @@ const WorkoutStartMain = () => {
             <Webcam
               ref={webcamRef} audio={false} mirrored
               className="absolute inset-0 w-full h-full object-cover"
-              videoConstraints={{ width: 600, height: 400, facingMode: "user" }}
+              videoConstraints={{ 
+                width: 1280,                    // 넓은 FOV
+                height: 720,                    // 세로 충분히
+                facingMode: 'user',             // 전면 카메라
+                aspectRatio: 16/9               // 가로세로 비율
+              }}
             />
-            <canvas ref={canvasRef} width={600} height={400} className="absolute inset-0 w-full h-full z-10" style={{ transform: 'scaleX(-1)' }} />
-
-
-
+            <canvas ref={canvasRef} width={1280} height={720} className="absolute inset-0 w-full h-full z-10" style={{ transform: 'scaleX(-1)' }} />
             {isDetecting && (
               <div className={`absolute bottom-4 left-4 z-20 px-4 py-2 rounded-lg font-bold text-base shadow-2xl ${status === 'down' ? 'bg-green-500 text-white' : 'bg-white/90 text-slate-800'}`}>
                 {status === 'down' ? "▼ DOWN" : "▲ UP"}
@@ -382,7 +464,7 @@ const WorkoutStartMain = () => {
           </CardHeader>
           <CardContent className="p-4 flex flex-col gap-3">
             {workouts?.map((workout, index) => (
-              <WdogWorkout key={workout.WOO_ID ?? index} workout={workout} index={index} type="start" />
+              <WdogWorkout key={workout.WOO_ID ?? index} workout={workout} index={index} type="dashboard" />
             ))}
           </CardContent>
         </Card>

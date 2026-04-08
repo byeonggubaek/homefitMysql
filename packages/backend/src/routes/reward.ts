@@ -70,7 +70,6 @@ rewardRouter.get('/getPoint', async (req, res) => {
   let apiLogEntry = null;
   try {
     const { mem_id, from, to } = req.query as { mem_id: string; from: string; to: string };
-    console.log('포인트 조회 요청 - mem_id:', mem_id, 'from:', from, 'to:', to);
     if (!mem_id || !from || !to) {
       return res.status(400).json({ success: false, error: '필수 파라미터 누락' });
     }
